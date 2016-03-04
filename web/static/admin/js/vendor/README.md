@@ -1,0 +1,1 @@
+Vendor folder contains jquery and xregexp folders
