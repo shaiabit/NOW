@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Evennia MUD/MU\* Creation System ![evennia logo][logo]
 [![Build Status][travisimg]][travislink]
 
@@ -41,3 +42,7 @@ To learn how to get your hands on the code base, the [Getting started][gettingst
 [group]: https://groups.google.com/forum/#!forum/evennia
 [chat]: http://webchat.freenode.net/?channels=evennia&uio=MT1mYWxzZSY5PXRydWUmMTE9MTk1JjEyPXRydWUbb
 [wikimudpage]: http://en.wikipedia.org/wiki/MUD
+=======
+# NOW
+A MUD under construction based on Evennia.
+>>>>>>> 1f8a35c5206118f5b50928a9ed6da597745d1208
