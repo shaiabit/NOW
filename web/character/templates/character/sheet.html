@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <h1>{{ character.name }}</h1>
+
+    <p>{{ character.db.desc }}</p>
+
+    <h2>Stats</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Stat</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Strength</td>
+          <td>{{ character.db.str }}</td>
+        </tr>
+        <tr>
+          <td>Intelligence</td>
+          <td>{{ character.db.int }}</td>
+        </tr>
+        <tr>
+          <td>Speed</td>
+          <td>{{ character.db.spd }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Skills</h2>
+    <ul>
+      {% for skill in character.db.skills %}
+        <li>{{ skill }}</li>
+      {% empty %}
+        <li>This character has no skills yet.</li>
+      {% endfor %}
+    </ul>
+
+    {% if character.db.approved %}
+      <p class="success">This character has been approved!</p>
+    {% else %}
+      <p class="warning">This character has not yet been approved!</p>
+    {% endif %}
+{% endblock %}
