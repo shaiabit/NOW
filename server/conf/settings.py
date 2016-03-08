@@ -35,6 +35,16 @@ HTTP_LOG_FILE = os.path.join(LOG_DIR, 'http_requests.log')
 # Other defaults
 PROTOTYPE_MODULES = ("world.prototypes",)
 
+LANGUAGE_CODE = 'en-us'
+# How long time (in seconds) a user may idle before being logged
+# out. This can be set as big as desired. A user may avoid being
+# thrown off by sending the empty system command 'idle' to the server
+# at regular intervals. Set <=0 to deactivate idle timeout completely.
+IDLE_TIMEOUT = 9000
+# The idle command can be sent to keep your session active without actually
+# having to spam normal commands regularly. It gives no feedback, only updates
+# the idle timer.
+
 ######################################################################
 # Evennia Database config
 ######################################################################
