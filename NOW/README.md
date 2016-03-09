@@ -1,9 +1,9 @@
-# Welcome to Evennia!
+# Welcome to Novel Online World!
 
-This directory is your game directory, set up to let you start with
-your new game right away.
+This directory is the directory that contains all NOW assets,
+set up to mirror the operating NOW server.
 
-You can delete this readme file when you've read it and you can
+If you are cloning NOW, tou can delete this readme file, or just
 re-arrange things in this game-directory to suit your own sense of
 organisation (the only exception is the directory structure of the
 server/ directory, which Evennia expects). If you change the structure
