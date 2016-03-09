@@ -19,36 +19,16 @@ from django.conf import settings
 from evennia import utils
 
 CONNECTION_SCREEN = \
-r"""{b=============================================================={n
-                                        
-Welcome to {g%s{n, version %s!
-                                          
- _      ____  _     _____ _    
-/ \  /\/  _ \/ \ |\/  __// \   
-| |\ ||||||| / \|||| | //|  \  | |   
-| | \||||||| \_/|||| \// |  /_ | |_/\
-\_/  \|\____/\__/  \____\\____/
- ____  _      _     _  _      _____
-/  _ \/ \  /|/ \   / \/ \  /|/  __/
-| / \|||| |\ |||||| |   | |||| |\ ||||||  \  
-| \_/|||| | \|||||| |_/\| |||| | \||||||  /_ 
-\____/\_/  \|\____/\_/\_/  \|\____\
- _      ____  ____  _     ____ 
-/ \  /|/  _ \/  __\/ \   /  _ \
-| |  |||||| / \||||  \/|||| |   | | \|
-| |/\|||||| \_/||||    /| |_/\| |_/|
-\_/  \|\____/\_/\_\\____/\____/
-
->>> Using Smscript/Avatar/Smush Figlets <<<
-
-The New Frontier in Text Based Online Gaming
-{b=============================================================={n
+r"""Welcome to NOW - Novel Online World: 
+========= a New Frontier in Text Based Online Gaming =========
  If you have an existing account, connect to it by typing:
-      {wconnect <username> <password>{n
+      connect <username> <password>
  If you need to create an account, type (without the <>'s):
-      {wcreate <username> <password>{n
+      create <username> <password>
 
- If you have spaces in your username, enclose it in quotes.
- Enter {whelp{n for more info. {wlook{n will re-show this screen.
-{b=============================================================={n""" \
+    HELP for more info.     LOOK will re-show this screen.
+
+ If you have spaces or apostrophes in your username, enclose 
+ your name in double quotes.  
+ ==============================================================""" \
  % (settings.SERVERNAME, utils.get_evennia_version())
