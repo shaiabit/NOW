@@ -20,7 +20,7 @@ from evennia.settings_default import *
 ######################################################################
 
 # This is the name of your game. Make it catchy!
-SERVERNAME = "Now"
+SERVERNAME = "NOW"
 
 # Path to the game directory (use EVENNIA_DIR to refer to the
 # core evennia library)
