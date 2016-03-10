@@ -34,3 +34,12 @@ documentation found here: https://github.com/evennia/evennia/wiki.
 
 Plenty of beginner's tutorials can be found here:
 http://github.com/evennia/evennia/wiki/Tutorials.
+
+After installed, to start it, log in then:
+
+    source pyenv/bin/activate
+    cd NOW
+    evennia start
+
+You will see console output, but can disconnect with Control-D or exit
+evennia stays running in daemon mode.
