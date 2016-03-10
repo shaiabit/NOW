@@ -42,4 +42,5 @@ After installed, to start it, log in then:
     evennia start
 
 You will see console output, but can disconnect with Control-D or exit
+
 evennia stays running in daemon mode.
