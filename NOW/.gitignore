@@ -1,55 +1,55 @@
-*.py[cod]"
+*.py[cod]
 
-# C extensions"
-*.so"
+# C extensions
+*.so
 
-# Packages"
-*.egg"
-*.egg-info"
-dist"
-build"
-eggs"
-parts"
-var"
-sdist"
-develop-eggs"
-.installed.cfg"
-lib"
-lib64"
-__pycache__"
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+__pycache__
 
-# Other"
-*.swp"
-*.log"
-*.pid"
-*.restart"
-# *.db3"
-pyenv/"
-.gitconfig"
-.bash_history"
-.ssh/"
-.cache/"
+# Other
+*.swp
+*.log
+*.pid
+*.restart
+# *.db3
+pyenv/
+.gitconfig
+.bash_history
+.ssh/
+.cache/
 
-# Installer logs"
-pip-log.txt"
+# Installer logs
+pip-log.txt
 
-# Unit test / coverage reports"
-.coverage"
-.tox"
-nosetests.xml"
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
 
-# Translations"
+# Translations
 
-# *.mo"
+# *.mo
 
-# Mr Developer"
-.mr.developer.cfg"
-.project"
-.pydevproject"
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
 
-# PyCharm config"
-.idea"
+# PyCharm config
+.idea
 
-# Windows files generated during setup"
-evennia.bat"
-twistd.bat"
+# Windows files generated during setup
+evennia.bat
+twistd.bat
