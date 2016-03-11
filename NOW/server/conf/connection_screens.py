@@ -30,5 +30,5 @@ r"""Welcome to NOW - Novel Online World:
 
  If you have spaces or apostrophes in your username, enclose 
  your name in double quotes.  
- ==============================================================""" \
- % (settings.SERVERNAME, utils.get_evennia_version())
+ =============================================================="""
+ # % (settings.SERVERNAME, utils.get_evennia_version())
