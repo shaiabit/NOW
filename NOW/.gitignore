@@ -2,6 +2,7 @@
 
 # C extensions"
 *.so"
+
 # Packages"
 *.egg"
 *.egg-info"
@@ -22,7 +23,12 @@ __pycache__"
 *.log"
 *.pid"
 *.restart"
-*.db3"
+# *.db3"
+pyenv/"
+.gitconfig"
+.bash_history"
+.ssh/"
+.cache/"
 
 # Installer logs"
 pip-log.txt"
