@@ -3,7 +3,7 @@
 This directory is the directory that contains all NOW assets,
 set up to mirror the operating NOW server.
 
-If you are cloning NOW, tou can delete this readme file, or just
+If you are cloning NOW, you can delete this readme file, or just
 re-arrange things in this game-directory to suit your own sense of
 organisation (the only exception is the directory structure of the
 server/ directory, which Evennia expects). If you change the structure
