@@ -42,6 +42,7 @@
       <rect class='road' key='Furry Avenue' x='1110' y='1215' height='600' width='58'/>
       <rect class='road' key='Shiner Street' x='300' y='1570' width='1060' height='58'/>
       <rect class='road' key='Feather Heights Boulevard' x='300' y='1060' height='568' width='58'/>
+      <rect class='road' key='Wolf Run/Terra Nova' x="50" y="160" width="900" height="58"/>
       <rect class='road' key='Red Wolfe Road' x='665' y='750' height='300' width='58'/>
       <rect class='road' key="Tiger's Den Drive" x='665' y='1050' height='450' width='58'/>
       <rect class='road' key='Oasis Street' x='665' y='730' height='58' width='500'/>
@@ -76,10 +77,9 @@
     <g key='Shiner Street Wharf'><rect x='860' y='1630' width='40' height='40'/></g>
     <g id='oldroads' transform="matrix(4.3576977,0,0,4.3576977,-480.90047,-835.13688)">
       <rect id='or1' key='Wolf Run/Terra Nova' class='road' width="14" height="243.82561" x="281.01666" y="-361.7782" transform="matrix(0,1,-1,0,0,0)"/>
-      <path id='dl1' d="m 378.66894,288.14847 c -113.64216,0 -257.02957,0 -257.02957,0" style="fill:blue;fill-opacity:1;stroke:#f2f000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2, 1;stroke-dashoffset:0;stroke-opacity:1"/>
     </g>
     <rect style='fill:#6edc00' x='100' y='1030' width='100' height='75' ry='36'/>
-    <rect id='Mulmer' y="448" x="295" height="600" width="28" style="display:inline;fill:#5b4d2d;fill-opacity:1;stroke:none"/>
+    <rect id='Mulmur' y="448" x="295" height="600" width="28" style="display:inline;fill:#5b4d2d;fill-opacity:1;stroke:none"/>
     <path id='barrier' d="m 196.58472,1043.3728 c 1.16238,3.351 2.19051,6.8309 3.41212,10.1219 1.18925,-3.3027 2.29193,-6.7561 3.41285,-10.1219 1.97688,-0.9412 4.11452,-2.0346 5.71219,-2.8589 0.93992,1.9777 2.02589,4.1096 2.84777,5.7128 l -7.20811,21.644 c 2.48274,7.5422 5.08786,15.3218 7.21011,21.6373 -0.93157,1.8649 -2.01274,4.0161 -2.84967,5.7471 -1.71236,-0.9028 -3.87127,-1.9578 -5.74175,-2.893 -1.15115,-3.3101 -2.29285,-7.1238 -3.38359,-10.077 -1.24804,3.4732 -2.44199,7.1908 -3.38303,10.077 l -5.78628,2.893 c -0.66293,-1.615 -1.90776,-3.939 -2.81481,-5.7501 2.54372,-7.509 5.07155,-15.1447 7.22197,-21.6371 l -7.21797,-21.6443 c 1.0144,-1.9402 2.06723,-4.0917 2.85537,-5.712 1.93773,1.0247 4.09603,2.0754 5.71283,2.8612 z" style='fill:red'/>
     <rect style="fill:black;fill-opacity:0.25;stroke:black;stroke-width:0.75;stroke-opacity:1" width="85" height="85" x="290" y="1555"/>
   </g>
@@ -109,6 +109,8 @@
     </text>
     <g style="display:inline" id='38564RJ' owner="BoingDragon" key="Storm Tower - the courtyard"/>
     <g id='StreetNames'>
+      <text><tspan y="185" x="700" style="font-size:25px;font-family:sans-serif;">Wolf Run Road</tspan></text>
+      <text><tspan y="185" x="100" style="font-size:25px;font-family:sans-serif;">Terra Nova Road</tspan></text>
       <text style="font-size:14.12160397px;display:inline;fill:#ffffff;fill-opacity:1" y="1060.7762" x="-1528.3093" id='text6352' transform="matrix(0,-0.94144025,1.0622023,0,0,0)">
         <tspan id='tspan6354' style="font-size:22px;font-family:sans-serif" x="-1528.3093" y="1060.7762">Furry Avenue</tspan>
       </text>
@@ -148,14 +150,8 @@
       <text y="20.756466" x="750.87189" style="font-size:12px;display:inline;fill:#ffffff;fill-opacity:1" id='text3696' transform="matrix(1.2172014,0,0,1.2836824,-478.25803,1563.3709)">
         <tspan id='tspan3698' style="font-size:18.90406227px;font-family:sans-serif;" x="750.87189" y="20.756466">Shiner Street</tspan>
       </text>
-      <text transform="matrix(1.2172014,0,0,1.2836824,-478.25803,1563.3709)" id='text3695' style="font-size:12px;display:inline;fill:#ffffff;fill-opacity:1" x="1123.6543" y="-898.69647">
-        <tspan y="-898.69647" x="1123.6543" style="font-size:18.90406227px;font-family:sans-serif;" id='tspan3697'>Wolf Run Road</tspan>
-      </text>
-      <text y="-898.43524" x="463.48251" style="font-size:12px;display:inline;fill:#ffffff;fill-opacity:1" id='text3699' transform="matrix(1.2172014,0,0,1.2836824,-478.25803,1563.3709)">
-        <tspan id='tspan3701' style="font-size:18.90406227px;font-family:sans-serif;" x="463.48251" y="-898.43524">Terra Nova Road</tspan>
-      </text>
-      <text transform="matrix(0,-1.2874549,0.77672624,0,0,0)" key="Mulmer Sideroad" x="-634" y="395" style="font-size:12px;fill:white;fill-opacity:1;display:inline">
-        <tspan  style="font-size:20px;font-family:sans-serif" x="-635" y="394.57904" id="tspan3730">#4 Mulmer</tspan>
+      <text transform="matrix(0,-1.2874549,0.77672624,0,0,0)" key="Mulmur Sideroad" x="-634" y="395" style="font-size:12px;fill:white;fill-opacity:1;display:inline">
+        <tspan  style="font-size:20px;font-family:sans-serif" x="-635" y="394.57904" id="tspan3730">#4 Mulmur</tspan>
         <tspan style="font-size:19.29454041px;font-family:sans-serif" x="-623" y="417.73264" id="tspan3732">SideRoad</tspan>
       </text>
     </g>
@@ -312,9 +308,6 @@
                         <path id='path3311' style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-opacity:1" d="m 1240.8699,-913.84103 c 0,4.96729 -4.0258,8.99219 -8.9926,8.99219 -4.9654,0 -8.9922,-4.0249 -8.9922,-8.99219 0,-4.96531 4.0268,-8.99171 8.9922,-8.99171 4.9668,0 8.9926,4.0264 8.9926,8.99171 z"/>
                       </g>
                     </g>
-                    <text y="-898.51208" x="434.15747" style="font-size:12px;fill:#ffffff;fill-opacity:1" id='text3283' transform="scale(0.97376112,1.0269459)">
-                      <tspan id='tspan3285' style="font-size:18.90406227px;font-family:sans-serif;" x="434.15747" y="-898.51208">...</tspan>
-                    </text>
                     <text transform="scale(0.97376112,1.0269459)" id='text3289' style="font-size:12px;fill:#ffffff;fill-opacity:1" x="2020.978" y="-394.78122">
                       <tspan y="-394.78122" x="2020.978" style="font-size:18.90406227px;font-family:sans-serif;" id='tspan3291'>...</tspan>
                     </text>
