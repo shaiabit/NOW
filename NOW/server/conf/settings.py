@@ -45,6 +45,14 @@ IDLE_TIMEOUT = 9000
 # having to spam normal commands regularly. It gives no feedback, only updates
 # the idle timer.
 
+# Actual URL for webclient component to reach the websocket. You only need
+# to set this if you know you need it, like using some sort of proxy setup.
+# If given it must be on the form "ws://hostname" (WEBSOCKET_CLIENT_PORT will
+# be automatically appended). If left at None, the client will itself
+# figure out this url based on the server's hostname.
+# WEBSOCKET_CLIENT_URL = 'ws://localhost'
+
+
 ######################################################################
 # Evennia Database config
 ######################################################################
