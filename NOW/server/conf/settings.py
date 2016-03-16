@@ -35,6 +35,7 @@ HTTP_LOG_FILE = os.path.join(LOG_DIR, 'http_requests.log')
 # Other defaults
 PROTOTYPE_MODULES = ("world.prototypes",)
 
+INLINEFUNC_ENABLED=True
 LANGUAGE_CODE = 'en-us'
 # How long time (in seconds) a user may idle before being logged
 # out. This can be set as big as desired. A user may avoid being
