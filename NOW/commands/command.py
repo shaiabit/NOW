@@ -136,3 +136,84 @@ class MuxCommand(default_cmds.MuxCommand):
         # this can be removed in your child class, it's just
         # printing the ingoing variables as a demo.
         super(MuxCommand, self).func()
+
+
+from builtins import range
+import time
+from django.conf import settings
+from evennia.server.sessionhandler import SESSIONS
+from evennia.commands.default.muxcommand import MuxPlayerCommand
+from evennia.utils import utils, create, search, prettytable
+
+
+class CmdWho(MuxPlayerCommand):
+    """
+    list who is currently online
+    Usage:
+      who
+      doing
+    Shows who is currently online. Doing is an alias that limits info
+    also for those with all permissions.
+    """
+
+    key = "who"
+    locks = "cmd:all()"
+
+    def func(self):
+        """
+        Get all connected players by polling session.
+        """
+
+        player = self.player
+        session_list = SESSIONS.get_sessions()
+
+        session_list = sorted(session_list, key=lambda o: o.player.key)
+
+        if self.cmdstring == "who":
+            show_session_data = False
+        else:
+            show_session_data = player.check_permstring("Immortals") or player.check_permstring("Wizards")
+
+        nplayers = (SESSIONS.player_count())
+        if show_session_data:
+            # privileged info - WHO
+            table = prettytable.PrettyTable(["{wPlayer Name",
+                                             "{wOn for",
+                                             "{wIdle",
+                                             "{wCharacter",
+                                             "{wRoom",
+                                             "{wCmds",
+                                             "{wProtocol",
+                                             "{wHost"])
+            for session in session_list:
+                if not session.logged_in: continue
+                delta_cmd = time.time() - session.cmd_last_visible
+                delta_conn = time.time() - session.conn_time
+                player = session.get_player()
+                puppet = session.get_puppet()
+                location = puppet.location.key if puppet else "None"
+                table.add_row([utils.crop(player.name, width=25),
+                               utils.time_format(delta_conn, 0),
+                               utils.time_format(delta_cmd, 1),
+                               utils.crop(puppet.key if puppet else "None", width=25),
+                               utils.crop(location, width=25),
+                               session.cmd_total,
+                               session.protocol_key,
+                               isinstance(session.address, tuple) and session.address[0] or session.address])
+        else:
+            # unprivileged or who
+            table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle"])
+            for session in session_list:
+                if not session.logged_in:
+                    continue
+                delta_cmd = time.time() - session.cmd_last_visible
+                delta_conn = time.time() - session.conn_time
+                player = session.get_player()
+                puppet = session.get_puppet()
+                table.add_row([utils.crop(puppet.key if puppet else "- Unknown -", width=25),
+                               utils.time_format(delta_conn, 0),
+                               utils.time_format(delta_cmd, 1)])
+
+        isone = nplayers == 1
+        string = "{wPlayers:{n\n%s\n%s unique account%s logged in." % (table, "One" if isone else nplayers, "" if isone else "s")
+        self.msg(string)
