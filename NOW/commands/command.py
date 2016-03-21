@@ -169,39 +169,57 @@ class CmdWho(MuxPlayerCommand):
 
         session_list = sorted(session_list, key=lambda o: o.player.key)
 
-        if self.cmdstring == "who":
-            show_session_data = False
-        else:
+        if 'f' in self.switches:
             show_session_data = player.check_permstring("Immortals") or player.check_permstring("Wizards")
+        else:
+            show_session_data = False
+
 
         nplayers = (SESSIONS.player_count())
-        if show_session_data:
-            # privileged info - WHO
-            table = prettytable.PrettyTable(["{wPlayer Name",
-                                             "{wOn for",
-                                             "{wIdle",
-                                             "{wCharacter",
-                                             "{wRoom",
-                                             "{wCmds",
-                                             "{wProtocol",
-                                             "{wHost"])
-            for session in session_list:
-                if not session.logged_in: continue
-                delta_cmd = time.time() - session.cmd_last_visible
-                delta_conn = time.time() - session.conn_time
-                player = session.get_player()
-                puppet = session.get_puppet()
-                location = puppet.location.key if puppet else "None"
-                table.add_row([utils.crop(player.name, width=25),
-                               utils.time_format(delta_conn, 0),
-                               utils.time_format(delta_cmd, 1),
-                               utils.crop(puppet.key if puppet else "None", width=25),
-                               utils.crop(location, width=25),
-                               session.cmd_total,
-                               session.protocol_key,
-                               isinstance(session.address, tuple) and session.address[0] or session.address])
+        if 'f' in self.switches:
+            if show_session_data:
+                # privileged info - who/f by wizard or immortal
+                table = prettytable.PrettyTable(["{wPlayer Name",
+                                                 "{wOn for",
+                                                 "{wIdle",
+                                                 "{wCharacter",
+                                                 "{wRoom",
+                                                 "{wCmds",
+                                                 "{wProtocol",
+                                                 "{wHost"])
+                for session in session_list:
+                    if not session.logged_in: continue
+                    delta_cmd = time.time() - session.cmd_last_visible
+                    delta_conn = time.time() - session.conn_time
+                    player = session.get_player()
+                    puppet = session.get_puppet()
+                    location = puppet.location.key if puppet else "None"
+                    table.add_row([utils.crop(player.name, width=25),
+                                   utils.time_format(delta_conn, 0),
+                                   utils.time_format(delta_cmd, 1),
+                                   utils.crop(puppet.key if puppet else "None", width=25),
+                                   utils.crop(location, width=25),
+                                   session.cmd_total,
+                                   session.protocol_key,
+                                   isinstance(session.address, tuple) and session.address[0] or session.address])
+            else:
+                # non privileged info - who/f by player
+
+                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wLocation"])
+                for session in session_list:
+                    if not session.logged_in:
+                        continue
+                    delta_cmd = time.time() - session.cmd_last_visible
+                    delta_conn = time.time() - session.conn_time
+                    player = session.get_player()
+                    puppet = session.get_puppet()
+                    location = puppet.location.key if puppet else "None"
+                    table.add_row([utils.crop(puppet.key if puppet else "- Unknown -", width=25),
+                                   utils.time_format(delta_conn, 0),
+                                   utils.time_format(delta_cmd, 1),
+                                   utils.crop(location, width=25)])
         else:
-            # unprivileged or who
+            # unprivileged info - who
             table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle"])
             for session in session_list:
                 if not session.logged_in:
