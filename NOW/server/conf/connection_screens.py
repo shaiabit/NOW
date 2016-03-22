@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 """
 Connection screen
 
@@ -19,7 +19,15 @@ from django.conf import settings
 from evennia import utils
 
 CONNECTION_SCREEN = \
-r"""Welcome to NOW - Novel Online World: 
+r"""
+N  N   OOO  W   W
+NN  N OO OO W   W
+N N N O   O W W W
+N  NN OO OO W W W
+ N  N  OOO   W W
+
+Welcome to the Novel Online World (NOW) 
+
 ========= a New Frontier in Text Based Online Gaming =========
  If you have an existing account, connect to it by typing:
       connect <username> <password>
