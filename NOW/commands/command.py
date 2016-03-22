@@ -151,9 +151,8 @@ class CmdWho(MuxPlayerCommand):
     list who is currently online
     Usage:
       who
-      doing
-    Shows who is currently online. Doing is an alias that limits info
-    also for those with all permissions.
+    Shows who is currently online. Use the /f switch to see
+    character locations, and more info for those with permissions.
     """
 
     key = "who"
@@ -233,5 +232,5 @@ class CmdWho(MuxPlayerCommand):
                                utils.time_format(delta_cmd, 1)])
 
         isone = nplayers == 1
-        string = "{wPlayers:{n\n%s\n%s unique account%s logged in." % (table, "One" if isone else nplayers, "" if isone else "s")
+        string = "%s\n%s unique account%s logged in." % (table, "One" if isone else nplayers, "" if isone else "s")
         self.msg(string)
