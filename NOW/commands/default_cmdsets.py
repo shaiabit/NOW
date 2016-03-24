@@ -16,6 +16,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 from commands.command import CmdWho
+from commands.command import CmdPose
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
@@ -30,9 +31,8 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         Populates the cmdset
         """
         super(CharacterCmdSet, self).at_cmdset_creation()
-        #
         # any commands you add below will overload the default ones.
-        #
+        self.add(CmdPose)
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
@@ -49,10 +49,9 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         Populates the cmdset
         """
         super(PlayerCmdSet, self).at_cmdset_creation()
-        #
         # any commands you add below will overload the default ones.
-        #
         self.add(CmdWho)
+
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
     """
@@ -66,9 +65,7 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
         Populates the cmdset
         """
         super(UnloggedinCmdSet, self).at_cmdset_creation()
-        #
         # any commands you add below will overload the default ones.
-        #
 
 
 class SessionCmdSet(default_cmds.SessionCmdSet):
@@ -87,6 +84,4 @@ class SessionCmdSet(default_cmds.SessionCmdSet):
         It prints some info.
         """
         super(SessionCmdSet, self).at_cmdset_creation()
-        #
         # any commands you add below will overload the default ones.
-        #
