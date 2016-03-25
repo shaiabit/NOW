@@ -254,27 +254,33 @@ class CmdPose(MuxCommand):
     automatically begin with your name.
     """
     key = "pose"
-    aliases = [":", ";", "emote"]
+    aliases = [':', ';', 'emote', 'verb']
     locks = "cmd:all()"
 
     def parse(self):
         """
-        Custom parse the cases where the emote
-        starts with some special letter, such
-        as 's, at which we don't want to separate
-        the caller's name and the emote with a
-        space.
+        Parse the cases where the emote starts with specific characters,
+        such as 's, at which we don't want to separate the character's
+        name and the emote with a space.
+        
+        Also parse for a verb and noun in a power pose of the form:
+        verb noun:pose
         """
-        args = self.args
-        if args and not args[0] in ["'", "’", ",", ";", ":", ".", "?", "!", "…"]:
+        args = unicode(self.args)
+        if len(args.split(':')) > 1:
+            verbnoun, pose = args.split(':', 1)
+            if len(verbnoun.split()) == 2:
+                verb, noun=verbnoun.split()
+                msg = "|r%s|n tries to %s the %s." % (self.caller.name, verb, noun)
+                self.caller.location.msg_contents(msg)
+                args = pose
+        
+        if args and not args[0] in ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]:
             args = " %s" % args.strip()
         self.args = args
 
     def func(self):
         "Hook function"
-        if not self.args:
-            msg = "What do you want to do?"
-            self.caller.msg(msg)
-        else:
-            msg = "%s%s" % (self.caller.name, self.args)
+        if self.args:
+            msg = "|c%s|n%s" % (self.caller.name, self.args)
             self.caller.location.msg_contents(msg)
