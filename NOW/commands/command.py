@@ -147,6 +147,46 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import utils, create, search, prettytable
 
 
+class CmdQuit(MuxPlayerCommand):
+    """
+    quit the game
+    Usage:
+      @quit
+    Switch:
+      all - disconnect all connected sessions
+    Gracefully disconnect your current session from the
+    game. Use the /all switch to disconnect from all sessions.
+    """
+    key = "@quit"
+    aliases = "quit"
+    locks = "cmd:all()"
+
+    def func(self):
+        "hook function"
+        player = self.player
+        bye = '|RDisconnecting|n'
+        exit_msg = 'Hope to see you again, soon.'
+
+        if 'all' in self.switches:
+            msg = bye + ' all sessions. ' + exit_msg
+            player.msg(msg, session=self.session)
+            for session in player.sessions.all():
+                player.disconnect_session_from_player(session)
+        else:
+            nsess = len(player.sessions.all())
+            if nsess == 2:
+                msg = bye + '. One session is still connected.' 
+                player.msg(msg, session=self.session)
+            elif nsess > 2:
+                msg = bye + ". %i sessions are still connected."
+                player.msg(msg % (nsess-1), session=self.session)
+            else:
+                # we are quitting the last available session
+                msg = bye + '. ' + exit_msg
+                player.msg(msg, session=self.session)
+            player.disconnect_session_from_player(self.session)
+
+
 class CmdWho(MuxPlayerCommand):
     """
     list who is currently online
