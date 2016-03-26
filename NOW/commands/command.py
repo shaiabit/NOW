@@ -239,22 +239,31 @@ class CmdWho(MuxPlayerCommand):
 
 class CmdPose(MuxCommand):
     """
-    strike a pose
+    Describe and/or attempt to trigger an action on an object.
+    The pose text will automatically begin with your name.
 
     Usage:
       pose <pose text>
       pose's <pose text>
 
-    Example:
-      pose is standing by the wall, smiling.
-       -> others will see:
-      Tom is standing by the wall, smiling.
+      pose <verb> <noun>:<pose text>
 
-    Describe an action being taken. The pose text will
-    automatically begin with your name.
+      try <verb> <noun>
+
+    Example:
+      > pose is standing by the tree, smiling.
+      Rulan is standing by the tree, smiling.
+
+      > pose get anvil:puts his back into it.
+      Rulan tries to get the anvil. He puts his back into it.
+      (optional success message if anvil is liftable.)
+
+      > try unlock door
+      Rulan tries to unlock the door.
+      (optional success message if door is unlocked.)
     """
     key = "pose"
-    aliases = [':', ';', 'emote', 'verb']
+    aliases = [':', ';', 'emote', 'try']
     locks = "cmd:all()"
 
     def parse(self):
@@ -265,8 +274,16 @@ class CmdPose(MuxCommand):
         
         Also parse for a verb and noun in a power pose of the form:
         verb noun:pose
+        
+        verb noun:
+
+        or using the try command, just
+        verb noun
         """
         args = unicode(self.args)
+        
+        if self.cmdstring == 'try':
+            args += ':'
         if len(args.split(':')) > 1:
             verbnoun, pose = args.split(':', 1)
             if len(verbnoun.split()) == 2:
