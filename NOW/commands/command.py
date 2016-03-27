@@ -40,7 +40,7 @@ class Command(BaseCommand):
     # optional
     # auto_help = False      # uncomment to deactive auto-help for this command.
     # arg_regex = r"\s.*?|$" # optional regex detailing how the part after
-                             # the cmdname must look to match this command.
+    # the cmdname must look to match this command.
 
     # (we don't implement hook method access() here, you don't need to
     #  modify that unless you want to change how the lock system works
@@ -175,17 +175,31 @@ class CmdQuit(MuxPlayerCommand):
         else:
             nsess = len(player.sessions.all())
             if nsess == 2:
-                msg = bye + '. One session is still connected.' 
+                msg = bye + '. One session is still connected.'
                 player.msg(msg, session=self.session)
             elif nsess > 2:
                 msg = bye + ". %i sessions are still connected."
-                player.msg(msg % (nsess-1), session=self.session)
+                player.msg(msg % (nsess - 1), session=self.session)
             else:
                 # we are quitting the last available session
                 msg = bye + '. ' + exit_msg
                 player.msg(msg, session=self.session)
             player.disconnect_session_from_player(self.session)
 
+
+class CmdVerb(MuxPlayerCommand):
+    """
+    Set a verb lock.
+    Usage:
+      @verb
+    """
+    key = "@verb"
+    locks = "cmd:all()"
+
+    def func(self):
+        """
+        """
+        self.caller.location.msg_contents("|_@verb|n")
 
 class CmdWho(MuxPlayerCommand):
     """
@@ -197,6 +211,7 @@ class CmdWho(MuxPlayerCommand):
     """
 
     key = "who"
+    aliases = "ws"
     locks = "cmd:all()"
 
     def func(self):
@@ -213,7 +228,6 @@ class CmdWho(MuxPlayerCommand):
             show_session_data = player.check_permstring("Immortals") or player.check_permstring("Wizards")
         else:
             show_session_data = False
-
 
         nplayers = (SESSIONS.player_count())
         if 'f' in self.switches:
@@ -244,33 +258,46 @@ class CmdWho(MuxPlayerCommand):
                                    isinstance(session.address, tuple) and session.address[0] or session.address])
             else:
                 # non privileged info - who/f by player
-
                 table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wLocation"])
                 for session in session_list:
                     if not session.logged_in:
                         continue
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
-                    player = session.get_player()
-                    puppet = session.get_puppet()
-                    location = puppet.location.key if puppet and puppet.location else "None"
-                    table.add_row([utils.crop(puppet.key if puppet else "- Unknown -", width=25),
+                    character = session.get_puppet()
+                    location = character.location.key if character and character.location else "None"
+                    table.add_row([utils.crop(character.key if character else "- Unknown -", width=25),
                                    utils.time_format(delta_conn, 0),
                                    utils.time_format(delta_cmd, 1),
                                    utils.crop(location, width=25)])
         else:
-            # unprivileged info - who
-            table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle"])
-            for session in session_list:
-                if not session.logged_in:
-                    continue
-                delta_cmd = time.time() - session.cmd_last_visible
-                delta_conn = time.time() - session.conn_time
-                player = session.get_player()
-                puppet = session.get_puppet()
-                table.add_row([utils.crop(puppet.key if puppet else "- Unknown -", width=25),
-                               utils.time_format(delta_conn, 0),
-                               utils.time_format(delta_cmd, 1)])
+            if 'species' in self.switches or self.cmdstring == 'ws':
+                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wSpecies"])
+                for session in session_list:
+                    character = session.get_puppet()
+                    my_character = self.caller.get_puppet(self.session)
+                    if not session.logged_in or character.location != my_character.location:
+                        continue
+                    delta_cmd = time.time() - session.cmd_last_visible
+                    delta_conn = time.time() - session.conn_time
+                    character = session.get_puppet()
+                    species = character.attributes.get('species', default='- None -')
+                    table.add_row([utils.crop(character.key if character else "- Unknown -", width=25),
+                                   utils.time_format(delta_conn, 0),
+                                   utils.time_format(delta_cmd, 1),
+                                   utils.crop(species, width=25)])
+            else:
+                # unprivileged info - who
+                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle"])
+                for session in session_list:
+                    if not session.logged_in:
+                        continue
+                    delta_cmd = time.time() - session.cmd_last_visible
+                    delta_conn = time.time() - session.conn_time
+                    character = session.get_puppet()
+                    table.add_row([utils.crop(character.key if character else "- Unknown -", width=25),
+                                   utils.time_format(delta_conn, 0),
+                                   utils.time_format(delta_cmd, 1)])
 
         isone = nplayers == 1
         string = "%s\n%s unique account%s logged in." % (table, "One" if isone else nplayers, "" if isone else "s")
@@ -321,18 +348,18 @@ class CmdPose(MuxCommand):
         verb noun
         """
         args = unicode(self.args)
-        
+
         if self.cmdstring == 'try':
             args += ':'
         if len(args.split(':')) > 1:
             verbnoun, pose = args.split(':', 1)
             if len(verbnoun.split()) == 2:
-                verb, noun=verbnoun.split()
+                verb, noun = verbnoun.split()
                 msg = "|r%s|n tries to %s the %s." % (self.caller.name, verb, noun)
                 self.caller.location.msg_contents(msg)
                 args = pose
-        
-        if args and not args[0] in ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]:
+
+        if args and not args[0] in ["-", "'", "â€™", ",", ";", ":", ".", "?", "!", "â€¦"]:
             args = " %s" % args.strip()
         self.args = args
 
