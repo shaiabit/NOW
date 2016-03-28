@@ -147,6 +147,36 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import utils, create, search, prettytable
 
 
+class CmdLook(MuxCommand):
+    """
+    look at location or object
+    Usage:
+      look
+      look <obj>
+      look *<player>
+    Observes your location or objects in your vicinity.
+    """
+    key = "look"
+    aliases = ["l", "ls"]
+    locks = "cmd:all()"
+    arg_regex = r"\s|$"
+
+    def func(self):
+        """
+        Handle looking at objects.
+        """
+        if not self.args:
+            target = self.caller.location
+            if not target:
+                self.caller.msg("You have no location to look at!")
+                return
+        else:
+            target = self.caller.search(self.args)
+            if not target:
+                return
+        self.msg(self.caller.at_look(target))
+
+
 class CmdQuit(MuxPlayerCommand):
     """
     quit the game
@@ -187,6 +217,41 @@ class CmdQuit(MuxPlayerCommand):
             player.disconnect_session_from_player(self.session)
 
 
+class CmdSay(MuxCommand):
+    """
+    speak as your character
+    Usage:
+      say <message>
+    Talk to those in your current location.
+    """
+
+    key = "say"
+    aliases = ['"', "'"]
+    locks = "cmd:all()"
+
+    def func(self):
+        "Run the say command"
+
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("Say what?")
+            return
+
+        speech = self.args
+
+        # calling the speech hook on the location
+        speech = caller.location.at_say(caller, speech)
+
+        # Feedback for the object doing the talking.
+        # caller.msg('You say, "%s{n"' % speech)
+
+        # Build the string to emit to neighbors.
+        emit_string = '|c%s|n says, "%s{n"' % (caller.name, speech)
+        caller.location.msg_contents(emit_string)
+        # caller.location.msg_contents(emit_string, exclude=caller)
+
+
 class CmdVerb(MuxPlayerCommand):
     """
     Set a verb lock.
@@ -198,8 +263,11 @@ class CmdVerb(MuxPlayerCommand):
 
     def func(self):
         """
+        Here's where the @verbing magic happens.
         """
-        self.caller.location.msg_contents("|_@verb|n")
+        my_char=self.caller.get_puppet(self.session)
+        if my_char and my_char.location:
+            my_char.location.msg_contents("|_@verb|n")
 
 class CmdWho(MuxPlayerCommand):
     """

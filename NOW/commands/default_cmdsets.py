@@ -11,13 +11,15 @@ To create new commands to populate the cmdset, see
 This module wraps the default command sets of Evennia; overloads them
 to add/remove commands from the default lineup. You can create your
 own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
-
 """
 
 from evennia import default_cmds
+from commands.command import CmdLook
 from commands.command import CmdQuit
 from commands.command import CmdPose
+from commands.command import CmdSay
 from commands.command import CmdWho
+from commands.command import CmdVerb
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -34,7 +36,9 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         """
         super(CharacterCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
+        self.add(CmdLook)
         self.add(CmdPose)
+        self.add(CmdSay)
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
@@ -52,8 +56,9 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         """
         super(PlayerCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
-        self.add(CmdWho)
         self.add(CmdQuit)
+        self.add(CmdWho)
+        self.add(CmdVerb)
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
