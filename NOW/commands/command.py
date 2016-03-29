@@ -407,32 +407,55 @@ class CmdPose(MuxCommand):
         such as 's, at which we don't want to separate the character's
         name and the emote with a space.
         
-        Also parse for a verb and noun in a power pose of the form:
+        Also parse for a verb and optional noun, which if blank is assumed
+        to be the character, in a power pose of the form:
         verb noun:pose
+        verb:pose
         
         verb noun:
+        verb:
 
         or using the try command, just
         verb noun
+        verb
         """
         args = unicode(self.args)
+        caller = self.caller
+        self.verb = None; self.obj = None
+        non_space_chars = ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if self.cmdstring == 'try':
             args += ':'
         if len(args.split(':')) > 1:
             verbnoun, pose = args.split(':', 1)
-            if len(verbnoun.split()) == 2:
-                verb, noun = verbnoun.split()
-                msg = "|r%s|n tries to %s the %s." % (self.caller.name, verb, noun)
-                self.caller.location.msg_contents(msg)
+            if 0 < len(verbnoun.split()) <= 2:
                 args = pose
-
-        if args and not args[0] in ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]:
-            args = " %s" % args.strip()
+                if len(verbnoun.split()) == 2:
+                    self.verb, noun = verbnoun.split()
+                else:
+                    self.verb = verbnoun.strip(); noun = 'me'
+                # Only checks the location - needs to check inventory, too.
+                self.obj = caller.search(noun, location=caller.location)
+        if args and not args[0] in non_space_chars:
+             args = " %s" % args.strip()
         self.args = args
 
     def func(self):
         "Hook function"
+        caller = self.caller
         if self.args:
-            msg = "|c%s|n%s" % (self.caller.name, self.args)
-            self.caller.location.msg_contents(msg)
+            msg = "|c%s|n%s" % (caller.name, self.args)
+            caller.location.msg_contents(msg)
+
+        if self.obj:
+            obj = self.obj
+            verb = self.verb
+            if obj.access(caller, verb):
+                msg = "|g%s|n is able to %s %s." % \
+                      (caller.name, verb, obj.name)
+                caller.location.msg_contents(msg)
+            else:
+                msg = "|r%s|n fails to %s %s." % \
+                      (caller.name, verb, obj.name)
+                caller.location.msg_contents(msg, exclude=caller)
+                caller.msg("You failed to %s %s." % (verb, obj.name))
