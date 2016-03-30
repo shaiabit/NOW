@@ -265,9 +265,27 @@ class CmdVerb(MuxPlayerCommand):
         """
         Here's where the @verbing magic happens.
         """
-        my_char=self.caller.get_puppet(self.session)
+        my_char = self.caller.get_puppet(self.session)
+        args = self.args
         if my_char and my_char.location:
-            my_char.location.msg_contents("|_@verb|n")
+            obj_list = my_char.search(args, location=[my_char, my_char.location]) if args else my_char
+            if obj_list:
+                obj = obj_list
+                verb_msg = "Verbs of %s: " % obj_list
+            else:
+                obj = my_char
+                verb_msg = "Verbs on you: "
+            verbs = obj.locks
+            collector = ''
+            for verb in ("%s" % verbs).split(';'):
+                element = verb.split(':')[0]
+                if obj.access(self.caller, element):
+                    collector += "|g%s " % element
+                else:
+                    collector += "|r%s " % element
+            collector = collector + '|n'
+            my_char.msg(verb_msg + "%s" % collector)
+
 
 class CmdWho(MuxPlayerCommand):
     """
@@ -277,7 +295,6 @@ class CmdWho(MuxPlayerCommand):
     Shows who is currently online. Use the /f switch to see
     character locations, and more info for those with permissions.
     """
-
     key = "who"
     aliases = "ws"
     locks = "cmd:all()"
@@ -421,23 +438,24 @@ class CmdPose(MuxCommand):
         """
         args = unicode(self.args)
         caller = self.caller
-        self.verb = None; self.obj = None
+        self.verb = None;
+        self.obj = None
         non_space_chars = ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if self.cmdstring == 'try':
-            args += ':'
-        if len(args.split(':')) > 1:
-            verbnoun, pose = args.split(':', 1)
+            args += '::'
+        if len(args.split('::')) > 1:
+            verbnoun, pose = args.split('::', 1)
             if 0 < len(verbnoun.split()) <= 2:
                 args = pose
                 if len(verbnoun.split()) == 2:
                     self.verb, noun = verbnoun.split()
                 else:
-                    self.verb = verbnoun.strip(); noun = 'me'
-                # Only checks the location - needs to check inventory, too.
-                self.obj = caller.search(noun, location=caller.location)
+                    self.verb = verbnoun.strip();
+                    noun = 'me'
+                self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
-             args = " %s" % args.strip()
+            args = " %s" % args.strip()
         self.args = args
 
     def func(self):
@@ -451,9 +469,12 @@ class CmdPose(MuxCommand):
             obj = self.obj
             verb = self.verb
             if obj.access(caller, verb):
-                msg = "|g%s|n is able to %s %s." % \
-                      (caller.name, verb, obj.name)
-                caller.location.msg_contents(msg)
+                if verb == 'get':
+                    caller.execute_cmd(verb + ' ' + obj.name)
+                else:
+                    msg = "|g%s|n is able to %s %s." % \
+                          (caller.name, verb, obj.name)
+                    caller.location.msg_contents(msg)
             else:
                 msg = "|r%s|n fails to %s %s." % \
                       (caller.name, verb, obj.name)
