@@ -20,6 +20,9 @@ from commands.command import CmdPose
 from commands.command import CmdSay
 from commands.command import CmdWho
 from commands.command import CmdVerb
+from commands.command import CmdOoc
+from commands.command import CmdSpoof
+from commands.command import CmdAccess
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -39,6 +42,8 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdLook)
         self.add(CmdPose)
         self.add(CmdSay)
+        self.add(CmdOoc)
+        self.add(CmdSpoof)
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
@@ -59,6 +64,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdQuit)
         self.add(CmdWho)
         self.add(CmdVerb)
+        self.add(CmdAccess)
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):

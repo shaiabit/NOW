@@ -217,6 +217,109 @@ class CmdQuit(MuxPlayerCommand):
             player.disconnect_session_from_player(self.session)
 
 
+class CmdAccess(MuxCommand):
+    """
+    show your current game access
+    Usage:
+      access
+    This command shows you the permission hierarchy and
+    which permission groups you are a member of.
+    """
+
+    key = "@access"
+    locks = "cmd:all()"
+    arg_regex = r"$"
+
+    def func(self):
+        "Load the permission groups"
+
+        caller = self.caller
+        hierarchy_full = settings.PERMISSION_HIERARCHY
+        string = "\n{wPermission Hierarchy{n (climbing):\n %s" % ", ".join(hierarchy_full)
+        #hierarchy = [p.lower() for p in hierarchy_full]
+
+        if self.caller.player.is_superuser:
+            cperms = "<Superuser>"
+            pperms = "<Superuser>"
+        else:
+            cperms = ", ".join(caller.permissions.all())
+            pperms = ", ".join(caller.player.permissions.all())
+
+        string += "\n{wYour access{n:"
+        string += "\nCharacter {c%s{n: %s" % (caller.key, cperms)
+        if hasattr(caller, 'player'):
+            string += "\nPlayer {c%s{n: %s" % (caller.player.key, pperms)
+        caller.msg(string)
+
+
+class CmdOoc(MuxCommand):
+    """
+    Send an out-of-character message to your current location.
+    Usage:
+      ooc <message>
+      ooc :<message>
+      ooc "<message>
+    """
+
+    key = "ooc"
+    aliases = ['_']
+    locks = "cmd:all()"
+
+    def func(self):
+        "Run the ooc command"
+
+        caller = self.caller
+        args = self.args.strip
+        emit_string = ''
+
+        if not args:
+            caller.msg("help ooc")
+            return
+        elif ['"', "'"] in args[0]:
+            msg = args[1:]
+            # calling the speech hook on the location
+            msg = caller.location.at_say(caller, msg)
+            # Build the string to emit - or better, pass to say/ooc
+            emit_string = '|c[OOC]|n |c%s|n says, "%s"' % (caller.name, msg)
+        elif [':', ';'] in args[0]:
+            msg = args[1:]
+            # Build the string to emit - or better, pass to pose/ooc
+            emit_string = '|c[OOC]|n |c%s|n %s' % (caller.name, msg)
+        else:
+            # Build the string to emit
+            emit_string = '|c[OOC %s]|n %s' % (caller.name, msg)
+
+        caller.location.msg_contents(emit_string)
+
+
+class CmdSpoof(MuxCommand):
+    """
+    Send a spoofed message to your current location.
+    Usage:
+      spoof <message>
+    """
+
+    key = "spoof"
+    aliases = ['~', '`', 'sp']
+    locks = "cmd:all()"
+
+    def func(self):
+        "Run the spoof command"
+
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("help spoof")
+            return
+
+        # calling the speech hook on the location
+        spoof = caller.location.at_say(caller, self.args)
+
+        # Build the string to emit
+        emit_string = '|m%s|n' % spoof
+        caller.location.msg_contents(emit_string)
+
+
 class CmdSay(MuxCommand):
     """
     speak as your character
@@ -235,7 +338,7 @@ class CmdSay(MuxCommand):
         caller = self.caller
 
         if not self.args:
-            caller.msg("Say what?")
+            caller.msg("help say")
             return
 
         speech = self.args
@@ -244,10 +347,10 @@ class CmdSay(MuxCommand):
         speech = caller.location.at_say(caller, speech)
 
         # Feedback for the object doing the talking.
-        # caller.msg('You say, "%s{n"' % speech)
+        # caller.msg('You say, "%s|n"' % speech)
 
         # Build the string to emit to neighbors.
-        emit_string = '|c%s|n says, "%s{n"' % (caller.name, speech)
+        emit_string = '|c%s|n says, "%s|n"' % (caller.name, speech)
         caller.location.msg_contents(emit_string)
         # caller.location.msg_contents(emit_string, exclude=caller)
 
@@ -256,8 +359,9 @@ class CmdVerb(MuxPlayerCommand):
     """
     Set a verb lock.
     Usage:
-      @verb
+      @verb <object>
     """
+
     key = "@verb"
     locks = "cmd:all()"
 
@@ -265,6 +369,7 @@ class CmdVerb(MuxPlayerCommand):
         """
         Here's where the @verbing magic happens.
         """
+
         my_char = self.caller.get_puppet(self.session)
         args = self.args
         if my_char and my_char.location:
