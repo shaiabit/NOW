@@ -144,7 +144,7 @@ import time
 from django.conf import settings
 from evennia.server.sessionhandler import SESSIONS
 from evennia.commands.default.muxcommand import MuxPlayerCommand
-from evennia.utils import utils, create, search, prettytable
+from evennia.utils import ansi, utils, create, search, prettytable
 
 
 class CmdLook(MuxCommand):
@@ -221,7 +221,7 @@ class CmdAccess(MuxCommand):
     """
     show your current game access
     Usage:
-      access
+      @access
     This command shows you the permission hierarchy and
     which permission groups you are a member of.
     """
@@ -269,27 +269,19 @@ class CmdOoc(MuxCommand):
         "Run the ooc command"
 
         caller = self.caller
-        args = self.args.strip
+        args = self.args.strip()
+        # args = args
         emit_string = ''
 
         if not args:
-            caller.msg("help ooc")
+            caller.execute_cmd("help ooc")
             return
-        elif ['"', "'"] in args[0]:
-            msg = args[1:]
-            # calling the speech hook on the location
-            msg = caller.location.at_say(caller, msg)
-            # Build the string to emit - or better, pass to say/ooc
-            emit_string = '|c[OOC]|n |c%s|n says, "%s"' % (caller.name, msg)
-        elif [':', ';'] in args[0]:
-            msg = args[1:]
-            # Build the string to emit - or better, pass to pose/ooc
-            emit_string = '|c[OOC]|n |c%s|n %s' % (caller.name, msg)
+        elif args[0] == '"' or args[0] == "'":
+            caller.execute_cmd('say/o ' + caller.location.at_say(caller, args[1:]))
+        elif args[0] == ':' or args[0] == ';':
+            caller.execute_cmd('pose/o %s' % args[1:])
         else:
-            # Build the string to emit
-            emit_string = '|c[OOC %s]|n %s' % (caller.name, msg)
-
-        caller.location.msg_contents(emit_string)
+            caller.location.msg_contents('[OOC |c%s|n] %s' % (caller.name, args))
 
 
 class CmdSpoof(MuxCommand):
@@ -315,6 +307,8 @@ class CmdSpoof(MuxCommand):
         # calling the speech hook on the location
         spoof = caller.location.at_say(caller, self.args)
 
+        ansi.parse_ansi(self.args, strip_ansi=nomarkup)
+
         # Build the string to emit
         emit_string = '|m%s|n' % spoof
         caller.location.msg_contents(emit_string)
@@ -322,10 +316,11 @@ class CmdSpoof(MuxCommand):
 
 class CmdSay(MuxCommand):
     """
-    speak as your character
+    Speak as your character.
     Usage:
       say <message>
-    Talk to those in your current location.
+    Switch:
+      /o or /ooc - Out-of-character to the room.
     """
 
     key = "say"
@@ -341,18 +336,13 @@ class CmdSay(MuxCommand):
             caller.msg("help say")
             return
 
-        speech = self.args
+        speech = caller.location.at_say(caller, self.args)
 
-        # calling the speech hook on the location
-        speech = caller.location.at_say(caller, speech)
-
-        # Feedback for the object doing the talking.
-        # caller.msg('You say, "%s|n"' % speech)
-
-        # Build the string to emit to neighbors.
-        emit_string = '|c%s|n says, "%s|n"' % (caller.name, speech)
+        if 'o' in self.switches or 'ooc' in self.switches:
+            emit_string = '[OOC]|n |c%s|n says, "%s"' % (caller.name, speech)
+        else:
+            emit_string = '|c%s|n says, "%s|n"' % (caller.name, speech)
         caller.location.msg_contents(emit_string)
-        # caller.location.msg_contents(emit_string, exclude=caller)
 
 
 class CmdVerb(MuxPlayerCommand):
@@ -384,7 +374,8 @@ class CmdVerb(MuxPlayerCommand):
             collector = ''
             for verb in ("%s" % verbs).split(';'):
                 element = verb.split(':')[0]
-                if obj.access(self.caller, element):
+                # if obj.access(self.caller, element):
+                if obj.access(my_char, element):
                     collector += "|g%s " % element
                 else:
                     collector += "|r%s " % element
@@ -420,7 +411,7 @@ class CmdWho(MuxPlayerCommand):
             show_session_data = False
 
         nplayers = (SESSIONS.player_count())
-        if 'f' in self.switches:
+        if 'f' in self.switches or 'full' in self.switches:
             if show_session_data:
                 # privileged info - who/f by wizard or immortal
                 table = prettytable.PrettyTable(["{wPlayer Name",
@@ -461,7 +452,7 @@ class CmdWho(MuxPlayerCommand):
                                    utils.time_format(delta_cmd, 1),
                                    utils.crop(location, width=25)])
         else:
-            if 'species' in self.switches or self.cmdstring == 'ws':
+            if 's' in self.switches or 'species' in self.switches or self.cmdstring == 'ws':
                 table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wSpecies"])
                 for session in session_list:
                     character = session.get_puppet()
@@ -506,6 +497,8 @@ class CmdPose(MuxCommand):
       pose <verb> <noun>:<pose text>
 
       try <verb> <noun>
+    Switch:
+      /o or /ooc - Out-of-character to the room.
 
     Example:
       > pose is standing by the tree, smiling.
@@ -519,6 +512,7 @@ class CmdPose(MuxCommand):
       Rulan tries to unlock the door.
       (optional success message if door is unlocked.)
     """
+
     key = "pose"
     aliases = [':', ';', 'emote', 'try']
     locks = "cmd:all()"
@@ -541,11 +535,13 @@ class CmdPose(MuxCommand):
         verb noun
         verb
         """
+
+        super(CmdPose, self).parse()
         args = unicode(self.args)
         caller = self.caller
-        self.verb = None;
+        self.verb = None
         self.obj = None
-        non_space_chars = ["-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
+        non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if self.cmdstring == 'try':
             args += '::'
@@ -565,9 +561,13 @@ class CmdPose(MuxCommand):
 
     def func(self):
         "Hook function"
+
         caller = self.caller
         if self.args:
-            msg = "|c%s|n%s" % (caller.name, self.args)
+            if 'o' in self.switches or 'ooc' in self.switches:
+                msg = '[OOC]|n |c%s|n%s' % (caller.name, self.args)
+            else:
+                msg = "|c%s|n%s" % (caller.name, self.args)
             caller.location.msg_contents(msg)
 
         if self.obj:
