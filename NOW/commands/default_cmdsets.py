@@ -14,15 +14,8 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
 from evennia import default_cmds
-from commands.command import CmdLook
-from commands.command import CmdQuit
-from commands.command import CmdPose
-from commands.command import CmdSay
-from commands.command import CmdWho
-from commands.command import CmdVerb
-from commands.command import CmdOoc
-from commands.command import CmdSpoof
-from commands.command import CmdAccess
+from commands.command import CmdLook, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb
+from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -65,6 +58,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdWho)
         self.add(CmdVerb)
         self.add(CmdAccess)
+        self.add(CmdChannels)
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):

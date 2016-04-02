@@ -139,8 +139,86 @@ class MuxCommand(default_cmds.MuxCommand):
         super(MuxCommand, self).func()
 
 
-from builtins import range
+from past.builtins import cmp
+from django.conf import settings
+from evennia.comms.models import ChannelDB, Msg
+#from evennia.comms import irc, imc2, rss
+from evennia.players.models import PlayerDB
+from evennia.players import bots
+from evennia.comms.channelhandler import CHANNELHANDLER
+from evennia.utils import create, utils, evtable
+from evennia.utils.utils import make_iter
+from evennia.commands.default.muxcommand import MuxCommand, MuxPlayerCommand
+
+_DEFAULT_WIDTH = settings.CLIENT_DEFAULT_WIDTH
+
+class CmdChannels(MuxPlayerCommand):
+    """
+    list all channels available to you
+    Usage:
+      @chan
+      @channel
+      @channels
+    Lists all channels available to you, whether you listen to them or not.
+    Use /list to only view your current channel subscriptions.
+    Use /join or /leave to join and leave channels
+    """
+    key = "@channel"
+    aliases = ["@chan", "@channels"]
+    help_category = "Communication"
+    locks = "cmd: not pperm(channel_banned)"
+
+    def func(self):
+        "Implement function"
+
+        caller = self.caller
+
+        # all channels we have available to listen to
+        channels = [chan for chan in ChannelDB.objects.get_all_channels()
+                    if chan.access(caller, 'listen')]
+        if not channels:
+            self.msg("No channels available.")
+            return
+        # all channel we are already subscribed to
+        subs = ChannelDB.objects.get_subscriptions(caller)
+
+        if self.cmdstring == "comlist":
+            # just display the subscribed channels with no extra info
+            comtable = evtable.EvTable("{wchannel{n", "{wmy aliases{n",
+                                       "{wdescription{n", align="l", maxwidth=_DEFAULT_WIDTH)
+            #comtable = prettytable.PrettyTable(["{wchannel", "{wmy aliases", "{wdescription"])
+            for chan in subs:
+                clower = chan.key.lower()
+                nicks = caller.nicks.get(category="channel", return_obj=True)
+                comtable.add_row(*["%s%s" % (chan.key, chan.aliases.all() and
+                                  "(%s)" % ",".join(chan.aliases.all()) or ""),
+                                  "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
+                                  if nick and nick.strvalue.lower() == clower),
+                                  chan.db.desc])
+            caller.msg("\n{wChannel subscriptions{n (use {w@channels{n to list all, "
+                       "{waddcom{n/{wdelcom{n to sub/unsub):{n\n%s" % comtable)
+        else:
+            # full listing (of channels caller is able to listen to)
+            comtable = evtable.EvTable("{wsub{n", "{wchannel{n", "{wmy aliases{n",
+                                       "{wlocks{n", "{wdescription{n", maxwidth=_DEFAULT_WIDTH)
+            #comtable = prettytable.PrettyTable(["{wsub", "{wchannel", "{wmy aliases", "{wlocks", "{wdescription"])
+            for chan in channels:
+                clower = chan.key.lower()
+                nicks = caller.nicks.get(category="channel", return_obj=True)
+                nicks = nicks or []
+                comtable.add_row(*[chan in subs and "{gYes{n" or "{rNo{n",
+                                  "%s%s" % (chan.key, chan.aliases.all() and
+                                  "(%s)" % ",".join(chan.aliases.all()) or ""),
+                                  "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
+                                  if nick.strvalue.lower() == clower),
+                                  str(chan.locks),
+                                  chan.db.desc])
+            caller.msg("\n{wAvailable channels{n" +
+                       " (use {wcomlist{n,{waddcom{n and {wdelcom{n to manage subscriptions):\n%s" % comtable)
+
+
 import time
+from builtins import range
 from django.conf import settings
 from evennia.server.sessionhandler import SESSIONS
 from evennia.commands.default.muxcommand import MuxPlayerCommand
@@ -301,13 +379,13 @@ class CmdSpoof(MuxCommand):
         caller = self.caller
 
         if not self.args:
-            caller.msg("help spoof")
+            caller.execute_cmd("help spoof")
             return
 
         # calling the speech hook on the location
         spoof = caller.location.at_say(caller, self.args)
 
-        ansi.parse_ansi(self.args, strip_ansi=nomarkup)
+        # ansi.parse_ansi(self.args, strip_ansi=nomarkup)
 
         # Build the string to emit
         emit_string = '|m%s|n' % spoof
@@ -333,7 +411,7 @@ class CmdSay(MuxCommand):
         caller = self.caller
 
         if not self.args:
-            caller.msg("help say")
+            caller.execute_cmd("help say")
             return
 
         speech = caller.location.at_say(caller, self.args)
@@ -374,11 +452,12 @@ class CmdVerb(MuxPlayerCommand):
             collector = ''
             for verb in ("%s" % verbs).split(';'):
                 element = verb.split(':')[0]
-                # if obj.access(self.caller, element):
+                name = element[2:] if element[:2] == 'v-' else element
+                # obj lock checked against character
                 if obj.access(my_char, element):
-                    collector += "|g%s " % element
+                    collector += "|g%s " % name
                 else:
-                    collector += "|r%s " % element
+                    collector += "|r%s " % name
             collector = collector + '|n'
             my_char.msg(verb_msg + "%s" % collector)
 
@@ -542,6 +621,9 @@ class CmdPose(MuxCommand):
         self.verb = None
         self.obj = None
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
+
+        if 'magnet' in self.switches or 'm' in self.switches:
+            caller.msg("Pose magnet glyphs are %s." % non_space_chars)
 
         if self.cmdstring == 'try':
             args += '::'
