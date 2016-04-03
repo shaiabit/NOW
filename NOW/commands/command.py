@@ -161,7 +161,7 @@ class CmdChannels(MuxPlayerCommand):
       @channels
     Lists all channels available to you, whether you listen to them or not.
     Use /list to only view your current channel subscriptions.
-    Use /join or /leave to join and leave channels
+    Use /join or /part to join or depart channels.
     """
     key = "@channel"
     aliases = ["@chan", "@channels"]
@@ -178,15 +178,16 @@ class CmdChannels(MuxPlayerCommand):
                     if chan.access(caller, 'listen')]
         if not channels:
             self.msg("No channels available.")
+            # Suggest use of /join switch and brief-list join-able channels.
             return
         # all channel we are already subscribed to
         subs = ChannelDB.objects.get_subscriptions(caller)
 
-        if self.cmdstring == "comlist":
+        if 'list' in self.switches:
             # just display the subscribed channels with no extra info
-            comtable = evtable.EvTable("{wchannel{n", "{wmy aliases{n",
-                                       "{wdescription{n", align="l", maxwidth=_DEFAULT_WIDTH)
-            #comtable = prettytable.PrettyTable(["{wchannel", "{wmy aliases", "{wdescription"])
+            comtable = evtable.EvTable("|wchannel{n", "|wmy aliases{n",
+                                       "|wdescription{n", align="l", maxwidth=_DEFAULT_WIDTH)
+            #comtable = prettytable.PrettyTable(["|wchannel", "|wmy aliases", "|wdescription"])
             for chan in subs:
                 clower = chan.key.lower()
                 nicks = caller.nicks.get(category="channel", return_obj=True)
@@ -195,13 +196,17 @@ class CmdChannels(MuxPlayerCommand):
                                   "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
                                   if nick and nick.strvalue.lower() == clower),
                                   chan.db.desc])
-            caller.msg("\n{wChannel subscriptions{n (use {w@channels{n to list all, "
-                       "{waddcom{n/{wdelcom{n to sub/unsub):{n\n%s" % comtable)
+            caller.msg("\n|wChannel subscriptions{n (use |w@channels{n to list all, "
+                       "|waddcom{n/|wdelcom{n to sub/unsub):{n\n%s" % comtable)
+        elif 'join' in self.switches:
+            caller.msg('Join a channel or list of channels.')
+        elif 'part' in self.switches:
+            caller.msg('Part a channel or list of channels.')
         else:
             # full listing (of channels caller is able to listen to)
-            comtable = evtable.EvTable("{wsub{n", "{wchannel{n", "{wmy aliases{n",
-                                       "{wlocks{n", "{wdescription{n", maxwidth=_DEFAULT_WIDTH)
-            #comtable = prettytable.PrettyTable(["{wsub", "{wchannel", "{wmy aliases", "{wlocks", "{wdescription"])
+            comtable = evtable.EvTable("|wsub{n", "|wchannel{n", "|wmy aliases{n",
+                                       "|wlocks{n", "|wdescription{n", maxwidth=_DEFAULT_WIDTH)
+            #comtable = prettytable.PrettyTable(["|wsub", "|wchannel", "|wmy aliases", "|wlocks", "|wdescription"])
             for chan in channels:
                 clower = chan.key.lower()
                 nicks = caller.nicks.get(category="channel", return_obj=True)
@@ -213,8 +218,8 @@ class CmdChannels(MuxPlayerCommand):
                                   if nick.strvalue.lower() == clower),
                                   str(chan.locks),
                                   chan.db.desc])
-            caller.msg("\n{wAvailable channels{n" +
-                       " (use {wcomlist{n,{waddcom{n and {wdelcom{n to manage subscriptions):\n%s" % comtable)
+            caller.msg("\n|wAvailable channels{n" +
+                       " (use |wcomlist{n,|waddcom{n and |wdelcom{n to manage subscriptions):\n%s" % comtable)
 
 
 import time
@@ -296,6 +301,12 @@ class CmdQuit(MuxPlayerCommand):
 
 
 class CmdAccess(MuxCommand):
+    "Removing"
+
+    key = ''
+    locks = "cmd:not all()"
+
+class CmdAccessnew(MuxCommand):
     """
     show your current game access
     Usage:
@@ -313,7 +324,7 @@ class CmdAccess(MuxCommand):
 
         caller = self.caller
         hierarchy_full = settings.PERMISSION_HIERARCHY
-        string = "\n{wPermission Hierarchy{n (climbing):\n %s" % ", ".join(hierarchy_full)
+        string = "\n|wPermission Hierarchy{n (climbing):\n %s" % ", ".join(hierarchy_full)
         #hierarchy = [p.lower() for p in hierarchy_full]
 
         if self.caller.player.is_superuser:
@@ -323,7 +334,7 @@ class CmdAccess(MuxCommand):
             cperms = ", ".join(caller.permissions.all())
             pperms = ", ".join(caller.player.permissions.all())
 
-        string += "\n{wYour access{n:"
+        string += "\n|wYour access{n:"
         string += "\nCharacter {c%s{n: %s" % (caller.key, cperms)
         if hasattr(caller, 'player'):
             string += "\nPlayer {c%s{n: %s" % (caller.player.key, pperms)
@@ -348,8 +359,6 @@ class CmdOoc(MuxCommand):
 
         caller = self.caller
         args = self.args.strip()
-        # args = args
-        emit_string = ''
 
         if not args:
             caller.execute_cmd("help ooc")
@@ -493,14 +502,14 @@ class CmdWho(MuxPlayerCommand):
         if 'f' in self.switches or 'full' in self.switches:
             if show_session_data:
                 # privileged info - who/f by wizard or immortal
-                table = prettytable.PrettyTable(["{wPlayer Name",
-                                                 "{wOn for",
-                                                 "{wIdle",
-                                                 "{wCharacter",
-                                                 "{wRoom",
-                                                 "{wCmds",
-                                                 "{wProtocol",
-                                                 "{wHost"])
+                table = prettytable.PrettyTable(["|wPlayer Name",
+                                                 "|wOn for",
+                                                 "|wIdle",
+                                                 "|wCharacter",
+                                                 "|wRoom",
+                                                 "|wCmds",
+                                                 "|wProtocol",
+                                                 "|wHost"])
                 for session in session_list:
                     if not session.logged_in: continue
                     delta_cmd = time.time() - session.cmd_last_visible
@@ -518,7 +527,7 @@ class CmdWho(MuxPlayerCommand):
                                    isinstance(session.address, tuple) and session.address[0] or session.address])
             else:
                 # non privileged info - who/f by player
-                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wLocation"])
+                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wLocation"])
                 for session in session_list:
                     if not session.logged_in:
                         continue
@@ -532,7 +541,7 @@ class CmdWho(MuxPlayerCommand):
                                    utils.crop(location, width=25)])
         else:
             if 's' in self.switches or 'species' in self.switches or self.cmdstring == 'ws':
-                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle", "{wSpecies"])
+                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wSpecies"])
                 for session in session_list:
                     character = session.get_puppet()
                     my_character = self.caller.get_puppet(self.session)
@@ -548,7 +557,7 @@ class CmdWho(MuxPlayerCommand):
                                    utils.crop(species, width=25)])
             else:
                 # unprivileged info - who
-                table = prettytable.PrettyTable(["{wCharacter", "{wOn for", "{wIdle"])
+                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle"])
                 for session in session_list:
                     if not session.logged_in:
                         continue
@@ -583,7 +592,7 @@ class CmdPose(MuxCommand):
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.
 
-      > pose get anvil:puts his back into it.
+      > pose get anvil::puts his back into it.
       Rulan tries to get the anvil. He puts his back into it.
       (optional success message if anvil is liftable.)
 
@@ -604,11 +613,11 @@ class CmdPose(MuxCommand):
         
         Also parse for a verb and optional noun, which if blank is assumed
         to be the character, in a power pose of the form:
-        verb noun:pose
-        verb:pose
+        verb noun::pose
+        verb::pose
         
-        verb noun:
-        verb:
+        verb noun::
+        verb::
 
         or using the try command, just
         verb noun
@@ -652,11 +661,16 @@ class CmdPose(MuxCommand):
                 msg = "|c%s|n%s" % (caller.name, self.args)
             caller.location.msg_contents(msg)
 
+#    def at_post_command(self):
+#        "Verb response here."
+
+#        super(CmdPose, self).at_post_command()
         if self.obj:
             obj = self.obj
             verb = self.verb
+            caller = self.caller
             if obj.access(caller, verb):
-                if verb == 'get':
+                if verb == 'get' or verb == 'drop':
                     caller.execute_cmd(verb + ' ' + obj.name)
                 else:
                     msg = "|g%s|n is able to %s %s." % \
