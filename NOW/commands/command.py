@@ -152,6 +152,30 @@ from evennia.commands.default.muxcommand import MuxCommand, MuxPlayerCommand
 
 _DEFAULT_WIDTH = settings.CLIENT_DEFAULT_WIDTH
 
+
+def find_channel(caller, channelname, silent=False, noaliases=False):
+    """
+    Helper function for searching for a single channel with
+    some error handling.
+    """
+    channels = ChannelDB.objects.channel_search(channelname)
+    if not channels:
+        if not noaliases:
+            channels = [chan for chan in ChannelDB.objects.get_all_channels()
+                        if channelname in chan.aliases.all()]
+        if channels:
+            return channels[0]
+        if not silent:
+            caller.msg("Channel '%s' not found." % channelname)
+        return None
+    elif len(channels) > 1:
+        matches = ", ".join(["%s(%s)" % (chan.key, chan.id) for chan in channels])
+        if not silent:
+            caller.msg("Multiple channels match (be more specific): \n%s" % matches)
+        return None
+    return channels[0]
+
+
 class CmdChannels(MuxPlayerCommand):
     """
     list all channels available to you
@@ -172,6 +196,7 @@ class CmdChannels(MuxPlayerCommand):
         "Implement function"
 
         caller = self.caller
+        args = self.args
 
         # all channels we have available to listen to
         channels = [chan for chan in ChannelDB.objects.get_all_channels()
@@ -184,10 +209,138 @@ class CmdChannels(MuxPlayerCommand):
         subs = ChannelDB.objects.get_subscriptions(caller)
 
         if 'list' in self.switches:
-            # just display the subscribed channels with no extra info
-            comtable = evtable.EvTable("|wchannel{n", "|wmy aliases{n",
-                                       "|wdescription{n", align="l", maxwidth=_DEFAULT_WIDTH)
-            #comtable = prettytable.PrettyTable(["|wchannel", "|wmy aliases", "|wdescription"])
+            # full listing (of channels caller is able to listen to)
+            comtable = evtable.EvTable("|wsub|n", "|wchannel|n", "|wmy aliases|n",
+                                       "|wlocks|n", "|wdescription|n", maxwidth=_DEFAULT_WIDTH)
+            #comtable = prettytable.PrettyTable(["|wsub", "|wchannel", "|wmy aliases", "|wlocks", "|wdescription"])
+            for chan in channels:
+                clower = chan.key.lower()
+                nicks = caller.nicks.get(category="channel", return_obj=True)
+                nicks = nicks or []
+                comtable.add_row(*[chan in subs and "|gYes|n" or "|rNo|n",
+                                  "%s%s" % (chan.key, chan.aliases.all() and
+                                  "(%s)" % ",".join(chan.aliases.all()) or ""),
+                                  "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
+                                  if nick.strvalue.lower() == clower),
+                                  str(chan.locks),
+                                  chan.db.desc])
+            caller.msg("\n|wAvailable channels|n" +
+                       " (Use |w/list|n,|w/join|n and |w/part|n to manage received channels.):\n%s" % comtable)
+        elif 'join' in self.switches:
+            if not args:
+                self.msg("Usage: %s/join [alias =] channelname." % self.cmdstring)
+                return
+
+            if self.rhs: # rhs holds the channelname
+                channelname = self.rhs
+                alias = self.lhs
+            else:
+                channelname = args
+                alias = None
+
+            channel = find_channel(caller, channelname)
+            if not channel:
+                # custom search method handles errors.
+                return
+
+            # check permissions
+            if not channel.access(caller, 'listen'):
+                self.msg("%s: You are not able to listen to this channel." % channel.key)
+                return
+
+            string = ''
+            if not channel.has_connection(caller):
+                # we want to connect as well.
+                if not channel.connect(caller):
+                    # if this would have returned True, the player is connected
+                    self.msg("%s: You are not able to join this channel." % channel.key)
+                    return
+                else:
+                    string += "You now listen to channel %s. " % channel.key
+            else:
+                string += "You already receive channel %s." % channel.key
+
+            if alias:
+                # create a nick and add it to the caller.
+                caller.nicks.add(alias, channel.key, category="channel")
+                string += " You can now refer to the channel %s with the alias '%s'."
+                self.msg(string % (channel.key, alias))
+            else:
+                string += " No alias added."
+            self.msg(string)
+        elif 'part' in self.switches:
+            if not args:
+                self.msg("Usage: %s/part <alias or channel>" % self.cmdstring)
+                return
+            ostring = self.args.lower()
+
+            channel = find_channel(caller, ostring, silent=True, noaliases=True)
+            if channel:
+                # we have given a channel name - unsubscribe
+                if not channel.has_connection(caller):
+                    self.msg("You are not listening to that channel.")
+                    return
+                chkey = channel.key.lower()
+                # find all nicks linked to this channel and delete them
+                for nick in [nick for nick in make_iter(caller.nicks.get(category="channel", return_obj=True))
+                             if nick and nick.strvalue.lower() == chkey]:
+                    nick.delete()
+                disconnect = channel.disconnect(caller)
+                if disconnect:
+                    self.msg("You stop receiving channel '%s'. Any aliases were removed." % channel.key)
+                return
+            else:
+                # we are removing a channel nick
+                channame = caller.nicks.get(key=ostring, category="channel")
+                channel = find_channel(caller, channame, silent=True)
+                if not channel:
+                    self.msg("No channel with alias '%s' was found." % ostring)
+                else:
+                    if caller.nicks.get(ostring, category="channel"):
+                        caller.nicks.remove(ostring, category="channel")
+                        self.msg("Your alias '%s' for channel %s was cleared." % (ostring, channel.key))
+                    else:
+                        self.msg("You had no such alias defined for this channel.")
+        elif 'who' in self.switches:
+            channel = find_channel(self.caller, self.lhs)
+            if not channel:
+                return
+            if not channel.access(self.caller, "control"):
+                string = "You do not control this channel."
+                self.msg(string)
+                return
+            string = "\n|CChannel receivers|n"
+            string += " of |w%s:|n " % channel.key
+            subs = channel.db_subscriptions.all()
+            if subs:
+                string += ", ".join([player.key for player in subs])
+            else:
+                string += "<None>"
+            self.msg(string.strip())
+        elif 'lock' in self.switches:
+            if not self.args:
+                self.msg("Usage: %s/lock <alias or channel>" % self.cmdstring)
+                return
+            channel = find_channel(self.caller, self.lhs)
+            if not channel:
+                return
+            if not self.rhs: # no =, so just view the current locks
+                string = "Current locks on %s:" % channel.key
+                string = "%s %s" % (string, channel.locks)
+                self.msg(string)
+                return
+            # we want to add/change a lock.
+            if not channel.access(self.caller, "control"):
+                string = "You don't control this channel."
+                self.msg(string)
+                return
+            channel.locks.add(self.rhs) # Try to add the lock
+            string = "Lock(s) applied on %s:" % channel.key
+            string = "%s %s" % (string, channel.locks)
+            self.msg(string)
+        else: # just display the subscribed channels with no extra info
+            comtable = evtable.EvTable("|wchannel|n", "|wmy aliases|n",
+                                       "|wdescription|n", align="l", maxwidth=_DEFAULT_WIDTH)
             for chan in subs:
                 clower = chan.key.lower()
                 nicks = caller.nicks.get(category="channel", return_obj=True)
@@ -196,31 +349,8 @@ class CmdChannels(MuxPlayerCommand):
                                   "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
                                   if nick and nick.strvalue.lower() == clower),
                                   chan.db.desc])
-            caller.msg("\n|wChannel subscriptions{n (use |w@channels{n to list all, "
-                       "|waddcom{n/|wdelcom{n to sub/unsub):{n\n%s" % comtable)
-        elif 'join' in self.switches:
-            caller.msg('Join a channel or list of channels.')
-        elif 'part' in self.switches:
-            caller.msg('Part a channel or list of channels.')
-        else:
-            # full listing (of channels caller is able to listen to)
-            comtable = evtable.EvTable("|wsub{n", "|wchannel{n", "|wmy aliases{n",
-                                       "|wlocks{n", "|wdescription{n", maxwidth=_DEFAULT_WIDTH)
-            #comtable = prettytable.PrettyTable(["|wsub", "|wchannel", "|wmy aliases", "|wlocks", "|wdescription"])
-            for chan in channels:
-                clower = chan.key.lower()
-                nicks = caller.nicks.get(category="channel", return_obj=True)
-                nicks = nicks or []
-                comtable.add_row(*[chan in subs and "{gYes{n" or "{rNo{n",
-                                  "%s%s" % (chan.key, chan.aliases.all() and
-                                  "(%s)" % ",".join(chan.aliases.all()) or ""),
-                                  "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
-                                  if nick.strvalue.lower() == clower),
-                                  str(chan.locks),
-                                  chan.db.desc])
-            caller.msg("\n|wAvailable channels{n" +
-                       " (use |wcomlist{n,|waddcom{n and |wdelcom{n to manage subscriptions):\n%s" % comtable)
-
+            caller.msg("\n|wChannel subscriptions|n (use |w@chan/list|n to list all, "
+                       "|w/join|n/|w/part|n to join/part):|n\n%s" % comtable)
 
 import time
 from builtins import range
@@ -324,7 +454,7 @@ class CmdAccessnew(MuxCommand):
 
         caller = self.caller
         hierarchy_full = settings.PERMISSION_HIERARCHY
-        string = "\n|wPermission Hierarchy{n (climbing):\n %s" % ", ".join(hierarchy_full)
+        string = "\n|wPermission Hierarchy|n (climbing):\n %s" % ", ".join(hierarchy_full)
         #hierarchy = [p.lower() for p in hierarchy_full]
 
         if self.caller.player.is_superuser:
@@ -334,10 +464,10 @@ class CmdAccessnew(MuxCommand):
             cperms = ", ".join(caller.permissions.all())
             pperms = ", ".join(caller.player.permissions.all())
 
-        string += "\n|wYour access{n:"
-        string += "\nCharacter {c%s{n: %s" % (caller.key, cperms)
+        string += "\n|wYour access|n:"
+        string += "\nCharacter {c%s|n: %s" % (caller.key, cperms)
         if hasattr(caller, 'player'):
-            string += "\nPlayer {c%s{n: %s" % (caller.player.key, pperms)
+            string += "\nPlayer {c%s|n: %s" % (caller.player.key, pperms)
         caller.msg(string)
 
 
