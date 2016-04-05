@@ -183,9 +183,15 @@ class CmdChannels(MuxPlayerCommand):
       @chan
       @channel
       @channels
-    Lists all channels available to you, whether you listen to them or not.
-    Use /list to only view your current channel subscriptions.
-    Use /join or /part to join or depart channels.
+    Lists channels you are currently receiving.
+      Use /list to display all available channels.
+      Use /join or /part to join or depart channels.
+    If you own a channel:
+      Use /who to see who listens to a channel.
+      Use /lock to set a lock on a channel.
+      Use /desc to describe a channel.
+      Use /emit to emit on a channel.
+        Use /name when emitting, to display your name.
     """
     key = "@channel"
     aliases = ["@chan", "@channels"]
@@ -338,6 +344,39 @@ class CmdChannels(MuxPlayerCommand):
             string = "Lock(s) applied on %s:" % channel.key
             string = "%s %s" % (string, channel.locks)
             self.msg(string)
+        elif 'emit' in self.switches:
+            if not self.args or not self.rhs:
+                string = "Usage: %n/emit[/name] <channel> = <message>" % self.cmdstring
+                self.msg(string)
+                return
+            channel = find_channel(self.caller, self.lhs)
+            if not channel:
+                return
+            if not channel.access(self.caller, "control"):
+                string = "You don't control this channel."
+                self.msg(string)
+                return
+            message = self.rhs
+            if "name" in self.switches:
+                message = "%s: %s" % (self.caller.key, message)
+            channel.msg(message)
+            if not "quiet" in self.switches:
+                string = "Sent to channel %s: %s" % (channel.key, message)
+                self.msg(string)
+        elif 'desc' in self.switches:
+            if not self.rhs:
+                self.msg("Usage: %s/desc <channel> = <description>") % self.cmdstring
+                return
+            channel = find_channel(caller, self.lhs)
+            if not channel:
+                self.msg("Channel '%s' not found." % self.lhs)
+                return
+            if not channel.access(caller, 'control'): # check permissions
+                self.msg("You cannot describe this channel.")
+                return
+            channel.db.desc = self.rhs  # set the description
+            channel.save()
+            self.msg("Description of channel '%s' set to '%s'." % (channel.key, self.rhs))
         else: # just display the subscribed channels with no extra info
             comtable = evtable.EvTable("|wchannel|n", "|wmy aliases|n",
                                        "|wdescription|n", align="l", maxwidth=_DEFAULT_WIDTH)
@@ -350,7 +389,7 @@ class CmdChannels(MuxPlayerCommand):
                                   if nick and nick.strvalue.lower() == clower),
                                   chan.db.desc])
             caller.msg("\n|wChannel subscriptions|n (use |w@chan/list|n to list all, "
-                       "|w/join|n/|w/part|n to join/part):|n\n%s" % comtable)
+                       "|w/join|n |w/part|n to join or part):|n\n%s" % comtable)
 
 import time
 from builtins import range
@@ -431,22 +470,17 @@ class CmdQuit(MuxPlayerCommand):
 
 
 class CmdAccess(MuxCommand):
-    "Removing"
-
-    key = ''
-    locks = "cmd:not all()"
-
-class CmdAccessnew(MuxCommand):
     """
-    show your current game access
+    Displays your current game access levels.
     Usage:
       @access
-    This command shows you the permission hierarchy and
-    which permission groups you are a member of.
+    Displays the system's permission hierarchy and the
+    permissions for your current character and player account.
     """
 
     key = "@access"
     locks = "cmd:all()"
+    help_category = "System"
     arg_regex = r"$"
 
     def func(self):
@@ -553,12 +587,23 @@ class CmdSay(MuxCommand):
             caller.execute_cmd("help say")
             return
 
+        if 'v' in self.switches or 'verb' in self.switches:
+            # caller.add('say-verb', self.args, strattr=True)
+            emit_string = '|c%s|n warms up vocally with "%s|n"' % (caller.name, self.args)
+            caller.location.msg_contents(emit_string)
+            return
+
+        if 'q' in self.switches or 'quote' in self.switches:
+            caller.quote = self.args
+            return
+
         speech = caller.location.at_say(caller, self.args)
 
         if 'o' in self.switches or 'ooc' in self.switches:
             emit_string = '[OOC]|n |c%s|n says, "%s"' % (caller.name, speech)
         else:
-            emit_string = '|c%s|n says, "%s|n"' % (caller.name, speech)
+            verb = 'says' # caller.verb if caller.has('say-verb') else 'says'
+            emit_string = '|c%s|n %s, "%s|n"' % (caller.name, verb, speech)
         caller.location.msg_contents(emit_string)
 
 
@@ -757,6 +802,11 @@ class CmdPose(MuxCommand):
         super(CmdPose, self).parse()
         args = unicode(self.args)
         caller = self.caller
+
+        if not self.args:
+            caller.execute_cmd("help pose")
+            return
+
         self.verb = None
         self.obj = None
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
