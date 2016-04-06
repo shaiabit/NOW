@@ -2,7 +2,7 @@
 """
 Commands
 
-Commands describe the input the player can do to the game.
+Commands describe the input the player can do to the world.
 
 """
 
@@ -186,7 +186,13 @@ class CmdChannels(MuxPlayerCommand):
     Lists channels you are currently receiving.
       Use /list to display all available channels.
       Use /join or /part to join or depart channels.
+    Batch:
+      Use /all to affect all channels at once:
+      Use /all on  to join all available channels.
+      Use /all off  to part all channels currently on.
     If you own a channel:
+      Use /all who  to list who listens to channels you control.
+      Use /all clear to remove all channels you control.
       Use /who to see who listens to a channel.
       Use /lock to set a lock on a channel.
       Use /desc to describe a channel.
@@ -199,7 +205,7 @@ class CmdChannels(MuxPlayerCommand):
     locks = "cmd: not pperm(channel_banned)"
 
     def func(self):
-        "Implement function"
+        """Implement function"""
 
         caller = self.caller
         args = self.args
@@ -346,7 +352,7 @@ class CmdChannels(MuxPlayerCommand):
             self.msg(string)
         elif 'emit' in self.switches:
             if not self.args or not self.rhs:
-                string = "Usage: %n/emit[/name] <channel> = <message>" % self.cmdstring
+                string = "Usage: %s/emit[/name] <channel> = <message>" % self.cmdstring
                 self.msg(string)
                 return
             channel = find_channel(self.caller, self.lhs)
@@ -377,6 +383,50 @@ class CmdChannels(MuxPlayerCommand):
             channel.db.desc = self.rhs  # set the description
             channel.save()
             self.msg("Description of channel '%s' set to '%s'." % (channel.key, self.rhs))
+        elif 'all' in self.switches:
+            if not args:
+                caller.execute_cmd("@channels")
+                self.msg("Usage: %s/all on | off | who | clear") % self.cmdstring
+                return
+
+            if args == "on":
+                # get names of all channels available to listen to
+                # and activate them all
+                channels = [chan for chan in ChannelDB.objects.get_all_channels()
+                            if chan.access(caller, 'listen')]
+                for channel in channels:
+                    caller.execute_cmd("addcom %s" % channel.key)
+            elif args == "off":
+                # get names all subscribed channels and disconnect from them all
+                channels = ChannelDB.objects.get_subscriptions(caller)
+                for channel in channels:
+                    caller.execute_cmd("delcom %s" % channel.key)
+            elif args == "clear":
+                # destroy all channels you control
+                channels = [chan for chan in ChannelDB.objects.get_all_channels()
+                            if chan.access(caller, 'control')]
+                for channel in channels:
+                    caller.execute_cmd("@cdestroy %s" % channel.key)
+            elif args == "who":
+                # run a who, listing the subscribers on visible channels.
+                string = "\n|CChannel subscriptions|n"
+                channels = [chan for chan in ChannelDB.objects.get_all_channels()
+                            if chan.access(caller, 'listen')]
+                if not channels:
+                    string += "No channels."
+                for channel in channels:
+                    if not channel.access(self.caller, "control"):
+                        continue
+                    string += "\n|w%s:|n\n" % channel.key
+                    subs = channel.db_subscriptions.all()
+                    if subs:
+                        string += "  " + ", ".join([player.key for player in subs])
+                    else:
+                        string += "  <None>"
+                self.msg(string.strip())
+            else:
+                # wrong input
+                self.msg("Usage: %s/all on | off | who | clear") % self.cmdstring
         else: # just display the subscribed channels with no extra info
             comtable = evtable.EvTable("|wchannel|n", "|wmy aliases|n",
                                        "|wdescription|n", align="l", maxwidth=_DEFAULT_WIDTH)
@@ -431,13 +481,10 @@ class CmdLook(MuxCommand):
 
 class CmdQuit(MuxPlayerCommand):
     """
-    quit the game
-    Usage:
+    Gracefully disconnect your current session
+      quit
       @quit
-    Switch:
-      all - disconnect all connected sessions
-    Gracefully disconnect your current session from the
-    game. Use the /all switch to disconnect from all sessions.
+    Use the /all switch to disconnect from all sessions.
     """
     key = "@quit"
     aliases = "quit"
@@ -463,15 +510,16 @@ class CmdQuit(MuxPlayerCommand):
                 msg = bye + ". %i sessions are still connected."
                 player.msg(msg % (nsess - 1), session=self.session)
             else:
-                # we are quitting the last available session
-                msg = bye + '. ' + exit_msg
+                # we are quitting the last available session - give connect time.
+                online = utils.time_format(time.time() - self.session.conn_time, 1)
+                msg = bye + ' after ' + online + ' online. ' + exit_msg
                 player.msg(msg, session=self.session)
             player.disconnect_session_from_player(self.session)
 
 
 class CmdAccess(MuxCommand):
     """
-    Displays your current game access levels.
+    Displays your current world access levels.
     Usage:
       @access
     Displays the system's permission hierarchy and the
@@ -499,9 +547,9 @@ class CmdAccess(MuxCommand):
             pperms = ", ".join(caller.player.permissions.all())
 
         string += "\n|wYour access|n:"
-        string += "\nCharacter {c%s|n: %s" % (caller.key, cperms)
+        string += "\nCharacter |c%s|n: %s" % (caller.key, cperms)
         if hasattr(caller, 'player'):
-            string += "\nPlayer {c%s|n: %s" % (caller.player.key, pperms)
+            string += "\nPlayer |c%s|n: %s" % (caller.player.key, pperms)
         caller.msg(string)
 
 
@@ -554,15 +602,13 @@ class CmdSpoof(MuxCommand):
         if not self.args:
             caller.execute_cmd("help spoof")
             return
+        # Strip any markup to secure the spoof.
+        spoof = ansi.strip_ansi(self.args)
 
-        # calling the speech hook on the location
-        spoof = caller.location.at_say(caller, self.args)
-
-        # ansi.parse_ansi(self.args, strip_ansi=nomarkup)
-
-        # Build the string to emit
-        emit_string = '|m%s|n' % spoof
-        caller.location.msg_contents(emit_string)
+        # calling the speech hook on the location.
+        # An NPC would know who spoofed.
+        spoof = caller.location.at_say(caller, spoof)
+        caller.location.msg_contents('|m%s|n' % spoof)
 
 
 class CmdSay(MuxCommand):
@@ -572,6 +618,7 @@ class CmdSay(MuxCommand):
       say <message>
     Switch:
       /o or /ooc - Out-of-character to the room.
+      /v or /verb - set default say verb.
     """
 
     key = "say"
@@ -588,21 +635,21 @@ class CmdSay(MuxCommand):
             return
 
         if 'v' in self.switches or 'verb' in self.switches:
-            # caller.add('say-verb', self.args, strattr=True)
+            caller.attributes.add('say-verb', self.args)
             emit_string = '|c%s|n warms up vocally with "%s|n"' % (caller.name, self.args)
             caller.location.msg_contents(emit_string)
             return
 
         if 'q' in self.switches or 'quote' in self.switches:
-            caller.quote = self.args
+            caller.quote = self.args # Not yet implemented.
             return
 
-        speech = caller.location.at_say(caller, self.args)
+        speech = caller.location.at_say(caller, self.args) # Notify NPCs and listeners.
 
         if 'o' in self.switches or 'ooc' in self.switches:
             emit_string = '[OOC]|n |c%s|n says, "%s"' % (caller.name, speech)
         else:
-            verb = 'says' # caller.verb if caller.has('say-verb') else 'says'
+            verb = caller.attributes.get('say-verb') if caller.attributes.has('say-verb') else 'says'
             emit_string = '|c%s|n %s, "%s|n"' % (caller.name, verb, speech)
         caller.location.msg_contents(emit_string)
 
@@ -823,7 +870,7 @@ class CmdPose(MuxCommand):
                 if len(verbnoun.split()) == 2:
                     self.verb, noun = verbnoun.split()
                 else:
-                    self.verb = verbnoun.strip();
+                    self.verb = verbnoun.strip()
                     noun = 'me'
                 self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
