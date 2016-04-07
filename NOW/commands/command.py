@@ -190,14 +190,16 @@ class CmdChannels(MuxPlayerCommand):
       Use /all to affect all channels at once:
       Use /all on  to join all available channels.
       Use /all off  to part all channels currently on.
-    If you own a channel:
-      Use /all who  to list who listens to channels you control.
-      Use /all clear to remove all channels you control.
-      Use /who to see who listens to a channel.
+    If you control a channel:
+      Use /all who  to list who listens to all channels.
+      Use /all clear to remove all channels.
+      Use /who to see who listens to a specific channel.
       Use /lock to set a lock on a channel.
       Use /desc to describe a channel.
       Use /emit to emit on a channel.
         Use /name when emitting, to display your name.
+      Use /remove to remove a player from the channel.
+        Use /quiet to remove the user quietly.
     """
     key = "@channel"
     aliases = ["@chan", "@channels"]
@@ -257,7 +259,7 @@ class CmdChannels(MuxPlayerCommand):
 
             # check permissions
             if not channel.access(caller, 'listen'):
-                self.msg("%s: You are not able to listen to this channel." % channel.key)
+                self.msg("%s: You are not able to receive this channel." % channel.key)
                 return
 
             string = ''
@@ -371,7 +373,7 @@ class CmdChannels(MuxPlayerCommand):
                 self.msg(string)
         elif 'desc' in self.switches:
             if not self.rhs:
-                self.msg("Usage: %s/desc <channel> = <description>") % self.cmdstring
+                self.msg("Usage: %s/desc <channel> = <description>" % self.cmdstring)
                 return
             channel = find_channel(caller, self.lhs)
             if not channel:
@@ -386,7 +388,7 @@ class CmdChannels(MuxPlayerCommand):
         elif 'all' in self.switches:
             if not args:
                 caller.execute_cmd("@channels")
-                self.msg("Usage: %s/all on | off | who | clear") % self.cmdstring
+                self.msg("Usage: %s/all on | off | who | clear" % self.cmdstring)
                 return
 
             if args == "on":
@@ -426,7 +428,44 @@ class CmdChannels(MuxPlayerCommand):
                 self.msg(string.strip())
             else:
                 # wrong input
-                self.msg("Usage: %s/all on | off | who | clear") % self.cmdstring
+                self.msg("Usage: %s/all on | off | who | clear" % self.cmdstring)
+        elif 'remove' in switches:
+            if not self.args or not self.rhs:
+                string = "Usage: %s/remove [/quiet] <channel> = <player> [:reason]" % self.cmdstring
+                self.msg(string)
+                return
+            channel = find_channel(self.caller, self.lhs)
+            if not channel:
+                return
+            reason = ""
+            if ":" in self.rhs:
+                playername, reason = self.rhs.rsplit(":", 1)
+                searchstring = playername.lstrip('*')
+            else:
+                searchstring = self.rhs.lstrip('*')
+            player = self.caller.search(searchstring, player=True)
+            if not player:
+                return
+            if reason:
+                reason = " (reason: %s)" % reason
+            if not channel.access(self.caller, "control"):
+                string = "You don't control this channel."
+                self.msg(string)
+                return
+            if not player in channel.db_subscriptions.all():
+                string = "Player %s is not connected to channel %s." % (player.key, channel.key)
+                self.msg(string)
+                return
+            if not "quiet" in self.switches:
+                string = "%s boots %s from channel.%s" % (self.caller, player.key, reason)
+                channel.msg(string)
+            # find all player's nicks linked to this channel and delete them
+            for nick in [nick for nick in
+                         player.character.nicks.get(category="channel") or []
+                         if nick.db_real.lower() == channel.key]:
+                nick.delete()
+            channel.disconnect(player)  # disconnect player
+            CHANNELHANDLER.update()
         else: # just display the subscribed channels with no extra info
             comtable = evtable.EvTable("|wchannel|n", "|wmy aliases|n",
                                        "|wdescription|n", align="l", maxwidth=_DEFAULT_WIDTH)

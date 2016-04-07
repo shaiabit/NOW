@@ -58,6 +58,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdAddCom)
         self.remove(default_cmds.CmdAllCom)
+        self.remove(default_cmds.CmdCBoot)
         self.remove(default_cmds.CmdDelCom)
         self.remove(default_cmds.CmdCdesc)
         self.remove(default_cmds.CmdClock)
