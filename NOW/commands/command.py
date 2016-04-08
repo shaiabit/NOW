@@ -176,6 +176,87 @@ def find_channel(caller, channelname, silent=False, noaliases=False):
     return channels[0]
 
 
+class CmdChannelCreate(MuxPlayerCommand):
+    """
+    create a new channel
+    Usage:
+     !channelcreate <new channel>[;alias;alias...] = description
+    Creates a new channel controlled by you.
+    """
+
+    key = "!channelcreate"
+    locks = "cmd:not pperm(channel_banned) and perm(Wizard)"
+    help_category = "Admin"
+
+    def func(self):
+        "Implement the command"
+
+        caller = self.caller
+
+        if not self.args:
+            self.msg("Usage %s <channelname>[;alias;alias..] = description" % self.cmdstring)
+            return
+
+        description = ""
+
+        if self.rhs:
+            description = self.rhs
+        lhs = self.lhs
+        channame = lhs
+        aliases = None
+        if ';' in lhs:
+            channame, aliases = lhs.split(';', 1)
+            aliases = [alias.strip().lower() for alias in aliases.split(';')]
+        channel = ChannelDB.objects.channel_search(channame)
+        if channel:
+            self.msg("A channel with that name already exists.")
+            return
+        # Create and set the channel up
+        lockstring = "send:all();listen:all();control:id(%s)" % caller.id
+        new_chan = create.create_channel(channame.strip(),
+                                         aliases,
+                                         description,
+                                         locks=lockstring)
+        new_chan.connect(caller)
+        CHANNELHANDLER.update()
+        self.msg("Created channel %s and connected to it." % new_chan.key)
+
+
+class CmdChannelDestroy(MuxPlayerCommand):
+    """
+    destroy a channel
+    Usage:
+      !channeldestroy <channel>
+    Destroys a channel that you control.
+    """
+
+    key = "!channeldestroy"
+    help_category = "Admin"
+    locks = "cmd: not pperm(channel_banned) and perm(Wizards)"
+
+    def func(self):
+        "Destroy channel cleanly."
+        caller = self.caller
+
+        if not self.args:
+            self.msg("Usage: %s <channelname>" % self.cmdstring)
+            return
+        channel = find_channel(caller, self.args)
+        if not channel:
+            self.msg("Could not find channel %s." % self.args)
+            return
+        if not channel.access(caller, 'control'):
+            self.msg("You are not allowed to do that.")
+            return
+        channel_key = channel.key
+        message = "%s is being destroyed. Make sure to change your aliases." % channel_key
+        msgobj = create.create_message(caller, message, channel)
+        channel.msg(msgobj)
+        channel.delete()
+        CHANNELHANDLER.update()
+        self.msg("Channel '%s' was destroyed." % channel_key)
+
+
 class CmdChannels(MuxPlayerCommand):
     """
     list all channels available to you
@@ -192,7 +273,6 @@ class CmdChannels(MuxPlayerCommand):
       Use /all off  to part all channels currently on.
     If you control a channel:
       Use /all who  to list who listens to all channels.
-      Use /all clear to remove all channels.
       Use /who to see who listens to a specific channel.
       Use /lock to set a lock on a channel.
       Use /desc to describe a channel.
@@ -397,18 +477,12 @@ class CmdChannels(MuxPlayerCommand):
                 channels = [chan for chan in ChannelDB.objects.get_all_channels()
                             if chan.access(caller, 'listen')]
                 for channel in channels:
-                    caller.execute_cmd("addcom %s" % channel.key)
+                    caller.execute_cmd("@command/join %s" % channel.key)
             elif args == "off":
                 # get names all subscribed channels and disconnect from them all
                 channels = ChannelDB.objects.get_subscriptions(caller)
                 for channel in channels:
-                    caller.execute_cmd("delcom %s" % channel.key)
-            elif args == "clear":
-                # destroy all channels you control
-                channels = [chan for chan in ChannelDB.objects.get_all_channels()
-                            if chan.access(caller, 'control')]
-                for channel in channels:
-                    caller.execute_cmd("@cdestroy %s" % channel.key)
+                    caller.execute_cmd("@command/part %s" % channel.key)
             elif args == "who":
                 # run a who, listing the subscribers on visible channels.
                 string = "\n|CChannel subscriptions|n"
@@ -429,7 +503,7 @@ class CmdChannels(MuxPlayerCommand):
             else:
                 # wrong input
                 self.msg("Usage: %s/all on | off | who | clear" % self.cmdstring)
-        elif 'remove' in switches:
+        elif 'remove' in self.switches:
             if not self.args or not self.rhs:
                 string = "Usage: %s/remove [/quiet] <channel> = <player> [:reason]" % self.cmdstring
                 self.msg(string)
@@ -939,11 +1013,12 @@ class CmdPose(MuxCommand):
                 if verb == 'get' or verb == 'drop':
                     caller.execute_cmd(verb + ' ' + obj.name)
                 else:
-                    msg = "|g%s|n is able to %s %s." % \
-                          (caller.name, verb, obj.name)
+                    msg = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
                     caller.location.msg_contents(msg)
             else:
-                msg = "|r%s|n fails to %s %s." % \
-                      (caller.name, verb, obj.name)
-                caller.location.msg_contents(msg, exclude=caller)
-                caller.msg("You failed to %s %s." % (verb, obj.name))
+                if self.obj.locks.get(verb): # Test to see if a lock string exists.
+                    msg = "|r%s|n fails to %s %s." % (caller.name, verb, obj.name)
+                    caller.location.msg_contents(msg, exclude=caller)
+                    caller.msg("You failed to %s %s." % (verb, obj.name))
+                else:
+                    caller.msg("It is not possible to %s %s." % (verb, obj.name))
