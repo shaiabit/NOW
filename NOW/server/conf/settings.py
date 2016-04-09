@@ -104,6 +104,9 @@ STATICFILES_DIRS = (
     os.path.join(GAME_DIR, "web", "static_overrides"),
     os.path.join(EVENNIA_DIR, "web", "static"),)
 
+# Lock functions here!
+LOCK_FUNC_MODULES = LOCK_FUNC_MODULES + ("world.locks",)
+
 # We setup the location of the website template as well as the admin site.
 TEMPLATE_DIRS = (
     os.path.join(GAME_DIR, "web", "template_overrides", ACTIVE_TEMPLATE),
