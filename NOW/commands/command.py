@@ -176,15 +176,16 @@ def find_channel(caller, channelname, silent=False, noaliases=False):
     return channels[0]
 
 
-class CmdChannelCreate(MuxPlayerCommand):
+class CmdChannelWizard(MuxPlayerCommand):
     """
-    create a new channel
+    Creates (or destroys) a new channel controlled by you.
     Usage:
-     !channelcreate <new channel>[;alias;alias...] = description
-    Creates a new channel controlled by you.
+     !channel <new channel>[;alias;alias...] = description
+    Switch:
+     !channel/destroy <channel name>
     """
 
-    key = "!channelcreate"
+    key = "!channel"
     locks = "cmd:not pperm(channel_banned) and perm(Wizard)"
     help_category = "Admin"
 
@@ -193,68 +194,53 @@ class CmdChannelCreate(MuxPlayerCommand):
 
         caller = self.caller
 
-        if not self.args:
-            self.msg("Usage %s <channelname>[;alias;alias..] = description" % self.cmdstring)
-            return
+        if not 'destroy' in self.switches:
+            if not self.args:
+                self.msg("Usage %s <channelname>[;alias;alias..] = description" % self.cmdstring)
+                return
 
-        description = ""
+            description = ""
 
-        if self.rhs:
-            description = self.rhs
-        lhs = self.lhs
-        channame = lhs
-        aliases = None
-        if ';' in lhs:
-            channame, aliases = lhs.split(';', 1)
-            aliases = [alias.strip().lower() for alias in aliases.split(';')]
-        channel = ChannelDB.objects.channel_search(channame)
-        if channel:
-            self.msg("A channel with that name already exists.")
-            return
-        # Create and set the channel up
-        lockstring = "send:all();listen:all();control:id(%s)" % caller.id
-        new_chan = create.create_channel(channame.strip(),
-                                         aliases,
-                                         description,
-                                         locks=lockstring)
-        new_chan.connect(caller)
-        CHANNELHANDLER.update()
-        self.msg("Created channel %s and connected to it." % new_chan.key)
+            if self.rhs:
+                description = self.rhs
+            lhs = self.lhs
+            channame = lhs
+            aliases = None
+            if ';' in lhs:
+                channame, aliases = lhs.split(';', 1)
+                aliases = [alias.strip().lower() for alias in aliases.split(';')]
+            channel = ChannelDB.objects.channel_search(channame)
+            if channel:
+                self.msg("A channel with that name already exists.")
+                return
+            # Create and set the channel up
+            lockstring = "send:all();listen:all();control:id(%s)" % caller.id
+            new_chan = create.create_channel(channame.strip(),
+                                             aliases,
+                                             description,
+                                             locks=lockstring)
+        else:
+            new_chan.connect(caller)
+            CHANNELHANDLER.update()
+            self.msg("Created channel %s and connected to it." % new_chan.key)
 
-
-class CmdChannelDestroy(MuxPlayerCommand):
-    """
-    destroy a channel
-    Usage:
-      !channeldestroy <channel>
-    Destroys a channel that you control.
-    """
-
-    key = "!channeldestroy"
-    help_category = "Admin"
-    locks = "cmd: not pperm(channel_banned) and perm(Wizards)"
-
-    def func(self):
-        "Destroy channel cleanly."
-        caller = self.caller
-
-        if not self.args:
-            self.msg("Usage: %s <channelname>" % self.cmdstring)
-            return
-        channel = find_channel(caller, self.args)
-        if not channel:
-            self.msg("Could not find channel %s." % self.args)
-            return
-        if not channel.access(caller, 'control'):
-            self.msg("You are not allowed to do that.")
-            return
-        channel_key = channel.key
-        message = "%s is being destroyed. Make sure to change your aliases." % channel_key
-        msgobj = create.create_message(caller, message, channel)
-        channel.msg(msgobj)
-        channel.delete()
-        CHANNELHANDLER.update()
-        self.msg("Channel '%s' was destroyed." % channel_key)
+            if not self.args:
+                self.msg("Usage: %s/destroy <channelname>" % self.cmdstring)
+                return
+            channel = find_channel(caller, self.args)
+            if not channel:
+                self.msg("Could not find channel %s." % self.args)
+                return
+            if not channel.access(caller, 'control'):
+                self.msg("You are not allowed to do that.")
+                return
+            channel_key = channel.key
+            message = "%s is being destroyed. Make sure to change your aliases." % channel_key
+            msgobj = create.create_message(caller, message, channel)
+            channel.msg(msgobj)
+            channel.delete()
+            CHANNELHANDLER.update()
+            self.msg("Channel '%s' was destroyed." % channel_key)
 
 
 class CmdChannels(MuxPlayerCommand):
@@ -396,6 +382,9 @@ class CmdChannels(MuxPlayerCommand):
                     else:
                         self.msg("You had no such alias defined for this channel.")
         elif 'who' in self.switches:
+            if not self.args:
+                self.msg("Usage: %s/who <channel name or alias>" % self.cmdstring)
+                return
             channel = find_channel(self.caller, self.lhs)
             if not channel:
                 return
