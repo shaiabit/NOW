@@ -250,13 +250,17 @@ class CmdChannels(MuxPlayerCommand):
       @chan
       @channel
       @channels
+
+    Switches:
     Lists channels you are currently receiving.
       Use /list to display all available channels.
       Use /join or /part to join or depart channels.
+
     Batch:
       Use /all to affect all channels at once:
       Use /all on  to join all available channels.
       Use /all off  to part all channels currently on.
+
     If you control a channel:
       Use /all who  to list who listens to all channels.
       Use /who to see who listens to a specific channel.
@@ -266,6 +270,10 @@ class CmdChannels(MuxPlayerCommand):
         Use /name when emitting, to display your name.
       Use /remove to remove a player from the channel.
         Use /quiet to remove the user quietly.
+
+    Channels provide communication with a group of other players based on a
+    particular interest or subject.  Channels are free of being at a particular
+    location. Channels use their alias as the command to post to then.
     """
     key = "@channel"
     aliases = ["@chan", "@channels"]
