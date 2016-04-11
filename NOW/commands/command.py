@@ -247,14 +247,11 @@ class CmdChannels(MuxPlayerCommand):
     """
     list all channels available to you
     Usage:
-      @chan
-      @channel
-      @channels
-
+      @chan,  @channel, @channels
     Switches:
     Lists channels you are currently receiving.
       Use /list to display all available channels.
-      Use /join or /part to join or depart channels.
+      Use /join (on) or /part (off) to join or depart channels.
 
     Batch:
       Use /all to affect all channels at once:
@@ -270,7 +267,6 @@ class CmdChannels(MuxPlayerCommand):
         Use /name when emitting, to display your name.
       Use /remove to remove a player from the channel.
         Use /quiet to remove the user quietly.
-
     Channels provide communication with a group of other players based on a
     particular interest or subject.  Channels are free of being at a particular
     location. Channels use their alias as the command to post to then.
@@ -314,7 +310,7 @@ class CmdChannels(MuxPlayerCommand):
                                   chan.db.desc])
             caller.msg("\n|wAvailable channels|n" +
                        " (Use |w/list|n,|w/join|n and |w/part|n to manage received channels.):\n%s" % comtable)
-        elif 'join' in self.switches:
+        elif 'join' in self.switches or 'on' in self.switches:
             if not args:
                 self.msg("Usage: %s/join [alias =] channelname." % self.cmdstring)
                 return
@@ -356,7 +352,7 @@ class CmdChannels(MuxPlayerCommand):
             else:
                 string += " No alias added."
             self.msg(string)
-        elif 'part' in self.switches:
+        elif 'part' in self.switches or 'off' in self.switches:
             if not args:
                 self.msg("Usage: %s/part <alias or channel>" % self.cmdstring)
                 return
@@ -763,6 +759,129 @@ class CmdSay(MuxCommand):
             emit_string = '|c%s|n %s, "%s|n"' % (caller.name, verb, speech)
         caller.location.msg_contents(emit_string)
 
+class CmdOption(MuxPlayerCommand):
+    """
+    Set an account option
+    @option
+    @option encode [= encoding]
+    @option reader [= on|off]
+    The text encoding setting should match what your client program
+    outputss, especially if you want to use non-ASCII characters.
+    If you see that your characters look strange (or you get encoding
+    errors), you should use this command to set the server encoding to
+    be the same used in your client program. If given the empty string
+    (default), the custom encoding will be removed and only defaults
+    will be used.
+    The screenreader setting strips the text output for users using
+    screen readers. It strips based on settings.SCREENREADER_REGEX_STRIP.
+    """
+    key = "@option"
+    aliases = "@options"
+    locks = "cmd:all()"
+
+    def func(self):
+        """
+        Implements the command
+        """
+        if self.session is None:
+            return
+        caller = self.caller
+        self.prefs = {'encode': 'utf-8', 'reader': False, 'color': True, 'blink': True, 'style': True, 'width': None}
+        if caller.attributes.has('prefs'):
+            # There are some preferences saved to use for this session.
+            # Load preferences with saved values, if they exist.
+            self.prefs = caller.db.prefs
+        else:
+            caller.db.prefs = self.prefs # First run of @option stores default dictionary setting on player.
+
+        if not self.args: # list the option settings
+            string = "|wEncoding|n:\n"
+            pencoding = self.session.encoding or "None"
+            sencodings = settings.ENCODINGS
+            string += " Custom: %s\n Server: %s" % (pencoding, ", ".join(sencodings))
+            string += "\n|wreader mode:|n %s" % self.session.screenreader
+            string += "\n|wcolor mode:|n %s" % self.prefs['color']
+            string += "\n|wblink mode:|n %s" % self.prefs['blink']
+            string += "\n|wstyle mode:|n %s" % self.prefs['style']
+            string += "\n|wwidth mode:|n %s" % self.prefs['width']
+            self.msg(string)
+            return
+
+        if not self.rhs:
+            self.msg("Usage: @option [name = [value]]")
+            return
+
+        if self.lhs == "encode":
+            # change encoding
+            old_encoding = self.session.encoding
+            new_encoding = self.rhs.strip() or "utf-8"
+            try:
+                utils.to_str(utils.to_unicode("test-string"), encoding=new_encoding)
+            except LookupError:
+                string = "|rThe encoding '|w%s|r' is invalid. Keeping the previous encoding '|w%s|r'.|n" % (
+                new_encoding, old_encoding)
+            else:
+                self.session.encoding = new_encoding
+                string = "Encoding was changed from '|w%s|n' to '|w%s|n'." % (old_encoding, new_encoding)
+            self.msg(string)
+            return
+
+        if self.lhs == 'reader':
+            onoff = self.rhs.lower() == 'on'
+            self.session.screenreader = onoff
+            self.msg("Screen reader mode was turned |w%s|n." % ("on" if onoff else "off"))
+            if onoff == 'on':
+                self.prefs['reader'] = True
+            else:
+                self.prefs['reader'] = False
+
+        if self.lhs == 'color':
+            onoff = self.rhs.lower() == 'on'
+            self.msg("Color mode was turned |w%s|n." % ("on" if onoff else "off"))
+            if not self.args or not self.args in ("on", "off"):
+                self.caller.msg("Usage: @option color=on|off")
+                return
+            if onoff == 'on':
+                self.prefs['color'] = True
+            else:
+                self.prefs['color'] = False
+            self.caller.msg("Color was turned %s." % self.args)
+
+        if self.lhs == 'blink':
+            onoff = self.rhs.lower() == 'on'
+            if not self.args or not self.args in ("on", "off"):
+                self.caller.msg("Usage: @option blink=on|off")
+                return
+            if onoff == 'on':
+                self.prefs['blink'] = True
+            else:
+                self.prefs['blink'] = False
+            self.caller.msg("Blink was turned %s." % self.args)
+
+        if self.lhs == 'style':
+            onoff = self.rhs.lower() == 'on'
+            if not self.args or not self.args in ("on", "off"):
+                self.caller.msg("Usage: @option style=on|off")
+                return
+            if onoff == 'on':
+                self.prefs['style'] = True
+            else:
+                self.prefs['style'] = False
+            self.caller.msg("Style was turned %s." % self.args)
+
+        if self.lhs == 'width':
+            if not self.args or not self.args in ("on", "off"):
+                self.caller.msg("Usage: @option width=80")
+                return
+            else:
+                self.prefs['width'] = self.args
+            self.caller.msg("Style was turned %s." % self.args)
+
+        if 'debug' in self.switches:
+            self.msg('Stored preferences: %s' % self.prefs)
+        if 'save' in self.switches:
+            self.caller.db.prefs = self.prefs
+            self.msg('Stored preferences: %s' % self.prefs)
 
 class CmdVerb(MuxPlayerCommand):
     """
@@ -791,13 +910,14 @@ class CmdVerb(MuxPlayerCommand):
                 verb_msg = "Verbs on you: "
             verbs = obj.locks
             collector = ''
+            show_red = True if obj.access(my_char, 'examine') else False
             for verb in ("%s" % verbs).split(';'):
                 element = verb.split(':')[0]
                 name = element[2:] if element[:2] == 'v-' else element
                 # obj lock checked against character
                 if obj.access(my_char, element):
                     collector += "|g%s " % name
-                else:
+                elif show_red:
                     collector += "|r%s " % name
             collector = collector + '|n'
             my_char.msg(verb_msg + "%s" % collector)
@@ -1005,8 +1125,11 @@ class CmdPose(MuxCommand):
         if self.obj:
             obj = self.obj
             verb = self.verb
+            safe_verb = verb
             caller = self.caller
-            if obj.access(caller, verb):
+            if not obj.access(caller, verb): # Try original verb first.
+                safe_verb = 'v-' + verb  # If that does not work, then...
+            if obj.access(caller, safe_verb):  # try the safe verb form.
                 if verb == 'get' or verb == 'drop':
                     caller.execute_cmd(verb + ' ' + obj.name)
                 else:
