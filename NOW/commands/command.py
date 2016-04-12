@@ -591,6 +591,7 @@ class CmdQuit(MuxPlayerCommand):
       quit
       @quit
     Use the /all switch to disconnect from all sessions.
+    Use the /reason switch to send quit reason.
     """
     key = "@quit"
     aliases = "quit"
@@ -600,6 +601,8 @@ class CmdQuit(MuxPlayerCommand):
         "hook function"
         player = self.player
         bye = '|RDisconnecting|n'
+        if self.args.strip() and 'reason' in self.switches:
+            bye += " ( |w%s\n ) " % self.args.strip()
         exit_msg = 'Hope to see you again, soon.'
 
         if 'all' in self.switches:
@@ -628,8 +631,11 @@ class CmdAccess(MuxCommand):
     Displays your current world access levels.
     Usage:
       @access
-    Displays the system's permission hierarchy and the
-    permissions for your current character and player account.
+    Switches:
+      @access /groups
+
+    Displays the system's permission groups hierarchy and the
+    permissions for your current player and character account.
     """
 
     key = "@access"
@@ -642,8 +648,9 @@ class CmdAccess(MuxCommand):
 
         caller = self.caller
         hierarchy_full = settings.PERMISSION_HIERARCHY
-        string = "\n|wPermission Hierarchy|n (climbing):\n %s" % ", ".join(hierarchy_full)
-        #hierarchy = [p.lower() for p in hierarchy_full]
+        if 'groups' in self.switches:
+            string = "\n|wPermission Hierarchy|n (climbing):\n %s" % ", ".join(hierarchy_full)
+            #hierarchy = [p.lower() for p in hierarchy_full]
 
         if self.caller.player.is_superuser:
             cperms = "<Superuser>"
@@ -652,10 +659,10 @@ class CmdAccess(MuxCommand):
             cperms = ", ".join(caller.permissions.all())
             pperms = ", ".join(caller.player.permissions.all())
 
-        string += "\n|wYour access|n:"
-        string += "\nCharacter |c%s|n: %s" % (caller.key, cperms)
+        string += "\n|wYour Player/Character access|n: "
         if hasattr(caller, 'player'):
-            string += "\nPlayer |c%s|n: %s" % (caller.player.key, pperms)
+            string += "Player: (|c%s|n: %s) and " % (caller.player.key, pperms)
+        string += "Character (|c%s|n: %s)" % (caller.key, cperms)
         caller.msg(string)
 
 
@@ -694,6 +701,9 @@ class CmdSpoof(MuxCommand):
     Send a spoofed message to your current location.
     Usage:
       spoof <message>
+     Switches
+      spoof/music <musical message>
+      spoof/self <message only to you>
     """
 
     key = "spoof"
@@ -708,13 +718,22 @@ class CmdSpoof(MuxCommand):
         if not self.args:
             caller.execute_cmd("help spoof")
             return
-        # Strip any markup to secure the spoof.
-        spoof = ansi.strip_ansi(self.args)
+
+        if 'self' in self.switches:
+            caller.msg(self.args)
+            return
+        else:
+            # Strip any markup to secure the spoof.
+            spoof = ansi.strip_ansi(self.args)
 
         # calling the speech hook on the location.
         # An NPC would know who spoofed.
         spoof = caller.location.at_say(caller, spoof)
-        caller.location.msg_contents('|m%s|n' % spoof)
+
+        if 'music' in self.switches:
+            caller.location.msg_contents("|g_/)|w %s |g_/)" % spoof)
+        else:
+            caller.location.msg_contents('|m%s|n' % spoof)
 
 
 class CmdSay(MuxCommand):
@@ -747,8 +766,9 @@ class CmdSay(MuxCommand):
             return
 
         if 'q' in self.switches or 'quote' in self.switches:
-            caller.quote = self.args # Not yet implemented.
-            return
+            if len(self.args) > 2:
+                caller.quote = self.args # Not yet implemented.
+                return
 
         speech = caller.location.at_say(caller, self.args) # Notify NPCs and listeners.
 
