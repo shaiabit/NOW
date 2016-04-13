@@ -28,4 +28,36 @@ class Character(DefaultCharacter):
                     has connected" message echoed to the room
 
     """
-    pass
+
+    def at_post_puppet(self):
+        """
+        Called just after puppeting has been completed and all
+        Player<->Object links have been established.
+        """
+        self.msg("\nYou assume the roll of |c%s|n.\n" % self.name)
+        self.msg(self.at_look(self.location))
+
+        def message(obj, from_obj):
+            obj.msg("|g%s|n awakens." % self.get_display_name(obj), from_obj=from_obj)
+        self.location.for_contents(message, exclude=[self], from_obj=self)
+
+    def at_post_unpuppet(self, player, session=None):
+        """
+        We store the character when the player goes ooc/logs off,
+        when the character is left in a public or semi-public room.
+        Otherwise the character object will remain in the room after
+        the player logged off ("headless", so to say).
+        Args:
+            player (Player): The player object that just disconnected
+                from this object.
+            session (Session): Session controlling the connection that
+                just disconnected.
+        """
+        if not self.sessions.count():
+            # only remove this char from grid if no sessions control it anymore.
+            if self.location:
+                def message(obj, from_obj):
+                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
+                self.location.for_contents(message, exclude=[self], from_obj=self)
+                self.db.prelogout_location = self.location
+                self.location = None
