@@ -176,6 +176,43 @@ def find_channel(caller, channelname, silent=False, noaliases=False):
     return channels[0]
 
 
+class CmdSysinfo(MuxCommand):
+    """
+    show Evennia info
+    Usage:
+      !about
+    Display info about the game engine.
+    """
+
+    key = "!about"
+    locks = "perm(Wizard)"
+    help_category = "System"
+
+    def func(self):
+        "Show the version"
+
+        string = """
+         |cEvennia|n %s|n
+         MUD/MUX/MU* development system
+         |wLicence|n BSD 3-Clause Licence:
+             https://opensource.org/licenses/BSD-3-Clause
+         |wWeb|n http://www.evennia.com
+         |wIrc|n #evennia on FreeNode
+         |wForum|n http://www.evennia.com/discussions
+         |wMaintainer|n (2010-)   Griatch (griatch AT gmail DOT com)
+         |wMaintainer|n (2006-10) Greg Taylor
+         |wOS|n %s
+         |wPython|n %s
+         |wTwisted|n %s
+         |wDjango|n %s
+        """ % (utils.get_evennia_version(),
+               os.name,
+               sys.version.split()[0],
+               twisted.version.short(),
+               django.get_version())
+        self.caller.msg(string)
+
+
 class CmdChannelWizard(MuxPlayerCommand):
     """
     Creates (or destroys) a new channel controlled by you.
@@ -648,8 +685,9 @@ class CmdAccess(MuxCommand):
 
         caller = self.caller
         hierarchy_full = settings.PERMISSION_HIERARCHY
+        string = ''
         if 'groups' in self.switches:
-            string = "\n|wPermission Hierarchy|n (climbing):\n %s" % ", ".join(hierarchy_full)
+            string = "|wPermission Hierarchy|n (climbing): %s\n" % ", ".join(hierarchy_full)
             #hierarchy = [p.lower() for p in hierarchy_full]
 
         if self.caller.player.is_superuser:
@@ -659,7 +697,7 @@ class CmdAccess(MuxCommand):
             cperms = ", ".join(caller.permissions.all())
             pperms = ", ".join(caller.player.permissions.all())
 
-        string += "\n|wYour Player/Character access|n: "
+        string += "|wYour Player/Character access|n: "
         if hasattr(caller, 'player'):
             string += "Player: (|c%s|n: %s) and " % (caller.player.key, pperms)
         string += "Character (|c%s|n: %s)" % (caller.key, cperms)
@@ -779,6 +817,7 @@ class CmdSay(MuxCommand):
             emit_string = '|c%s|n %s, "%s|n"' % (caller.name, verb, speech)
         caller.location.msg_contents(emit_string)
 
+
 class CmdOption(MuxPlayerCommand):
     """
     Set an account option
@@ -786,7 +825,7 @@ class CmdOption(MuxPlayerCommand):
     @option encode [= encoding]
     @option reader [= on|off]
     The text encoding setting should match what your client program
-    outputss, especially if you want to use non-ASCII characters.
+    outputs, especially if you want to use non-ASCII characters.
     If you see that your characters look strange (or you get encoding
     errors), you should use this command to set the server encoding to
     be the same used in your client program. If given the empty string
@@ -806,7 +845,7 @@ class CmdOption(MuxPlayerCommand):
         if self.session is None:
             return
         caller = self.caller
-        self.prefs = {'encode': 'utf-8', 'reader': False, 'color': True, 'blink': True, 'style': True, 'width': None}
+        self.prefs = {'encode': 'utf-8', 'reader': False, 'color': True, 'blink': True, 'width': None}
         if caller.attributes.has('prefs'):
             # There are some preferences saved to use for this session.
             # Load preferences with saved values, if they exist.
@@ -815,93 +854,89 @@ class CmdOption(MuxPlayerCommand):
             caller.db.prefs = self.prefs # First run of @option stores default dictionary setting on player.
 
         if not self.args: # list the option settings
-            string = "|wEncoding|n:\n"
             pencoding = self.session.encoding or "None"
             sencodings = settings.ENCODINGS
-            string += " Custom: %s\n Server: %s" % (pencoding, ", ".join(sencodings))
-            string += "\n|wreader mode:|n %s" % self.session.screenreader
-            string += "\n|wcolor mode:|n %s" % self.prefs['color']
-            string += "\n|wblink mode:|n %s" % self.prefs['blink']
-            string += "\n|wstyle mode:|n %s" % self.prefs['style']
-            string += "\n|wwidth mode:|n %s" % self.prefs['width']
+            string = "|wEncode|n: %s (Available: %s)\n" % (pencoding, ", ".join(sencodings))
+            string += "|wReader mode:|n %s\n" % self.session.screenreader
+            string += "|wColor mode:|n %s\n" % self.session.ndb.color
+            string += "|wBlink mode:|n %s\n" % self.session.ndb.blink
+            string += "|wWidth wrap:|n %s" % self.session.ndb.width
             self.msg(string)
-            return
-
-        if not self.rhs:
-            self.msg("Usage: @option [name = [value]]")
-            return
 
         if self.lhs == "encode":
-            # change encoding
-            old_encoding = self.session.encoding
-            new_encoding = self.rhs.strip() or "utf-8"
-            try:
-                utils.to_str(utils.to_unicode("test-string"), encoding=new_encoding)
-            except LookupError:
-                string = "|rThe encoding '|w%s|r' is invalid. Keeping the previous encoding '|w%s|r'.|n" % (
-                new_encoding, old_encoding)
-            else:
-                self.session.encoding = new_encoding
-                string = "Encoding was changed from '|w%s|n' to '|w%s|n'." % (old_encoding, new_encoding)
-            self.msg(string)
-            return
-
-        if self.lhs == 'reader':
-            onoff = self.rhs.lower() == 'on'
-            self.session.screenreader = onoff
-            self.msg("Screen reader mode was turned |w%s|n." % ("on" if onoff else "off"))
-            if onoff == 'on':
-                self.prefs['reader'] = True
-            else:
-                self.prefs['reader'] = False
-
-        if self.lhs == 'color':
-            onoff = self.rhs.lower() == 'on'
-            self.msg("Color mode was turned |w%s|n." % ("on" if onoff else "off"))
-            if not self.args or not self.args in ("on", "off"):
-                self.caller.msg("Usage: @option color=on|off")
-                return
-            if onoff == 'on':
-                self.prefs['color'] = True
-            else:
-                self.prefs['color'] = False
-            self.caller.msg("Color was turned %s." % self.args)
-
-        if self.lhs == 'blink':
-            onoff = self.rhs.lower() == 'on'
-            if not self.args or not self.args in ("on", "off"):
-                self.caller.msg("Usage: @option blink=on|off")
-                return
-            if onoff == 'on':
-                self.prefs['blink'] = True
-            else:
-                self.prefs['blink'] = False
-            self.caller.msg("Blink was turned %s." % self.args)
-
-        if self.lhs == 'style':
-            onoff = self.rhs.lower() == 'on'
-            if not self.args or not self.args in ("on", "off"):
-                self.caller.msg("Usage: @option style=on|off")
-                return
-            if onoff == 'on':
-                self.prefs['style'] = True
-            else:
-                self.prefs['style'] = False
-            self.caller.msg("Style was turned %s." % self.args)
-
-        if self.lhs == 'width':
-            if not self.args or not self.args in ("on", "off"):
-                self.caller.msg("Usage: @option width=80")
+            if self.rhs:
+                # change encoding
+                old_encoding = self.session.encoding
+                new_encoding = self.rhs.strip() or "utf-8"
+                try:
+                    utils.to_str(utils.to_unicode("test-string"), encoding=new_encoding)
+                except LookupError:
+                    string = "|rThe encoding '|w%s|r' is invalid. Keeping the previous encoding '|w%s|r'.|n" % (
+                    new_encoding, old_encoding)
+                else:
+                    self.session.encoding = new_encoding
+                    self.prefs['encode'] = new_encoding
+                    string = "Encoding was changed from '|w%s|n' to '|w%s|n'." % (old_encoding, new_encoding)
+                self.msg(string)
                 return
             else:
-                self.prefs['width'] = self.args
-            self.caller.msg("Style was turned %s." % self.args)
+                self.msg("Encoding is '|w%s|n'" % self.session.encoding)
 
-        if 'debug' in self.switches:
-            self.msg('Stored preferences: %s' % self.prefs)
+        elif self.lhs == 'reader':
+            if self.rhs:
+                onoff = self.rhs.lower() == 'on'
+                if self.args and self.rhs.lower() in ("on", "off"):
+                    self.session.screenreader = onoff
+                    self.msg("Screen reader mode was turned |w%s|n." % ("on" if onoff else "off"))
+                    self.prefs['reader'] = onoff
+                else:
+                    self.caller.msg("|gUsage|n: @option reader=on||off")
+                    return
+            else:
+                self.msg("Reader mode is |w%s|n." % ("on" if self.session.screenreader else "off"))
+
+
+        elif self.lhs == 'color':
+            if self.rhs:
+                onoff = self.rhs.lower() == 'on'
+                if self.args and self.rhs.lower() in ("on", "off"):
+                    self.msg("Color mode was turned |w%s|n." % ("on" if onoff else "off"))
+                    self.prefs['color'] = onoff
+                    self.session.ndb.color = onoff
+                else:
+                    self.caller.msg("Usage: @option color=on||off")
+                    return
+            else:
+                self.msg("Color mode is |w%s|n." % ("on" if self.session.ndb.color else "off"))
+
+        elif self.lhs == 'blink':
+            if self.rhs:
+                onoff = self.rhs.lower() == 'on'
+                if self.args and self.rhs.lower() in ("on", "off"):
+                    self.msg("Blink mode was turned |w%s|n." % ("on" if onoff else "off"))
+                    self.prefs['blink'] = onoff
+                    self.session.ndb.blink = onoff
+                else:
+                    self.caller.msg("Usage: @option blink=on||off")
+                    return
+            else:
+                self.msg("Blink mode is |w%s|n." % ("on" if self.session.ndb.blink else "off"))
+
+       # elif self.lhs == 'width':
+       #     if not self.args:
+       #         self.caller.msg("Usage: @option width=<number> (0 for none)")
+       #         return
+       #     else:
+       #         self.prefs['width'] = self.args if self.args > 0 else False
+       #         self.session.ndb.blink = self.prefs['width']
+       #     self.caller.msg("Width set to %s." % self.prefs['width'])
+
+        if not self.rhs:
+            self.msg("|gUsage|n: |w@option|n [|wname|n = [value]]")
+
         if 'save' in self.switches:
             self.caller.db.prefs = self.prefs
-            self.msg('Stored preferences: %s' % self.prefs)
+            self.msg('|gSaving preferences|n: %s' % self.prefs)
 
 class CmdVerb(MuxPlayerCommand):
     """

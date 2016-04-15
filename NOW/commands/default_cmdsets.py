@@ -15,7 +15,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 from commands.command import CmdLook, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdOption
-from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard
+from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -59,6 +59,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.remove(default_cmds.CmdAddCom)
         self.remove(default_cmds.CmdAllCom)
         self.remove(default_cmds.CmdCBoot)
+        self.remove(default_cmds.CmdPage)
         self.remove(default_cmds.CmdChannelCreate)
         self.remove(default_cmds.CmdCdestroy)
         self.remove(default_cmds.CmdDelCom)
@@ -71,6 +72,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdVerb)
         self.add(CmdAccess)
         self.add(CmdOption)
+        self.add(CmdSysinfo)
         self.add(CmdChannels)
         self.add(CmdChannelWizard)
 
