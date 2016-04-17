@@ -159,4 +159,14 @@ class Object(DefaultObject):
                                  object speaks
 
      """
-    pass
+
+    def at_before_move(self, destination):
+    """
+    Called just before moving object - here we check to see if
+    it is supporting another object that is currently in the room
+    before allowing the move. If it is, we do prevent the move by
+    returning False.
+    """
+
+        self.location.msg("Something is preventing %s from moving!" % self.key)
+        return False # Object is supporting something; do not move it
