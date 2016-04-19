@@ -592,6 +592,20 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
 
 
+def health_bar(value, maximum, length):
+    "Returns a health bar of length."
+    gradientlist = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
+    value = float(value)
+    maximum = float(maximum)
+    length = float(length)
+    value = min(value, maximum)
+    barcolor = gradientlist[max(0,(int(round((value / maximum) * 9)) - 1))]
+    rounded_percent = int(min(round((value / maximum) * length), length - 1))
+    barstring = (("{:<%i}" % int(length)).format("%i / %i" % (int(value), int(maximum))))
+    barstring = ("|555" + barcolor + barstring[:rounded_percent] + '|[011' + barstring[rounded_percent:])
+    return barstring[:int(length) + 13] + "|n"
+
+
 class CmdLook(MuxCommand):
     """
     look at location or object
@@ -611,15 +625,17 @@ class CmdLook(MuxCommand):
         Handle looking at objects.
         """
         if not self.args:
-            target = self.caller.location
-            if not target:
+            self.target = self.caller.location
+            if not self.target:
                 self.caller.msg("You have no location to look at!")
                 return
         else:
-            target = self.caller.search(self.args)
-            if not target:
+            self.target = self.caller.search(self.args)
+            if not self.target:
                 return
-        self.msg(self.caller.at_look(target))
+        self.msg(self.caller.at_look(self.target))
+        if self.target.attributes.has('health'):
+            self.msg(health_bar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40))
 
 
 class CmdQuit(MuxPlayerCommand):
@@ -818,126 +834,6 @@ class CmdSay(MuxCommand):
         caller.location.msg_contents(emit_string)
 
 
-class CmdOption(MuxPlayerCommand):
-    """
-    Set an account option
-    @option
-    @option encode [= encoding]
-    @option reader [= on|off]
-    The text encoding setting should match what your client program
-    outputs, especially if you want to use non-ASCII characters.
-    If you see that your characters look strange (or you get encoding
-    errors), you should use this command to set the server encoding to
-    be the same used in your client program. If given the empty string
-    (default), the custom encoding will be removed and only defaults
-    will be used.
-    The screenreader setting strips the text output for users using
-    screen readers. It strips based on settings.SCREENREADER_REGEX_STRIP.
-    """
-    key = "@option"
-    aliases = "@options"
-    locks = "cmd:all()"
-
-    def func(self):
-        """
-        Implements the command
-        """
-        if self.session is None:
-            return
-        caller = self.caller
-        self.prefs = {'encode': 'utf-8', 'reader': False, 'color': True, 'blink': True, 'width': None}
-        if caller.attributes.has('prefs'):
-            # There are some preferences saved to use for this session.
-            # Load preferences with saved values, if they exist.
-            self.prefs = caller.db.prefs
-        else:
-            caller.db.prefs = self.prefs # First run of @option stores default dictionary setting on player.
-
-        if not self.args: # list the option settings
-            pencoding = self.session.encoding or "None"
-            sencodings = settings.ENCODINGS
-            string = "|wEncode|n: %s (Available: %s)\n" % (pencoding, ", ".join(sencodings))
-            string += "|wReader mode:|n %s\n" % self.session.screenreader
-            string += "|wColor mode:|n %s\n" % self.session.ndb.color
-            string += "|wBlink mode:|n %s\n" % self.session.ndb.blink
-            string += "|wWidth wrap:|n %s" % self.session.ndb.width
-            self.msg(string)
-
-        if self.lhs == "encode":
-            if self.rhs:
-                # change encoding
-                old_encoding = self.session.encoding
-                new_encoding = self.rhs.strip() or "utf-8"
-                try:
-                    utils.to_str(utils.to_unicode("test-string"), encoding=new_encoding)
-                except LookupError:
-                    string = "|rThe encoding '|w%s|r' is invalid. Keeping the previous encoding '|w%s|r'.|n" % (
-                    new_encoding, old_encoding)
-                else:
-                    self.session.encoding = new_encoding
-                    self.prefs['encode'] = new_encoding
-                    string = "Encoding was changed from '|w%s|n' to '|w%s|n'." % (old_encoding, new_encoding)
-                self.msg(string)
-                return
-            else:
-                self.msg("Encoding is '|w%s|n'" % self.session.encoding)
-
-        elif self.lhs == 'reader':
-            if self.rhs:
-                onoff = self.rhs.lower() == 'on'
-                if self.args and self.rhs.lower() in ("on", "off"):
-                    self.session.screenreader = onoff
-                    self.msg("Screen reader mode was turned |w%s|n." % ("on" if onoff else "off"))
-                    self.prefs['reader'] = onoff
-                else:
-                    self.caller.msg("|gUsage|n: @option reader=on||off")
-                    return
-            else:
-                self.msg("Reader mode is |w%s|n." % ("on" if self.session.screenreader else "off"))
-
-
-        elif self.lhs == 'color':
-            if self.rhs:
-                onoff = self.rhs.lower() == 'on'
-                if self.args and self.rhs.lower() in ("on", "off"):
-                    self.msg("Color mode was turned |w%s|n." % ("on" if onoff else "off"))
-                    self.prefs['color'] = onoff
-                    self.session.ndb.color = onoff
-                else:
-                    self.caller.msg("Usage: @option color=on||off")
-                    return
-            else:
-                self.msg("Color mode is |w%s|n." % ("on" if self.session.ndb.color else "off"))
-
-        elif self.lhs == 'blink':
-            if self.rhs:
-                onoff = self.rhs.lower() == 'on'
-                if self.args and self.rhs.lower() in ("on", "off"):
-                    self.msg("Blink mode was turned |w%s|n." % ("on" if onoff else "off"))
-                    self.prefs['blink'] = onoff
-                    self.session.ndb.blink = onoff
-                else:
-                    self.caller.msg("Usage: @option blink=on||off")
-                    return
-            else:
-                self.msg("Blink mode is |w%s|n." % ("on" if self.session.ndb.blink else "off"))
-
-       # elif self.lhs == 'width':
-       #     if not self.args:
-       #         self.caller.msg("Usage: @option width=<number> (0 for none)")
-       #         return
-       #     else:
-       #         self.prefs['width'] = self.args if self.args > 0 else False
-       #         self.session.ndb.blink = self.prefs['width']
-       #     self.caller.msg("Width set to %s." % self.prefs['width'])
-
-        if not self.rhs:
-            self.msg("|gUsage|n: |w@option|n [|wname|n = [value]]")
-
-        if 'save' in self.switches:
-            self.caller.db.prefs = self.prefs
-            self.msg('|gSaving preferences|n: %s' % self.prefs)
-
 class CmdVerb(MuxPlayerCommand):
     """
     Set a verb lock.
@@ -1048,10 +944,14 @@ class CmdWho(MuxPlayerCommand):
                                    utils.crop(location, width=25)])
         else:
             if 's' in self.switches or 'species' in self.switches or self.cmdstring == 'ws':
+                my_character = self.caller.get_puppet(self.session)
+                if not (my_character and my_character.location):
+                    self.msg("You can't see anyone here.")
+                    return
                 table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wSpecies"])
                 for session in session_list:
                     character = session.get_puppet()
-                    my_character = self.caller.get_puppet(self.session)
+                    # my_character = self.caller.get_puppet(self.session)
                     if not session.logged_in or character.location != my_character.location:
                         continue
                     delta_cmd = time.time() - session.cmd_last_visible
