@@ -256,11 +256,11 @@ class CmdChannelWizard(MuxPlayerCommand):
                                              aliases,
                                              description,
                                              locks=lockstring)
-        else:
             new_chan.connect(caller)
             CHANNELHANDLER.update()
             self.msg("Created channel %s and connected to it." % new_chan.key)
 
+        else:
             if not self.args:
                 self.msg("Usage: %s/destroy <channelname>" % self.cmdstring)
                 return
@@ -592,14 +592,42 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
 
 
-def health_bar(value, maximum, length):
-    "Returns a health bar of length."
-    gradientlist = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-    value = float(value)
+#def annotate(receiver, original, screen_version)
+#    """
+#    Receiver session sees original, unless session is a screen reader.
+#    """
+
+# return annotation if receiver.protocol_key['SCREENREADER'] else original
+
+#    if receiver.protocol_key['SCREENREADER']:
+#        return screen_version
+#    return original
+
+
+def gett(caller, obj):
+    "implements the attempt to get an object."
+
+    if not obj:
+        caller.msg("Get what?")
+    elif caller == obj:
+        caller.msg("You can't get yourself.")
+    elif not obj.access(caller, 'get'):
+        if obj.db.get_err_msg:
+            caller.msg(obj.db.get_err_msg)
+        else:
+            caller.msg("You can't get that.")
+    elif obj.move_to(caller, quiet=True):
+        caller.location.msg_contents("|g%s|n picks up |M%s|n." %
+            (caller.name, obj.name))
+        obj.at_get(caller) # calling hook method
+
+
+def make_bar(value, maximum, length, gradient):
+    "Make a bar of length, of color value along the gradient."
     maximum = float(maximum)
     length = float(length)
-    value = min(value, maximum)
-    barcolor = gradientlist[max(0,(int(round((value / maximum) * 9)) - 1))]
+    value = min(float(value), maximum)
+    barcolor = gradient[max(0,(int(round((value / maximum) * len(gradient))) - 1))]
     rounded_percent = int(min(round((value / maximum) * length), length - 1))
     barstring = (("{:<%i}" % int(length)).format("%i / %i" % (int(value), int(maximum))))
     barstring = ("|555" + barcolor + barstring[:rounded_percent] + '|[011' + barstring[rounded_percent:])
@@ -635,7 +663,8 @@ class CmdLook(MuxCommand):
                 return
         self.msg(self.caller.at_look(self.target))
         if self.target.attributes.has('health'):
-            self.msg(health_bar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40))
+            gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
+            self.msg(make_bar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40, gradient))
 
 
 class CmdQuit(MuxPlayerCommand):
@@ -1056,7 +1085,17 @@ class CmdPose(MuxCommand):
                     self.verb, noun = verbnoun.split()
                 else:
                     self.verb = verbnoun.strip()
-                    noun = 'me'
+                    # if self.verb is any of the current exits or aliases of the exits:
+                    #x = self.caller.location.exits
+                    #caller.msg("%s" % x)
+                    #caller.msg("%s" % self.verb)
+                    if False:
+                        False
+                    #if self.verb in x:
+                    #    noun = self.verb
+                    #    self.verb = 'go' 
+                    else:
+                        noun = 'me'
                 self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
             args = " %s" % args.strip()
@@ -1082,11 +1121,19 @@ class CmdPose(MuxCommand):
             verb = self.verb
             safe_verb = verb
             caller = self.caller
+            if verb == 'go':
+                verb = 'traverse'
+                safe_verb = 'traverse'
             if not obj.access(caller, verb): # Try original verb first.
                 safe_verb = 'v-' + verb  # If that does not work, then...
             if obj.access(caller, safe_verb):  # try the safe verb form.
-                if verb == 'get' or verb == 'drop':
-                    caller.execute_cmd(verb + ' ' + obj.name)
+                if verb == 'drop':
+                    obj.drop(caller)
+                elif verb == 'get':
+                    #get(caller, self.obj)
+                    obj.get(caller) 
+                elif verb == 'traverse':
+                    caller.execute_cmd(obj.name)
                 else:
                     msg = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
                     caller.location.msg_contents(msg)
