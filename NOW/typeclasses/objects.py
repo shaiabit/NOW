@@ -148,9 +148,9 @@ class Object(DefaultObject):
      at_msg_send(self, msg, to_obj=None, **kwargs) - called when this objects
                              sends a message to someone via self.msg().
 
-     return_appearance(looker) - describes this object. Used by "look"
+     return_appearance(viewer) - describes this object. Used by "look"
                                  command by default
-     at_desc(looker=None)      - called by 'look' whenever the
+     at_desc(viewer=None)      - called by 'look' whenever the
                                  appearance is requested.
      at_get(getter)            - called after object has been picked up.
                                  Does not stop pickup.
@@ -160,13 +160,97 @@ class Object(DefaultObject):
 
      """
 
-    def at_before_move(self, destination):
-    """
-    Called just before moving object - here we check to see if
-    it is supporting another object that is currently in the room
-    before allowing the move. If it is, we do prevent the move by
-    returning False.
-    """
 
-        self.location.msg("Something is preventing %s from moving!" % self.key)
-        return False # Object is supporting something; do not move it
+    def at_before_move(self, destination):
+        """
+        Called just before moving object - here we check to see if
+        it is supporting another object that is currently in the room
+        before allowing the move. If it is, we do prevent the move by
+        returning False.
+        """
+
+        if self.attributes.has('locked'):
+            destination.location.msg_contents("Something is preventing |M%s|n from moving!" % self.key)
+            return False # Object is supporting something; do not move it
+        return True
+
+
+    def at_get(self, caller):
+        """
+        Called after getting an object in the room.
+        """
+
+        caller.msg("|M%s|n is now in your posession." % self.name)
+
+
+    def drop(self, caller):
+        """
+        Implements the attempt to drop this object.
+        """
+
+        if False == True: # If caller is not holding self.
+            caller.msg("You do not have |M%s|n." % self.name)
+            return False
+        self.move_to(caller.location, quiet=True)
+        caller.location.msg_contents("|g%s|n drops |M%s|n." %
+            (caller.key, self.name))
+        self.at_drop(caller) # Call at_drop() method.
+
+
+    def get(self, caller):
+        """
+        Implements the attempt to get this object.
+        """
+
+        if caller == self:
+            caller.msg("You can't get yourself.")
+        elif self.location == caller:
+            caller.msg("You already have |M%s|n." % self.name)
+        elif self.move_to(caller, quiet=True):
+            caller.location.msg_contents("|g%s|n picks up |M%s|n." %
+                (caller.key, self.name))
+            self.at_get(caller) # calling hook method
+
+    def surface(self, caller):
+        """
+        Implements the surface connection of object.
+        Connections can be varied, but we keep it simple for now.
+        """
+
+    def return_appearance(self, viewer):
+        """
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            viewer (Object): Object doing the looking.
+        """
+        if not viewer:
+            return
+        # get and identify all objects
+        visible = (con for con in self.contents if con != viewer and
+                                                    con.access(viewer, "view"))
+        exits, users, things = [], [], []
+        for con in visible:
+            key = con.get_display_name(viewer)
+            if con.destination:
+                exits.append(key)
+            elif con.has_player:
+                users.append("{c%s{n" % key)
+            else:
+                things.append(key)
+        # get description, build string
+        string = "|M%s|n\n" % self.get_display_name(viewer)
+        desc = self.db.desc
+        desc_brief = self.db.desc_brief
+        if desc:
+            string += "%s" % desc
+        elif desc_brief:
+            string += "%s" % desc_brief
+        else:
+            string += 'A shimmering illusion shifts from form to form.'
+        if exits:
+            string += "\n|wExits: |g" + "|n, |g".join(exits)
+        if users or things:
+            string += "\n|wContains:|n " + ", ".join(users) + '|M' + "|n, |M".join(things)
+        return string        

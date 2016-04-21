@@ -18,4 +18,41 @@ class Room(DefaultRoom):
     See examples/object.py for a list of
     properties and methods available on all Objects.
     """
-    pass
+
+    def return_appearance(self, viewer):
+        """
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            viewer (Object): Object doing the looking.
+        """
+        if not viewer:
+            return
+        # get and identify all objects
+        visible = (con for con in self.contents if con != viewer and
+                                                    con.access(viewer, "view"))
+        exits, users, things = [], [], []
+        for con in visible:
+            key = con.get_display_name(viewer)
+            if con.destination:
+                exits.append(key)
+            elif con.has_player:
+                users.append("{c%s{n" % key)
+            else:
+                things.append(key)
+        # get description, build string
+        string = "|y%s|n\n" % self.get_display_name(viewer)
+        desc = self.db.desc
+        desc_brief = self.db.desc_brief
+        if desc:
+            string += "%s" % desc
+        elif desc_brief:
+            string += "%s" % desc_brief
+        else:
+            string += 'Nothing more than smoke and mirrors appears around you.'
+        if exits:
+            string += "\n|wExits: |g" + "|n, |g".join(exits)
+        if users or things:
+            string += "\n|wYou see:|n " + ", ".join(users) + '|n, |M' + "|n, |M".join(things)
+        return string
