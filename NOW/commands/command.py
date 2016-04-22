@@ -604,24 +604,6 @@ from evennia.utils import ansi, utils, create, search, prettytable
 #    return original
 
 
-def gett(caller, obj):
-    "implements the attempt to get an object."
-
-    if not obj:
-        caller.msg("Get what?")
-    elif caller == obj:
-        caller.msg("You can't get yourself.")
-    elif not obj.access(caller, 'get'):
-        if obj.db.get_err_msg:
-            caller.msg(obj.db.get_err_msg)
-        else:
-            caller.msg("You can't get that.")
-    elif obj.move_to(caller, quiet=True):
-        caller.location.msg_contents("|g%s|n picks up |M%s|n." %
-            (caller.name, obj.name))
-        obj.at_get(caller) # calling hook method
-
-
 def make_bar(value, maximum, length, gradient):
     "Make a bar of length, of color value along the gradient."
     maximum = float(maximum)
@@ -665,6 +647,35 @@ class CmdLook(MuxCommand):
         if self.target.attributes.has('health'):
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
             self.msg(make_bar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40, gradient))
+
+
+class CmdInventory(MuxCommand):
+    """
+    view inventory
+    Usage:
+      inventory
+      inv
+    Shows your inventory: carrying, wielding, wearing, obscuring.
+    """
+
+    key = "inventory"
+    aliases = ["inv", "i"]
+    locks = "cmd:all()"
+
+    def func(self):
+        "check inventory"
+        items = self.caller.contents
+        if not items:
+            string = "You are not carrying anything."
+        else:
+            table = prettytable.PrettyTable(["name", "desc_brief"])
+            table.header = False
+            table.border = False
+            for item in items:
+                second = item.db.mass if 'weight' in self.switches else item.db.desc_brief
+                table.add_row(["|M%s|n" % item.name, second and second or ""])
+            string = "|wYou are carrying:\n%s" % table
+        self.caller.msg(string)
 
 
 class CmdQuit(MuxPlayerCommand):
@@ -723,7 +734,6 @@ class CmdAccess(MuxCommand):
     key = "@access"
     locks = "cmd:all()"
     help_category = "System"
-    arg_regex = r"$"
 
     def func(self):
         "Load the permission groups"
@@ -1086,19 +1096,20 @@ class CmdPose(MuxCommand):
                 else:
                     self.verb = verbnoun.strip()
                     # if self.verb is any of the current exits or aliases of the exits:
-                    #x = self.caller.location.exits
+                    x = self.caller.location.exits
                     #caller.msg("%s" % x)
                     #caller.msg("%s" % self.verb)
-                    if False:
-                        False
+                    if x == self.verb:
+
                     #if self.verb in x:
-                    #    noun = self.verb
-                    #    self.verb = 'go' 
+                        noun = self.verb
+                        self.verb = 'go' 
                     else:
                         noun = 'me'
                 self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
-            args = " %s" % args.strip()
+            if not self.cmdstring == ";" :
+                args = " %s" % args.strip()
         self.args = args
 
     def func(self):
@@ -1130,8 +1141,7 @@ class CmdPose(MuxCommand):
                 if verb == 'drop':
                     obj.drop(caller)
                 elif verb == 'get':
-                    #get(caller, self.obj)
-                    obj.get(caller) 
+                    obj.get(caller)
                 elif verb == 'traverse':
                     caller.execute_cmd(obj.name)
                 else:
