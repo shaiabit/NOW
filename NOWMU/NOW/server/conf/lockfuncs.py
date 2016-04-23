@@ -20,7 +20,7 @@ lock functions from evennia.locks.lockfuncs.
 
 """
 
-#def myfalse(accessing_obj, accessed_obj, *args, **kwargs):
+# def myfalse(accessing_obj, accessed_obj, *args, **kwargs):
 #    """
 #    called in lockstring with myfalse().
 #    A simple logger that always returns false. Prints to stdout
@@ -28,3 +28,15 @@ lock functions from evennia.locks.lockfuncs.
 #    """
 #    print "%s tried to access %s. Access denied." % (accessing_obj, accessed_obj)
 #    return False
+
+from random import *
+
+
+def half(accessing_obj, accessed_obj, *args, **kwargs):
+    if random() > 0.5:
+        return False
+    return True
+
+
+def roll(accessing_obj, accessed_obj, *args, **kwargs):
+    return True if args else False
