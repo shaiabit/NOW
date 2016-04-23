@@ -9,6 +9,7 @@ creation commands.
 """
 from evennia import DefaultCharacter
 
+
 class Character(DefaultCharacter):
     """
     The Character defaults to implementing some of its hook methods with the
@@ -34,7 +35,7 @@ class Character(DefaultCharacter):
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
-        self.msg("\nYou assume the roll of {c%s{n.\n" % self.name)
+        self.msg("\nYou assume the role of {c%s{n.\n" % self.name)
         self.msg(self.at_look(self.location))
 
         def message(obj, from_obj):
