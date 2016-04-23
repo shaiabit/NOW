@@ -211,11 +211,32 @@ class Object(DefaultObject):
                 (caller.key, self.name))
             self.at_get(caller) # calling hook method
 
-    def surface(self, caller):
+    def surface_put(self, caller, connection):
         """
-        Implements the surface connection of object.
-        Connections can be varied, but we keep it simple for now.
+        Implements the surface connection of object by caller.
         """
+
+        if not self.attributes.has('surface'):
+            self.db.surface = {}
+        surface = self.db.surface
+        if caller in surface:         
+            return False
+        surface[caller] = connection
+        return True
+
+
+    def surface_off(self, caller):
+        """
+        Implements the surface disconnection of object by caller.
+        """
+
+        surface = self.db.surface
+        if caller in surface:
+            del(surface[caller])
+            self.db.surface = surface
+            return True
+        return False
+
 
     def return_appearance(self, viewer):
         """
@@ -236,7 +257,7 @@ class Object(DefaultObject):
             if con.destination:
                 exits.append(key)
             elif con.has_player:
-                users.append("{c%s{n" % key)
+                users.append("|c%s|n" % key)
             else:
                 things.append(key)
         # get description, build string

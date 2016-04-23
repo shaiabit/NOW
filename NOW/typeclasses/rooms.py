@@ -36,9 +36,9 @@ class Room(DefaultRoom):
         for con in visible:
             key = con.get_display_name(viewer)
             if con.destination:
-                exits.append(key)
+                exits.append(con.name)
             elif con.has_player:
-                users.append("{c%s{n" % key)
+                users.append("|c%s|n" % key)
             else:
                 things.append(key)
         # get description, build string
@@ -52,7 +52,8 @@ class Room(DefaultRoom):
         else:
             string += 'Nothing more than smoke and mirrors appears around you.'
         if exits:
-            string += "\n|wExits: |g" + "|n, |g".join(exits)
+            string += "\n|wExits: " + ", ".join("|g{lc%s{lt%s{le|n" % (e, e) for e in exits)
         if users or things:
-            string += "\n|wYou see:|n " + ", ".join(users) + '|n, |M' + "|n, |M".join(things)
+            ut_joiner = ', ' if users and things else ''
+            string += "\n|wYou see:|n " + ", ".join(users) + ut_joiner + '|M' + "|n, |M".join(things)
         return string

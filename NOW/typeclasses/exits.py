@@ -67,13 +67,15 @@ class Exit(DefaultExit):
             else:
                 things.append(key)
         # get description, build string
-        string = "|g%s|n -- " % self.get_display_name(viewer)
+        string = "|g{lc%s{lt%s{le|n -- " % (self.name, self.get_display_name(viewer))
         desc = self.db.desc
         desc_brief = self.db.desc_brief
-        if desc:
+        if desc and viewer.location == self:
             string += "%s" % desc
         elif desc_brief:
             string += "%s" % desc_brief
+        else:
+            string += "leads to |y%s|n" % self.destination.get_display_name(viewer)
         if exits:
             string += "\n|wExits:|n " + ", ".join(exits)
         if users or things:
