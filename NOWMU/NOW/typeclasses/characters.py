@@ -69,7 +69,7 @@ class Character(DefaultCharacter):
         for the viewer's perspective as a string.
         """
 
-        if viewer and (self != viewer) and self.access(viewer, "view"):
+        if viewer and self.access(viewer, "view"):
             return "|c{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
