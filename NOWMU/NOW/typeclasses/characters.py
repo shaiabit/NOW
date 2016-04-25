@@ -9,7 +9,6 @@ creation commands.
 """
 from evennia import DefaultCharacter
 
-
 class Character(DefaultCharacter):
     """
     The Character defaults to implementing some of its hook methods with the
@@ -35,7 +34,7 @@ class Character(DefaultCharacter):
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
-        self.msg("\nYou assume the role of {c%s{n.\n" % self.name)
+        self.msg("\nYou assume the role of |c%s|n.\n" % self.name)
         self.msg(self.at_look(self.location))
 
         def message(obj, from_obj):
@@ -62,3 +61,56 @@ class Character(DefaultCharacter):
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
                 self.location = None
+
+
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|c{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+        else:
+            return ''
+
+
+    def return_appearance(self, viewer):
+        """
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            viewer (Object): Object doing the looking.
+        """
+        if not viewer:
+            return
+        # get and identify all objects
+        visible = (con for con in self.contents if con != viewer and
+                                                    con.access(viewer, "view"))
+        exits, users, things = [], [], []
+        for con in visible:
+            if con.destination:
+                exits.append(con)
+            elif con.has_player:
+                users.append(con)
+            else:
+                things.append(con)
+        # get description, build string
+        string = "%s\n" % self.full_name(viewer)
+        desc = self.db.desc
+        desc_brief = self.db.desc_brief
+        if desc:
+            string += "%s" % desc
+        elif desc_brief:
+            string += "%s" % desc_brief
+        else:
+            string += 'A shimmering illusion shifts from form to form.'
+        if exits:
+            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+        if users or things:
+            user_list = ", ".join(u.full_name(viewer) for u in users)
+            ut_joiner = ', ' if users and things else ''
+            item_list = ", ".join(t.full_name(viewer) for t in things)
+            string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+        return string

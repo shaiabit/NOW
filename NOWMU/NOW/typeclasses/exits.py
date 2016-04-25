@@ -44,6 +44,18 @@ class Exit(DefaultExit):
             looker.msg("You gaze into the distance.")
 
 
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|g{lc%s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+        else:
+            return ''
+
+
     def return_appearance(self, viewer):
         """
         This formats a description. It is the hook a 'look' command
@@ -59,11 +71,10 @@ class Exit(DefaultExit):
                                                     con.access(viewer, "view"))
         exits, users, things = [], [], []
         for con in visible:
-            key = con.get_display_name(viewer)
             if con.destination:
-                exits.append(key)
+                exits.append(con)
             elif con.has_player:
-                users.append("|c%s|n" % key)
+                users.append(con)
             else:
                 things.append(key)
         # get description, build string
@@ -77,7 +88,10 @@ class Exit(DefaultExit):
         else:
             string += "leads to |y%s|n" % self.destination.get_display_name(viewer)
         if exits:
-            string += "\n|wExits:|n " + ", ".join(exits)
+            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
         if users or things:
-            string += "\n|wYou see:|n " + ", ".join(users + things)
+            user_list = ", ".join(u.full_name(viewer) for u in users)
+            ut_joiner = ', ' if users and things else ''
+            item_list = ", ".join(t.full_name(viewer) for t in things)
+            string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         return string

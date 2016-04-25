@@ -170,7 +170,6 @@ class Object(DefaultObject):
         """
 
         if self.attributes.has('locked'):
-            destination.location.msg_contents("Something is preventing |M%s|n from moving!" % self.key)
             return False # Object is supporting something; do not move it
         return True
 
@@ -180,7 +179,7 @@ class Object(DefaultObject):
         Called after getting an object in the room.
         """
 
-        caller.msg("|M%s|n is now in your posession." % self.name)
+        caller.msg("%s is now in your posession." % self.full_name(caller))
 
 
     def drop(self, caller):
@@ -189,11 +188,11 @@ class Object(DefaultObject):
         """
 
         if False == True: # If caller is not holding self.
-            caller.msg("You do not have |M%s|n." % self.name)
+            caller.msg("You do not have %s." % self.full_name(caller))
             return False
         self.move_to(caller.location, quiet=True)
-        caller.location.msg_contents("|g%s|n drops |M%s|n." %
-            (caller.key, self.name))
+        caller.location.msg_contents("|g%s|n drops %s." %
+            (caller.key, self.full_name(caller)))
         self.at_drop(caller) # Call at_drop() method.
 
 
@@ -205,11 +204,12 @@ class Object(DefaultObject):
         if caller == self:
             caller.msg("You can't get yourself.")
         elif self.location == caller:
-            caller.msg("You already have |M%s|n." % self.name)
+            caller.msg("You already have %s." % self.full_name(caller))
         elif self.move_to(caller, quiet=True):
-            caller.location.msg_contents("|g%s|n picks up |M%s|n." %
-                (caller.key, self.name))
+            caller.location.msg_contents("|g%s|n takes %s." %
+                (caller.key, self.full_name(caller)))
             self.at_get(caller) # calling hook method
+
 
     def surface_put(self, caller, connection):
         """
@@ -238,6 +238,18 @@ class Object(DefaultObject):
         return False
 
 
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|u{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+        else:
+            return ''
+
+
     def return_appearance(self, viewer):
         """
         This formats a description. It is the hook a 'look' command
@@ -253,15 +265,14 @@ class Object(DefaultObject):
                                                     con.access(viewer, "view"))
         exits, users, things = [], [], []
         for con in visible:
-            key = con.get_display_name(viewer)
             if con.destination:
-                exits.append(key)
+                exits.append(con)
             elif con.has_player:
-                users.append("|c%s|n" % key)
+                users.append(con)
             else:
-                things.append(key)
+                things.append(con)
         # get description, build string
-        string = "|M%s|n\n" % self.get_display_name(viewer)
+        string = self.full_name(viewer) + "\n"
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:
@@ -271,7 +282,10 @@ class Object(DefaultObject):
         else:
             string += 'A shimmering illusion shifts from form to form.'
         if exits:
-            string += "\n|wExits: |g" + "|n, |g".join(exits)
+            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
         if users or things:
-            string += "\n|wContains:|n " + ", ".join(users) + '|M' + "|n, |M".join(things)
+            user_list = ", ".join(u.full_name(viewer) for u in users)
+            ut_joiner = ', ' if users and things else ''
+            item_list = ", ".join(t.full_name for t in things)
+            string += "\n|wContains:|n " + user_list + ut_joiner + item_list
         return string        
