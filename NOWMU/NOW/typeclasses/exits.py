@@ -93,5 +93,5 @@ class Exit(DefaultExit):
             user_list = ", ".join(u.full_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.full_name(viewer) for t in things)
-            string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+            string += "\n|wAlong the way you see:|n " + user_list + ut_joiner + item_list
         return string

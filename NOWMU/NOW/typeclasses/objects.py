@@ -160,6 +160,40 @@ class Object(DefaultObject):
 
      """
 
+    def reset(self):
+        "Resets the object - quietly sends it home or nowhere."
+
+        self.location = self.home
+
+
+    def junk(self):
+        "Tags the object as junk to decay."
+
+        # Create a timer for final stage of decay.
+        pass
+
+
+    def read(self):
+        """
+        Implements the read command. This simply looks for an
+        Attribute "readable_text" on the object and displays that.
+        """
+
+        if self.args:
+            obj = self.caller.search(self.args.strip())
+        else:
+            obj = self.obj
+        if not obj:
+            return
+        # Attribute read_text is defined.
+        readtext = obj.db.readable_text
+        if readtext:
+            string = "You read |C%s|n:\n  %s" % (obj.key, readtext)
+        else:
+            string = "There is nothing to read on %s." % obj.key
+        self.caller.msg(string)
+
+
 
     def at_before_move(self, destination):
         """
@@ -288,4 +322,23 @@ class Object(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.full_name for t in things)
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
-        return string        
+        return string
+
+
+class Consumable(Object):
+    """
+    This is the consumable typeclass object, implementing an in-game
+    object, to be consumed and decay, break, be eaten, drank, cast,
+    burned, or wear out slowly like clothing or furniture.
+    """
+
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|w|[B{lc@verb %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+        else:
+            return ''
