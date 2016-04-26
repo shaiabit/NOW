@@ -76,7 +76,7 @@ class Exit(DefaultExit):
             elif con.has_player:
                 users.append(con)
             else:
-                things.append(key)
+                things.append(con)
         # get description, build string
         string = "|g{lc%s{lt%s{le|n -- " % (self.name, self.get_display_name(viewer))
         desc = self.db.desc
