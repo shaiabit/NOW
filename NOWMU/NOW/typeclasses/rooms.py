@@ -26,7 +26,7 @@ class Room(DefaultRoom):
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|y{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+            return "|y|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
 

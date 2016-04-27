@@ -279,7 +279,7 @@ class Object(DefaultObject):
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|u{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+            return "|u|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
 
@@ -339,6 +339,6 @@ class Consumable(Object):
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|w|[B{lc@verb %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+            return "|w|[B|lc@verb %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''

@@ -51,7 +51,7 @@ class Exit(DefaultExit):
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|g{lc%s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+            return "|g|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
 
@@ -78,7 +78,7 @@ class Exit(DefaultExit):
             else:
                 things.append(con)
         # get description, build string
-        string = "|g{lc%s{lt%s{le|n -- " % (self.name, self.get_display_name(viewer))
+        string = "|g|lc%s|lt%s|le|n -- " % (self.name, self.get_display_name(viewer))
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc and viewer.location == self:
@@ -93,5 +93,6 @@ class Exit(DefaultExit):
             user_list = ", ".join(u.full_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.full_name(viewer) for t in things)
-            string += "\n|wAlong the way you see:|n " + user_list + ut_joiner + item_list
+            path_view = 'Y' if viewer.location == self else 'Along the way y'
+            string += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
         return string

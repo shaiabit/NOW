@@ -70,7 +70,7 @@ class Character(DefaultCharacter):
         """
 
         if viewer and self.access(viewer, "view"):
-            return "|c{lclook %s{lt%s{le|n" % (self.name, self.get_display_name(viewer))
+            return "|c|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
 
