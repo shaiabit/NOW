@@ -266,7 +266,7 @@ class CmdChannelWizard(MuxPlayerCommand):
                 return
             channel = find_channel(caller, self.args)
             if not channel:
-                self.msg("Could not find channel %s." % self.args)
+                # self.msg("Could not find channel %s." % self.args)
                 return
             if not channel.access(caller, 'control'):
                 self.msg("You are not allowed to do that.")
@@ -287,23 +287,23 @@ class CmdChannels(MuxPlayerCommand):
       @chan,  @channel, @channels
     Switches:
     Lists channels you are currently receiving.
-      Use /list to display all available channels.
-      Use /join (on) or /part (off) to join or depart channels.
+      /list to display all available channels.
+      /join (on) or /part (off) to join or depart channels.
 
     Batch:
-      Use /all to affect all channels at once:
-      Use /all on  to join all available channels.
-      Use /all off  to part all channels currently on.
+      /all      to affect all channels at once:
+      /all on   to join all available channels.
+      /all off  to part all channels currently on.
 
     If you control a channel:
-      Use /all who  to list who listens to all channels.
-      Use /who to see who listens to a specific channel.
-      Use /lock to set a lock on a channel.
-      Use /desc to describe a channel.
-      Use /emit to emit on a channel.
-        Use /name when emitting, to display your name.
-      Use /remove to remove a player from the channel.
-        Use /quiet to remove the user quietly.
+      /all who      to list who listens to all channels.
+      /who          who listens to a specific channel.
+      /lock         to set a lock on a channel.
+      /desc         to describe a channel.
+      /emit         to emit on a channel.
+      /emit/name    when emitting, to display your name.
+      /remove       to remove a player from the channel.
+      /remove/quiet to remove the user quietly.
     Channels provide communication with a group of other players based on a
     particular interest or subject.  Channels are free of being at a particular
     location. Channels use their alias as the command to post to then.
@@ -592,18 +592,6 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
 
 
-#def annotate(receiver, original, screen_version)
-#    """
-#    Receiver session sees original, unless session is a screen reader.
-#    """
-
-# return annotation if receiver.protocol_key['SCREENREADER'] else original
-
-#    if receiver.protocol_key['SCREENREADER']:
-#        return screen_version
-#    return original
-
-
 def make_bar(value, maximum, length, gradient):
     "Make a bar of length, of color value along the gradient."
     maximum = float(maximum)
@@ -673,7 +661,7 @@ class CmdInventory(MuxCommand):
             table.border = False
             for item in items:
                 second = item.db.mass if 'weight' in self.switches else item.db.desc_brief
-                table.add_row(["%s" % item.full_name(self.caller), second and second or ""])
+                table.add_row(["%s" % item.full_name(self.caller.session), second and second or ""])
             string = "|wYou are carrying:\n%s" % table
         self.caller.msg(string)
 
@@ -754,8 +742,8 @@ class CmdAccess(MuxCommand):
 
         string += "|wYour Player/Character access|n: "
         if hasattr(caller, 'player'):
-            string += "Player: (|c%s|n: %s) and " % (caller.player.key, pperms)
-        string += "Character (|c%s|n: %s)" % (caller.key, cperms)
+            string += "Player: (%s: %s) and " % (caller.player.full_name(self.session), pperms)
+        string += "Character (%s: %s)" % (caller.full_name(self.session), cperms)
         caller.msg(string)
 
 
@@ -786,7 +774,7 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             caller.execute_cmd('pose/o %s' % args[1:])
         else:
-            caller.location.msg_contents('[OOC |c%s|n] %s' % (caller.name, args))
+            caller.location.msg_contents('[OOC %s] %s' % (caller.full_name(self.session), args))
 
 
 class CmdSpoof(MuxCommand):
@@ -854,7 +842,7 @@ class CmdSay(MuxCommand):
 
         if 'v' in self.switches or 'verb' in self.switches:
             caller.attributes.add('say-verb', self.args)
-            emit_string = '|c%s|n warms up vocally with "%s|n"' % (caller.name, self.args)
+            emit_string = '%s warms up vocally with "%s|n"' % (caller.full_name(self.session), self.args)
             caller.location.msg_contents(emit_string)
             return
 
@@ -866,10 +854,10 @@ class CmdSay(MuxCommand):
         speech = caller.location.at_say(caller, self.args) # Notify NPCs and listeners.
 
         if 'o' in self.switches or 'ooc' in self.switches:
-            emit_string = '[OOC]|n |c%s|n says, "%s"' % (caller.name, speech)
+            emit_string = '[OOC]|n %s says, "%s"' % (caller.full_name(self.session), speech)
         else:
             verb = caller.attributes.get('say-verb') if caller.attributes.has('say-verb') else 'says'
-            emit_string = '|c%s|n %s, "%s|n"' % (caller.name, verb, speech)
+            emit_string = '%s %s, "%s|n"' % (caller.full_name(self.session), verb, speech)
         caller.location.msg_contents(emit_string)
 
 
@@ -894,7 +882,7 @@ class CmdVerb(MuxPlayerCommand):
             obj_list = my_char.search(args, location=[my_char, my_char.location]) if args else my_char
             if obj_list:
                 obj = obj_list
-                verb_msg = "Verbs of %s: " % obj_list
+                verb_msg = "Verbs of %s: " % obj_list.full_name(self.session)
             else:
                 obj = my_char
                 verb_msg = "Verbs on you: "
@@ -1095,17 +1083,18 @@ class CmdPose(MuxCommand):
                     self.verb, noun = verbnoun.split()
                 else:
                     self.verb = verbnoun.strip()
+
                     # if self.verb is any of the current exits or aliases of the exits:
-                    x = self.caller.location.exits
-                    #caller.msg("%s" % x)
-                    #caller.msg("%s" % self.verb)
-                    if x == self.verb:
+                    # x = self.caller.location.exits
+                    # caller.msg("%s" % x)
+                    # caller.msg("%s" % self.verb)
+                    # if x == self.verb:
 
                     #if self.verb in x:
-                        noun = self.verb
-                        self.verb = 'go' 
-                    else:
-                        noun = 'me'
+                    #    noun = self.verb
+                    #    self.verb = 'go' 
+                    #else:
+                    noun = 'me'
                 self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
             if not self.cmdstring == ";" :
@@ -1118,10 +1107,12 @@ class CmdPose(MuxCommand):
         caller = self.caller
         if self.args:
             if 'o' in self.switches or 'ooc' in self.switches:
-                msg = '[OOC]|n |c%s|n%s' % (caller.name, self.args)
+                msg = '[OOC]|n %s%s' % (caller.full_name(self.session), self.args)
             else:
-                msg = "|c%s|n%s" % (caller.name, self.args)
+                msg = "%s%s" % (caller.full_name(self.session), self.args)
             caller.location.msg_contents(msg)
+        elif self.cmdstring != 'try':
+            return
 
 #    def at_post_command(self):
 #        "Verb response here."

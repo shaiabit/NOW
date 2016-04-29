@@ -49,3 +49,8 @@ and can be used to customize it to each session.
 #    "Silly capitalize example. Used as {capitalize() ... {/capitalize"
 #    session = kwargs.get("session")
 #    return text.capitalize()
+
+def annotate(original, annotaion):
+    "session sees original, unless session is a screen reader."
+    session = kwargs.get("session")
+    return annotation if session.protocol_key['SCREENREADER'] else original

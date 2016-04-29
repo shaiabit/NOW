@@ -221,10 +221,10 @@ class Object(DefaultObject):
         Implements the attempt to drop this object.
         """
 
-        if False == True: # If caller is not holding self.
+        if self.location != caller: # If caller is not holding object,
             caller.msg("You do not have %s." % self.full_name(caller))
             return False
-        self.move_to(caller.location, quiet=True)
+        self.move_to(caller.location, quiet=True, use_destination=False)
         caller.location.msg_contents("|g%s|n drops %s." %
             (caller.key, self.full_name(caller)))
         self.at_drop(caller) # Call at_drop() method.

@@ -16,6 +16,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 from evennia import default_cmds
 from commands.command import CmdLook, CmdInventory, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb
 from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
+from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSetSpeed
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -42,6 +43,10 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdSay)
         self.add(CmdOoc)
         self.add(CmdSpoof)
+        self.add(CmdStop)
+        self.add(CmdSetSpeed)
+        self.add(CmdContinue)
+        self.add(CmdBack)
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
