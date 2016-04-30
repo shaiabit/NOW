@@ -91,7 +91,18 @@ class Player(DefaultPlayer):
      at_server_shutdown()
 
     """
-    pass
+
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and self.access(viewer, "view"):
+            # return "|[y|[R|lcexamine %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            return "|[y|[R|lcexamine %s|lt%s|le|n" % (self.name, self.key) # No get_display_name ?
+        else:
+            return ''
 
 
 class Guest(DefaultGuest):

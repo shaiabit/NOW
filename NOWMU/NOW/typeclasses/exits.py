@@ -109,10 +109,15 @@ class Exit(DefaultExit):
         Implements the actual traversal, using utils.delay to delay the move_to.
         """
 
-        # if the traverser has an Attribute move_speed, use that,
-        # otherwise default to "walk" speed
+        # if the exit has an attribute is_path and and traverser has move_speed,
+        # use that, otherwise default to normal exit behavior and "walk" speed.
+
+        is_path = self.db.is_path or False
         move_speed = traversing_object.db.move_speed or "walk"
         move_delay = MOVE_DELAY.get(move_speed, 4)
+
+        if is_path == False:
+            return traversing_object.move_to(self, quiet=False)
 
         def move_callback():
             "This callback will be called by utils.delay after move_delay seconds."
