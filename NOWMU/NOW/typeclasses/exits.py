@@ -119,30 +119,34 @@ class Exit(DefaultExit):
         if is_path == False:
             return traversing_object.move_to(self, quiet=False)
 
+        if traversing_object.location == target_location: # If object is already at destination...
+            return True
+
+
         def move_callback():
             "This callback will be called by utils.delay after move_delay seconds."
+
             source_location = traversing_object.location
             if traversing_object.move_to(target_location):
                 traversing_object.ndb.currently_moving = None
                 self.at_after_traverse(traversing_object, source_location)
             else:
-                if self.db.err_traverse:
-                    # if exit has a better error message, let's use it.
+                if self.db.err_traverse: # if exit has a better error message, use it.
                     self.caller.msg(self.db.err_traverse)
-                else:
-                    # No shorthand error message. Call hook.
+                else:  # No shorthand error message. Call hook.
                     self.at_failed_traverse(traversing_object)
 
         traversing_object.msg("You start moving %s at a %s." % (self.key, move_speed))
-        traversing_object.move_to(self, quiet=False, use_destination=False)
+
+        if traversing_object.location != self: # If object is not inside exit...
+            traversing_object.move_to(self, quiet=False, use_destination=False)
 
         # create a delayed movement
 
         deferred = utils.delay(move_delay, callback=move_callback)
 
-        # we store the deferred on the character, this will allow us
-        # to abort the movement. We must use an ndb here since
-        # deferreds cannot be pickled.
+        # Store the deferred on the character, this will allow momvent
+        # to abort. Use an ndb here since deferreds cannot be pickled.
 
         traversing_object.ndb.currently_moving = deferred
 
@@ -227,11 +231,12 @@ class CmdContinue(Command):
         if caller.ndb.currently_moving:
             caller.msg("You are already moving.")
         else:
-            caller.execute_cmd(caller.location.name)
             caller.location.msg_contents("%s is going to %s." \
-                % (caller.full_name, destination.full_name))#, exclude=caller)
-            caller.msg("You begin moving.")
-            #  (moving) %s." % SPEED_DESCS[caller.db.move_speed]
+                % (caller.full_name(caller.sessions), \
+                destination.full_name(caller.sessions)), exclude=caller)
+            caller.msg("You begin %s toward %s." % (SPEED_DESCS[caller.db.move_speed], \
+                destination.full_name(caller.sessions)))
+            caller.move_to(destination, quiet=False)
 
 
 class CmdBack(Command):
