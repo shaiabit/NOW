@@ -39,6 +39,8 @@ class Exit(DefaultExit):
                                         not be called if the attribute `err_traverse` is
                                         defined, in which case that will simply be echoed.
     """
+
+
     def at_desc(self, looker=None):
         """
         This is called whenever someone looks at an exit.
@@ -56,8 +58,13 @@ class Exit(DefaultExit):
         for the viewer's perspective as a string.
         """
 
+        is_path = self.db.is_path or False
+
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|g|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            if is_path:
+                return "|g|u|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            else:
+                return "|g|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
 
@@ -113,11 +120,15 @@ class Exit(DefaultExit):
         # use that, otherwise default to normal exit behavior and "walk" speed.
 
         is_path = self.db.is_path or False
+        source_location = traversing_object.location
         move_speed = traversing_object.db.move_speed or "walk"
         move_delay = MOVE_DELAY.get(move_speed, 4)
 
         if is_path == False:
-            return traversing_object.move_to(self, quiet=False)
+            success = traversing_object.move_to(self, quiet=False)
+            if success:
+                self.at_after_traverse(traversing_object, source_location)
+            return success
 
         if traversing_object.location == target_location: # If object is already at destination...
             return True
@@ -140,6 +151,7 @@ class Exit(DefaultExit):
 
         if traversing_object.location != self: # If object is not inside exit...
             traversing_object.move_to(self, quiet=False, use_destination=False)
+            self.at_after_traverse(traversing_object, source_location)
 
         # create a delayed movement
 
@@ -149,6 +161,14 @@ class Exit(DefaultExit):
         # to abort. Use an ndb here since deferreds cannot be pickled.
 
         traversing_object.ndb.currently_moving = deferred
+
+
+    def at_after_traverse(self, traveller, source_loc):
+        "called by at_traverse just after traversing."
+
+        traveller.ndb.last_location = source_loc
+        if source_loc.destination == None:
+            traveller.db.last_room = source_loc
 
 
 SPEED_DESCS = {"stroll": "strolling",
@@ -222,6 +242,7 @@ class CmdContinue(Command):
         """
 
         caller = self.caller
+        start = caller.location
         destination = caller.location.destination
 
         if destination == None:
@@ -236,7 +257,8 @@ class CmdContinue(Command):
                 destination.full_name(caller.sessions)), exclude=caller)
             caller.msg("You begin %s toward %s." % (SPEED_DESCS[caller.db.move_speed], \
                 destination.full_name(caller.sessions)))
-            caller.move_to(destination, quiet=False)
+            if caller.move_to(destination, quiet=False):
+                start.at_after_traverse(caller, start)
 
 
 class CmdBack(Command):
@@ -258,7 +280,13 @@ class CmdBack(Command):
         start = caller.location.location
 
         if destination == None:
-            caller.msg("You forgot where you came from.")
+            # Find an exit that leads back to the last room you were in.
+            last_location = caller.db.last_location or False
+            if last_location:
+                caller.msg("You came from %s." % \
+                    last_location.full_name(caller.sessions))
+            else:
+                caller.msg("You forgot where you came from.")
             return
 
         if caller.ndb.currently_moving:
