@@ -594,7 +594,7 @@ class CmdInventory(MuxCommand):
             table.border = False
             for item in items:
                 second = item.db.mass if 'weight' in self.switches else item.db.desc_brief
-                table.add_row(["%s" % item.full_name(self.caller.session), second and second or ""])
+                table.add_row(["%s" % item.full_name(self.caller.sessions), second and second or ""])
             string = "|wYou are carrying:\n%s" % table
         self.caller.msg(string)
 
@@ -834,7 +834,7 @@ class CmdVerb(MuxPlayerCommand):
             my_char.msg(verb_msg + "%s" % collector)
 
 
-class ho(MuxPlayerCommand):
+class CmdWho(MuxPlayerCommand):
     """
     list who is currently online
     Usage:
@@ -949,7 +949,7 @@ class CmdPose(MuxCommand):
       pose <pose text>
       pose's <pose text>
 
-      pose <verb> <noun>:<pose text>
+      pose <verb> <noun>::<pose text>
 
       try <verb> <noun>
     Switch:
