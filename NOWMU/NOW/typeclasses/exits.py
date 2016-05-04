@@ -139,7 +139,7 @@ class Exit(DefaultExit):
 
             source_location = traversing_object.location
             if traversing_object.move_to(target_location):
-                traversing_object.ndb.currently_moving = None
+                traversing_object.nattributes.remove('currently_moving')
                 self.at_after_traverse(traversing_object, source_location)
             else:
                 if self.db.err_traverse: # if exit has a better error message, use it.
@@ -221,7 +221,7 @@ class CmdStop(Command):
         currently_moving = self.caller.ndb.currently_moving
         if currently_moving:
             currently_moving.cancel() # disables the trigger.
-            self.caller.ndb.currently_moving = None # Removes the trigger.
+            self.caller.nattributes.remove('currently_moving')  # Removes the trigger.
             self.caller.msg("You stop moving.")
         else:
             self.caller.msg("You are not moving.")

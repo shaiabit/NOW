@@ -173,26 +173,21 @@ class Object(DefaultObject):
         pass
 
 
-    def read(self):
+    def read(self, caller):
         """
         Implements the read command. This simply looks for an
         Attribute "readable_text" on the object and displays that.
         """
 
-        if self.args:
-            obj = self.caller.search(self.args.strip())
+        readtext = self.db.readable_text
+        obj_name = self.full_name(caller.sessions)
+        if readtext:  # Attribute read_text is defined.
+            string = "You read %s:\n  %s" % (obj_name, readtext)
+            caller.location.msg_contents("|g%s|n reads %s." % \
+                (caller.full_name(caller), obj_name), exclude=caller)
         else:
-            obj = self.obj
-        if not obj:
-            return
-        # Attribute read_text is defined.
-        readtext = obj.db.readable_text
-        if readtext:
-            string = "You read |C%s|n:\n  %s" % (obj.key, readtext)
-        else:
-            string = "There is nothing to read on %s." % obj.key
-        self.caller.msg(string)
-
+            string = "There is nothing to read on %s." % obj_name
+        caller.msg(string)
 
 
     def at_before_move(self, destination):
@@ -256,6 +251,10 @@ class Object(DefaultObject):
         if caller in surface:         
             return False
         surface[caller] = connection
+        self.db.locked = True
+        caller.db.locked = True
+        caller.location.msg_contents("|g%s|n sits %s %s." %
+            (caller.key, connection, self.full_name(caller)))
         return True
 
 
@@ -268,6 +267,11 @@ class Object(DefaultObject):
         if caller in surface:
             del(surface[caller])
             self.db.surface = surface
+            if len(surface) < 1:
+                self.attributes.remove('locked')
+            caller.attributes.remove('locked')
+            caller.location.msg_contents("|r%s|n leaves %s." %
+                (caller.key, self.full_name(caller)))
             return True
         return False
 
@@ -322,6 +326,8 @@ class Object(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.full_name for t in things)
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
+        if self.db.surface:
+            string += "With %s on top." % self.db.surface
         return string
 
 
@@ -342,3 +348,51 @@ class Consumable(Object):
             return "|w|[B|lc@verb %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
+
+
+    def drink(self, caller):
+        """
+        Response to driinking the object.
+        """
+
+        if not self.locks.check_lockstring(caller,'holds()'):
+            msg = "You are not holding %s." % self.full_name(caller.sessions)
+            caller.msg(msg)
+            return False
+
+        finish = ''
+        if self.attributes.has('health'):
+            self.db.health -= 1
+            if self.db.health < 1:
+                finish = ', finishing it'
+                self.location = None
+        else:
+            finish = ', finishing it'
+            self.location = None
+        msg = "%s takes a drink of %s%s." % (caller.full_name(caller.sessions),
+            self.full_name(caller.sessions), finish)
+        caller.location.msg_contents(msg)
+
+
+    def eat(self, caller):
+        """
+        Response to eating the object.
+        """
+
+        if not self.locks.check_lockstring(caller,'holds()'):
+            msg = "You are not holding %s." % self.full_name(caller.sessions)
+            caller.msg(msg)
+            return False
+
+        finish = ''
+        if self.attributes.has('health'):
+            self.db.health -= 1
+            if self.db.health < 1:
+                finish = ', finishing it'
+                self.location = None
+        else:
+            finish = ', finishing it'
+            self.location = None
+        msg = "%s takes a bite of %s%s." % (caller.full_name(caller.sessions),
+            self.full_name(caller.sessions), finish)
+        caller.location.msg_contents(msg)

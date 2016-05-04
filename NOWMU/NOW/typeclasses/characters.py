@@ -29,6 +29,20 @@ class Character(DefaultCharacter):
 
     """
 
+    def at_before_move(self, destination):
+        """
+        Called just before moving object - here we check to see if
+        it is supporting another object that is currently in the room
+        before allowing the move. If it is, we do prevent the move by
+        returning False.
+        """
+
+        if self.attributes.has('locked'):
+            self.msg("\nYou're still sitting.")
+            return False # Object is supporting something; do not move it
+        return True
+
+
     def at_post_puppet(self):
         """
         Called just after puppeting has been completed and all
@@ -38,8 +52,13 @@ class Character(DefaultCharacter):
         self.msg(self.at_look(self.location))
 
         def message(obj, from_obj):
-            obj.msg("|g%s|n awakens." % self.get_display_name(obj), from_obj=from_obj)
+            obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
         self.location.for_contents(message, exclude=[self], from_obj=self)
+
+        def message(obj, from_obj):
+            obj.msg("|c%s|n awakens." % self.get_display_name(obj), from_obj=from_obj)
+        self.location.for_contents(message, exclude=[self], from_obj=self)
+
 
     def at_post_unpuppet(self, player, session=None):
         """
@@ -57,10 +76,13 @@ class Character(DefaultCharacter):
             # only remove this char from grid if no sessions control it anymore.
             if self.location:
                 def message(obj, from_obj):
-                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
+                    obj.msg("|c%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
                 self.location = None
+                def message(obj, from_obj):
+                    obj.msg("|r%s|n fades from view." % self.get_display_name(obj), from_obj=from_obj)
+                self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
 
 
     def full_name(self, viewer):

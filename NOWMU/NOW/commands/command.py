@@ -1068,6 +1068,16 @@ class CmdPose(MuxCommand):
                     obj.get(caller)
                 elif verb == 'traverse':
                     caller.execute_cmd(obj.name)
+                elif verb == 'sit':
+                    obj.surface_put(caller,'on')
+                elif verb == 'leave':
+                    obj.surface_off(caller)
+                elif verb == 'read':
+                    obj.read(caller)
+                elif verb == 'drink':
+                    obj.drink(caller)
+                elif verb == 'eat':
+                    obj.eat(caller)
                 else:
                     msg = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
                     caller.location.msg_contents(msg)
