@@ -252,34 +252,32 @@ class CmdChannels(MuxPlayerCommand):
         caller = self.caller
         args = self.args
 
-        # all channels we have available to listen to
+        # Of all channels, list only the ones with access to listen
         channels = [chan for chan in ChannelDB.objects.get_all_channels()
                     if chan.access(caller, 'listen')]
         if not channels:
             self.msg("No channels available.")
-            # Suggest use of /join switch and brief-list join-able channels.
             return
-        # all channel we are already subscribed to
-        subs = ChannelDB.objects.get_subscriptions(caller)
+
+        subs = ChannelDB.objects.get_subscriptions(caller)  # All channels already joined
 
         if 'list' in self.switches:
-            # full listing (of channels caller is able to listen to)
-            comtable = evtable.EvTable("|wsub|n", "|wchannel|n", "|wmy aliases|n",
-                                       "|wlocks|n", "|wdescription|n", maxwidth=_DEFAULT_WIDTH)
-            #comtable = prettytable.PrettyTable(["|wsub", "|wchannel", "|wmy aliases", "|wlocks", "|wdescription"])
+            # full listing (of channels caller is able to listen to) ✔ or ✘
+            comtable = evtable.EvTable("|wchannel|n", "|wdescription|n", "|wmy aliases|n",
+                                       "|wsub|n", "|wlocks|n", maxwidth=_DEFAULT_WIDTH)
             for chan in channels:
                 clower = chan.key.lower()
                 nicks = caller.nicks.get(category="channel", return_obj=True)
                 nicks = nicks or []
-                comtable.add_row(*[chan in subs and "|gYes|n" or "|rNo|n",
-                                  "%s%s" % (chan.key, chan.aliases.all() and
-                                  "(%s)" % ",".join(chan.aliases.all()) or ""),
-                                  "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
-                                  if nick.strvalue.lower() == clower),
-                                  str(chan.locks),
-                                  chan.db.desc])
+                comtable.add_row(*["%s%s" % (chan.key, chan.aliases.all() and
+                                   "(%s)" % ",".join(chan.aliases.all()) or ''),
+                                   chan.db.desc,
+                                   "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
+                                   if nick.strvalue.lower() == clower),
+                                   chan in subs and '|gYes|n' or '|rNo|n',
+                                   str(chan.locks)])
             caller.msg("\n|wAvailable channels|n" +
-                       " (Use |w/list|n,|w/join|n and |w/part|n to manage received channels.):\n%s" % comtable)
+                       " (Use |w/list|n, |w/join|n and |w/part|n to manage received channels.):\n%s" % comtable)
         elif 'join' in self.switches or 'on' in self.switches:
             if not args:
                 self.msg("Usage: %s/join [alias =] channelname." % self.cmdstring)
@@ -329,8 +327,7 @@ class CmdChannels(MuxPlayerCommand):
             ostring = self.args.lower()
 
             channel = find_channel(caller, ostring, silent=True, noaliases=True)
-            if channel:
-                # we have given a channel name - unsubscribe
+            if channel: # Given a channel name to part.
                 if not channel.has_connection(caller):
                     self.msg("You are not listening to that channel.")
                     return
@@ -526,11 +523,14 @@ from evennia.utils import ansi, utils, create, search, prettytable
 
 
 def make_bar(value, maximum, length, gradient):
-    "Make a bar of length, of color value along the gradient."
+    """
+    Make a bar of length, of color value along the gradient.
+    """
+
     maximum = float(maximum)
     length = float(length)
     value = min(float(value), maximum)
-    barcolor = gradient[max(0,(int(round((value / maximum) * len(gradient))) - 1))]
+    barcolor = gradient[max(0, (int(round((value / maximum) * len(gradient))) - 1))]
     rounded_percent = int(min(round((value / maximum) * length), length - 1))
     barstring = (("{:<%i}" % int(length)).format("%i / %i" % (int(value), int(maximum))))
     barstring = ("|555" + barcolor + barstring[:rounded_percent] + '|[011' + barstring[rounded_percent:])
@@ -1023,10 +1023,10 @@ class CmdPose(MuxCommand):
                     # caller.msg("%s" % self.verb)
                     # if x == self.verb:
 
-                    #if self.verb in x:
+                    # if self.verb in x:
                     #    noun = self.verb
                     #    self.verb = 'go' 
-                    #else:
+                    # else:
                     noun = 'me'
                 self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
