@@ -43,10 +43,9 @@ class Exit(DefaultExit):
 
     def at_desc(self, looker=None):
         """
-        This is called whenever someone looks at an exit.
-
-        viewer (Object): The object requesting the description.
-
+        This is called whenever looker looks at an exit.
+        looker is the object requesting the description.
+        Called before return_appearance.
         """
         if not looker.location == self:
             looker.msg("You gaze into the distance.")
@@ -124,13 +123,16 @@ class Exit(DefaultExit):
         move_speed = traversing_object.db.move_speed or "walk"
         move_delay = MOVE_DELAY.get(move_speed, 4)
 
+        if not traversing_object.at_before_move(target_location):
+            return False
+
         if is_path == False:
             success = traversing_object.move_to(self, quiet=False)
             if success:
                 self.at_after_traverse(traversing_object, source_location)
             return success
 
-        if traversing_object.location == target_location: # If object is already at destination...
+        if traversing_object.location == target_location: # If object is at destination...
             return True
 
 
@@ -150,7 +152,9 @@ class Exit(DefaultExit):
         traversing_object.msg("You start moving %s at a %s." % (self.key, move_speed))
 
         if traversing_object.location != self: # If object is not inside exit...
-            traversing_object.move_to(self, quiet=False, use_destination=False)
+            success = traversing_object.move_to(self, quiet=False, use_destination=False)
+            if not success:
+                return False
             self.at_after_traverse(traversing_object, source_location)
 
         # create a delayed movement
@@ -211,6 +215,7 @@ class CmdStop(Command):
     Stops the current movement, if any.
     """
     key = "stop"
+    locks = "cmd:on_path()"
 
     def func(self):
         """
@@ -235,6 +240,7 @@ class CmdContinue(Command):
     """
     key = "continue"
     aliases = ["move", "go"]
+    locks = "cmd:on_path()"
 
     def func(self):
         """
@@ -272,24 +278,33 @@ class CmdBack(Command):
 
     def func(self):
         """
-        This just turns you around.
+        This turns you around if you are traveling,
+        or tries to take you back to a previous room
+        if you are stopped in a room.
         """
 
-        caller = self.caller
-        destination = caller.location.destination
-        start = caller.location.location
+        caller = self.caller # The character calling "back"
+        destination = caller.location.destination  # Where caller is going.
+        start = caller.location.location  # Where caller came from.
 
-        if destination == None:
+        if destination == None: # You are inside a room.
+
             # Find an exit that leads back to the last room you were in.
-            last_location = caller.db.last_location or False
-            if last_location:
-                caller.msg("You came from %s." % \
-                    last_location.full_name(caller.sessions))
-            else:
-                caller.msg("You forgot where you came from.")
+            last_location = caller.ndb.last_location or False
+            last_room = caller.db.last_room or False
+
+            if last_room: # Message if you have arrived in a room already.
+                if last_room != caller.location:  # We are not in the place we were.
+                    # We came from another room. How do we go back?
+                    exits = caller.location.exits  # All the ways we can go.
+                    for exit in exits:  # Iterate through all the exits...
+                        # Is this exit the one that takes us back?
+                        if exit.destination == last_room: # It's the way back!
+                            caller.execute_cmd(exit.name) # Try! It might fail.
+
             return
 
-        if caller.ndb.currently_moving:
-            caller.execute_cmd('stop')
+        elif caller.ndb.currently_moving: # If you are inside an exit,
+            caller.execute_cmd('stop')  # traveling, then stop, go back.
         caller.msg("You turn around and go back the way you came.")
         caller.move_to(start)
