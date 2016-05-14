@@ -62,7 +62,7 @@ class Room(DefaultRoom):
         else:
             string += 'Nothing more than smoke and mirrors appears around you.'
         if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+            string += "\n|wVisible exits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
         if users or things:
             user_list = ", ".join(u.full_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''

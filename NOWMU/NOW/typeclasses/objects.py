@@ -173,7 +173,7 @@ class Object(DefaultObject):
         pass
 
 
-    def read(self, caller):
+    def read(self, pose, caller):
         """
         Implements the read command. This simply looks for an
         Attribute "readable_text" on the object and displays that.
@@ -183,8 +183,8 @@ class Object(DefaultObject):
         obj_name = self.full_name(caller.sessions)
         if readtext:  # Attribute read_text is defined.
             string = "You read %s:\n  %s" % (obj_name, readtext)
-            caller.location.msg_contents("|g%s|n reads %s." % \
-                (caller.full_name(caller), obj_name), exclude=caller)
+            caller.location.msg_contents("%s |g%s|n reads %s." % \
+                (pose, caller.full_name(caller), obj_name))  # , exclude=caller)
         else:
             string = "There is nothing to read on %s." % obj_name
         caller.msg(string)
@@ -198,9 +198,8 @@ class Object(DefaultObject):
         returning False.
         """
 
-        if self.attributes.has('locked'):
-            return False # Object is supporting something; do not move it
-        return True
+        # When self is supporting something, do not move it.
+        return False if self.attributes.has('locked') else True
 
 
     def at_get(self, caller):
@@ -211,7 +210,7 @@ class Object(DefaultObject):
         caller.msg("%s is now in your posession." % self.full_name(caller))
 
 
-    def drop(self, caller):
+    def drop(self, pose, caller):
         """
         Implements the attempt to drop this object.
         """
@@ -220,12 +219,12 @@ class Object(DefaultObject):
             caller.msg("You do not have %s." % self.full_name(caller))
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
-        caller.location.msg_contents("|g%s|n drops %s." %
-            (caller.key, self.full_name(caller)))
+        caller.location.msg_contents("%s |g%s|n drops %s." %
+            (pose, caller.key, self.full_name(caller)))
         self.at_drop(caller) # Call at_drop() method.
 
 
-    def get(self, caller):
+    def get(self, pose, caller):
         """
         Implements the attempt to get this object.
         """
@@ -235,12 +234,12 @@ class Object(DefaultObject):
         elif self.location == caller:
             caller.msg("You already have %s." % self.full_name(caller))
         elif self.move_to(caller, quiet=True):
-            caller.location.msg_contents("|g%s|n takes %s." %
-                (caller.key, self.full_name(caller)))
+            caller.location.msg_contents("%s |g%s|n takes %s." %
+                (pose, caller.key, self.full_name(caller)))
             self.at_get(caller) # calling hook method
 
 
-    def surface_put(self, caller, connection):
+    def surface_put(self, pose, caller, connection):
         """
         Implements the surface connection of object by caller.
         """
@@ -253,12 +252,12 @@ class Object(DefaultObject):
         surface[caller] = connection
         self.db.locked = True
         caller.db.locked = True
-        caller.location.msg_contents("|g%s|n sits %s %s." %
-            (caller.key, connection, self.full_name(caller)))
+        caller.location.msg_contents("%s |g%s|n sits %s %s." %
+            (pose, caller.key, connection, self.full_name(caller)))
         return True
 
 
-    def surface_off(self, caller):
+    def surface_off(self, pose, caller):
         """
         Implements the surface disconnection of object by caller.
         """
@@ -270,8 +269,8 @@ class Object(DefaultObject):
             if len(surface) < 1:
                 self.attributes.remove('locked')
             caller.attributes.remove('locked')
-            caller.location.msg_contents("|r%s|n leaves %s." %
-                (caller.key, self.full_name(caller)))
+            caller.location.msg_contents("%s |r%s|n leaves %s." %
+                (pose, caller.key, self.full_name(caller)))
             return True
         return False
 
@@ -396,3 +395,21 @@ class Consumable(Object):
         msg = "%s takes a bite of %s%s." % (caller.full_name(caller.sessions),
             self.full_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
+
+
+class Tool(Consumable):
+    """
+    This is the Tool typeclass object, implementing an in-game
+    object, to be used to craft, alter, or destroy other objects.
+    """
+
+    def full_name(self, viewer):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|R|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+        else:
+            return ''

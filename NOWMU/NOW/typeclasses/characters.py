@@ -7,7 +7,23 @@ is setup to be the "default" character type created by the default
 creation commands.
 
 """
+import re
 from evennia import DefaultCharacter
+
+_GENDER_PRONOUN_MAP = {"male": {"s": "he",
+                                "o": "him",
+                                "p": "his",
+                                "a": "his"},
+                       "female": {"s": "she",
+                                   "o": "her",
+                                   "p": "her",
+                                   "a": "hers"},
+                       "neutral": {"s": "it",
+                                    "o": "it",
+                                    "p": "its",
+                                    "a": "its"}}
+
+_RE_GENDER_PRONOUN = re.compile(r'[^\|]+(\|s|S|o|O|p|P|a|A)')
 
 class Character(DefaultCharacter):
     """
@@ -38,8 +54,11 @@ class Character(DefaultCharacter):
         """
 
         if self.attributes.has('locked'):
-            self.msg("\nYou're still sitting.")
+            self.msg("\nYou're still sitting.") # stance, prep, obj
             return False # Object is supporting something; do not move it
+        elif self.db.health <= 0:
+            self.msg("You can't move; you're incapacitated!")
+            return False
         return True
 
 
@@ -95,6 +114,46 @@ class Character(DefaultCharacter):
             return "|c|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
         else:
             return ''
+
+
+    def _get_pronoun(self, regex_match):
+        """
+        Get pronoun from the pronoun marker in the text. This is used as
+        the callable for the re.sub function.
+        Args:
+            regex_match (MatchObject): the regular expression match.
+        Notes:
+            - `|s`, `|S`: Subjective form: he, she, it, He, She, It
+            - `|o`, `|O`: Objective form: him, her, it, Him, Her, It
+            - `|p`, `|P`: Possessive form: his, her, its, His, Her, Its
+            - `|a`, `|A`: Absolute Possessive form: his, hers, its, His, Hers, Its
+        """
+        typ = regex_match.group()[2] # "s", "O" etc
+        gender = self.attributes.get("gender", default="neutral")
+        gender = gender if gender in ("male", "female", "neutral") else "neutral"
+        pronoun = _GENDER_PRONOUN_MAP[gender][typ.lower()]
+        return pronoun.capitalize() if typ.isupper() else pronoun
+
+
+    def msg(self, text, from_obj=None, session=None, **kwargs):
+        """
+        Emits something to a session attached to the object.
+        Overloads the default msg() implementation to include
+        gender-aware markers in output.
+        Args:
+            text (str, optional): The message to send
+            from_obj (obj, optional): object that is sending. If
+                given, at_msg_send will be called
+            session (Session or list, optional): session or list of
+                sessions to relay to, if any. If set, will
+                force send regardless of MULTISESSION_MODE.
+        Notes:
+            `at_msg_receive` will be called on this Object.
+            All extra kwargs will be passed on to the protocol.
+        """
+        # pre-process the text before continuing
+        # text = _RE_GENDER_PRONOUN.sub(self._get_pronoun, text)
+        super(Character, self).msg(text, from_obj=from_obj, session=session, **kwargs)
 
 
     def return_appearance(self, viewer):
