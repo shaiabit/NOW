@@ -41,8 +41,24 @@ def on_path(accessing_obj, accessed_obj, *args, **kwargs):
     called in lockstring with on_path() and returns False
     when accessing_obj is on a path (inside an exit).
     """
+    if accessing_obj.location == None:
+        return True # Nowhere is not on a path.
     destination = accessing_obj.location.destination
     return False if destination == None else True
+
+def no_back(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with no_back() and returns True
+    when accessing_obj unable to go back. (May be a trap!)
+    """
+    return False
+
+def no_home(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with no_home() and returns False
+    when accessing_obj unable to go home. (May already be home)
+    """
+    return True
 
 def roll(accessing_obj, accessed_obj, *args, **kwargs):
     return True if args else False

@@ -52,7 +52,7 @@ class Room(DefaultRoom):
             else:
                 things.append(con)
         # get description, build string
-        string = self.full_name(viewer) + "\n"
+        string = "\n%s\n" % self.full_name(viewer)
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:

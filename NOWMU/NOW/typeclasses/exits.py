@@ -275,6 +275,7 @@ class CmdBack(Command):
     """
     key = "back"
     aliases = ["return", "u-turn"]
+    locks = "cmd:NOT no_back()"
 
     def func(self):
         """
@@ -287,7 +288,7 @@ class CmdBack(Command):
         destination = caller.location.destination  # Where caller is going.
         start = caller.location.location  # Where caller came from.
 
-        if destination == None: # You are inside a room.
+        if destination == None: # You are inside of something.
 
             # Find an exit that leads back to the last room you were in.
             last_location = caller.ndb.last_location or False
@@ -297,13 +298,21 @@ class CmdBack(Command):
                 if last_room != caller.location:  # We are not in the place we were.
                     # We came from another room. How do we go back?
                     exits = caller.location.exits  # All the ways we can go.
-                    for exit in exits:  # Iterate through all the exits...
-                        # Is this exit the one that takes us back?
-                        if exit.destination == last_room: # It's the way back!
-                            caller.execute_cmd(exit.name) # Try! It might fail.
-
+                    if exits:
+                        for exit in exits:  # Iterate through all the exits...
+                            # Is this exit the one that takes us back?
+                            if exit.destination == last_room: # It's the way back!
+                                caller.execute_cmd(exit.name) # Try! It might fail.
+                    else: # The room has no way out of it.
+                        caller.msg("You go back the way you came.")
+                        caller.move_to(last_room)
+            else:  # No way back, try out.
+                if start:
+                    caller.msg("You leave %s." % caller.location.full_name(caller.sessions))
+                    caller.move_to(start)
+                else:
+                    caller.msg("You can not leave %s." % caller.location.full_name(caller.sessions))
             return
-
         elif caller.ndb.currently_moving: # If you are inside an exit,
             caller.execute_cmd('stop')  # traveling, then stop, go back.
         caller.msg("You turn around and go back the way you came.")

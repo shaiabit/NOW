@@ -135,25 +135,25 @@ class Character(DefaultCharacter):
         return pronoun.capitalize() if typ.isupper() else pronoun
 
 
-    def msg(self, text, from_obj=None, session=None, **kwargs):
-        """
-        Emits something to a session attached to the object.
-        Overloads the default msg() implementation to include
-        gender-aware markers in output.
-        Args:
-            text (str, optional): The message to send
-            from_obj (obj, optional): object that is sending. If
-                given, at_msg_send will be called
-            session (Session or list, optional): session or list of
-                sessions to relay to, if any. If set, will
-                force send regardless of MULTISESSION_MODE.
-        Notes:
-            `at_msg_receive` will be called on this Object.
-            All extra kwargs will be passed on to the protocol.
-        """
-        # pre-process the text before continuing
-        # text = _RE_GENDER_PRONOUN.sub(self._get_pronoun, text)
-        super(Character, self).msg(text, from_obj=from_obj, session=session, **kwargs)
+#    def msg(self, text, from_obj=None, session=None, **kwargs):
+#        """
+#        Emits something to a session attached to the object.
+#        Overloads the default msg() implementation to include
+#        gender-aware markers in output.
+#        Args:
+#            text (str, optional): The message to send
+#            from_obj (obj, optional): object that is sending. If
+#                given, at_msg_send will be called
+#            session (Session or list, optional): session or list of
+#                sessions to relay to, if any. If set, will
+#                force send regardless of MULTISESSION_MODE.
+#         Notes:
+#            `at_msg_receive` will be called on this Object.
+#            All extra kwargs will be passed on to the protocol.
+#        """
+#        # pre-process the text before continuing
+#        # text = _RE_GENDER_PRONOUN.sub(self._get_pronoun, text)
+#        super(Character, self).msg(text, from_obj=from_obj, session=session, **kwargs)
 
 
     def return_appearance(self, viewer):
@@ -178,7 +178,7 @@ class Character(DefaultCharacter):
             else:
                 things.append(con)
         # get description, build string
-        string = "%s\n" % self.full_name(viewer)
+        string = "\n%s\n" % self.full_name(viewer)
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:
