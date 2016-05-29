@@ -42,8 +42,9 @@ class Character(DefaultCharacter):
     at_pre_puppet - just before Player re-connects, retrieves the character's
                     old location and puts it back on the grid with a "charname
                     has connected" message echoed to the room
-
     """
+
+    STYLE = '|c'
 
     def at_before_move(self, destination):
         """
@@ -111,7 +112,19 @@ class Character(DefaultCharacter):
         """
 
         if viewer and self.access(viewer, "view"):
-            return "|c|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
+        else:
+            return ''
+
+
+    def mxp_name(self, viewer, command):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and self.access(viewer, "view"):
+            return "|lc@verb %s|lt%s%s|n|le" % (command, self.name, self.STYLE, self.full_name(viewer))
         else:
             return ''
 

@@ -45,12 +45,27 @@ and can be used to customize it to each session.
 
 """
 
-#def capitalize(text, *args, **kwargs):
-#    "Silly capitalize example. Used as {capitalize() ... {/capitalize"
-#    session = kwargs.get("session")
-#    return text.capitalize()
+def capitalize(text, *args, **kwargs):
+    "Silly capitalize example. Used as {capitalize() ... {/capitalize"
 
-def annotate(original, annotaion):
-    "session sees original, unless session is a screen reader."
     session = kwargs.get("session")
+    return text.capitalize()
+
+
+def annotate(text, *args, **kwargs):
+    "session sees original, unless session is a screen reader."
+
+    session = kwargs.get("session")
+    annotation = ''
+    original = ''
+    if nargs > 2:
+        annotation, original =  args
     return annotation if session.protocol_key['SCREENREADER'] else original
+
+
+def verb(text, *args, **kwargs):
+    "Proccess verb response messages"
+
+    session = kwargs.get("session")
+    verb = text
+    return verb

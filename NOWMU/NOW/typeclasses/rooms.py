@@ -19,6 +19,8 @@ class Room(DefaultRoom):
     properties and methods available on all Objects.
     """
 
+    STYLE = '|y'
+
     def full_name(self, viewer):
         """
         Returns the full styled and clickable-look name
@@ -26,7 +28,19 @@ class Room(DefaultRoom):
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|y|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
+        else:
+            return ''
+
+
+    def mxp_name(self, viewer, command):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and self.access(viewer, "view"):
+            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
         else:
             return ''
 
@@ -52,7 +66,8 @@ class Room(DefaultRoom):
             else:
                 things.append(con)
         # get description, build string
-        string = "\n%s\n" % self.full_name(viewer)
+        command = '%s #%s' % ('@verb', self.id)
+        string = "\n%s\n" % self.mxp_name(viewer, command)
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:
@@ -62,10 +77,10 @@ class Room(DefaultRoom):
         else:
             string += 'Nothing more than smoke and mirrors appears around you.'
         if exits:
-            string += "\n|wVisible exits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+            string += "\n|wVisible exits|n: " + ", ".join("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) for e in exits)
         if users or things:
-            user_list = ", ".join(u.full_name(viewer) for u in users)
+            user_list = ", ".join(u.mxp_name(viewer, u.mxp_name(viewer, '@verb #%s' % u.id)) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name(viewer) for t in things)
-            string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+            item_list = ", ".join(t.mxp_name(viewer, '@verb #%s' % t.id) for t in things)
+            string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
         return string

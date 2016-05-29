@@ -1,7 +1,7 @@
 """
 Object
 
-The Object is the "naked" base class for things in the game world.
+The Object is the "naked" base class for items in the game world.
 
 Note that the default Character, Room and Exit does not inherit from
 this Object, but from their respective default implementations in the
@@ -160,6 +160,8 @@ class Object(DefaultObject):
 
      """
 
+    STYLE = '|334'
+
     def reset(self):
         "Resets the object - quietly sends it home or nowhere."
 
@@ -169,7 +171,7 @@ class Object(DefaultObject):
     def junk(self):
         "Tags the object as junk to decay."
 
-        # Create a timer for final stage of decay.
+        # TODO: Create a timer for final stage of decay.
         pass
 
 
@@ -207,7 +209,7 @@ class Object(DefaultObject):
         Called after getting an object in the room.
         """
 
-        caller.msg("%s is now in your posession." % self.full_name(caller))
+        caller.msg("%s is now in your posession." % self.mxp_name(caller, '@verb #%s' % self.id))
 
 
     def drop(self, pose, caller):
@@ -220,7 +222,7 @@ class Object(DefaultObject):
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
         caller.location.msg_contents("%s |g%s|n drops %s." %
-            (pose, caller.key, self.full_name(caller)))
+            (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
         self.at_drop(caller) # Call at_drop() method.
 
 
@@ -270,19 +272,31 @@ class Object(DefaultObject):
                 self.attributes.remove('locked')
             caller.attributes.remove('locked')
             caller.location.msg_contents("%s |r%s|n leaves %s." %
-                (pose, caller.key, self.full_name(caller)))
+                (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
             return True
         return False
 
 
     def full_name(self, viewer):
         """
-        Returns the full styled and clickable-look name
+        Returns the full styled and database id (if accessable by player)
         for the viewer's perspective as a string.
         """
 
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|u|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
+        else:
+            return ''
+
+
+    def mxp_name(self, viewer, command):
+        """
+        Returns the full styled and clickable-name with command.
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and (self != viewer) and self.access(viewer, "view"):
+            return "|lc%s|lt%s|le" % (command, self.full_name(viewer))
         else:
             return ''
 
@@ -309,7 +323,10 @@ class Object(DefaultObject):
             else:
                 things.append(con)
         # get description, build string
-        string = self.full_name(viewer) + "\n"
+        string = self.mxp_name(viewer, '@verb #%s' % self.id)
+        if self.db.surface:
+            string += " -- %s" % self.db.surface
+        string += "\n"
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:
@@ -323,33 +340,21 @@ class Object(DefaultObject):
         if users or things:
             user_list = ", ".join(u.full_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name for t in things)
+            item_list = ", ".join(t.full_name(viewer) for t in things)
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
-        if self.db.surface:
-            string += "With %s on top." % self.db.surface
         return string
 
 
-class Consumable(Object):
+class Consumable(Object): # TODO: State and analog decay. (State could be discrete analaog?)
     """
     This is the consumable typeclass object, implementing an in-game
     object, to be consumed and decay, break, be eaten, drank, cast,
     burned, or wear out slowly like clothing or furniture.
     """
 
-    def full_name(self, viewer):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
+    STYLE='|321'
 
-        if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|w|[B|lc@verb %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
-        else:
-            return ''
-
-
-    def drink(self, caller):
+    def drink(self, caller): # TODO: Make this use a more generic def consume
         """
         Response to driinking the object.
         """
@@ -373,7 +378,7 @@ class Consumable(Object):
         caller.location.msg_contents(msg)
 
 
-    def eat(self, caller):
+    def eat(self, caller): # TODO: Make this use a more generic def consume
         """
         Response to eating the object.
         """
@@ -403,13 +408,6 @@ class Tool(Consumable):
     object, to be used to craft, alter, or destroy other objects.
     """
 
-    def full_name(self, viewer):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
+    STYLE = '|511'
 
-        if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|R|lclook %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
-        else:
-            return ''
+    # Currently there is nothing special about a tool compared to a Consumable.

@@ -40,6 +40,8 @@ class Exit(DefaultExit):
                                         defined, in which case that will simply be echoed.
     """
 
+    STYLE = '|g'
+    STYLE_PATH = '|252'
 
     def at_desc(self, looker=None):
         """
@@ -57,13 +59,21 @@ class Exit(DefaultExit):
         for the viewer's perspective as a string.
         """
 
-        is_path = self.db.is_path or False
-
         if viewer and (self != viewer) and self.access(viewer, "view"):
-            if is_path:
-                return "|g|u|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
-            else:
-                return "|g|lc%s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
+            style = self.STYLE_PATH if self.db.is_path or False else self.STYLE
+            return "%s%s|n" % (style, self.get_display_name(viewer))
+        else:
+            return ''
+
+
+    def mxp_name(self, viewer, command):
+        """
+        Returns the full styled and clickable-look name
+        for the viewer's perspective as a string.
+        """
+
+        if viewer and self.access(viewer, "view"):
+            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
         else:
             return ''
 
@@ -90,7 +100,7 @@ class Exit(DefaultExit):
             else:
                 things.append(con)
         # get description, build string
-        string = "|g|lc%s|lt%s|le|n -- " % (self.name, self.get_display_name(viewer))
+        string = "%s " % (self.mxp_name(viewer, '@verb #%s' % self.id))
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc and viewer.location == self:
@@ -98,7 +108,7 @@ class Exit(DefaultExit):
         elif desc_brief:
             string += "%s" % desc_brief
         else:
-            string += "leads to |y%s|n" % self.destination.get_display_name(viewer)
+            string += "leads to %s" % self.destination.mxp_name(viewer, '@verb #%s' % self.destination.id)
         if exits:
             string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
         if users or things:

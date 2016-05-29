@@ -539,15 +539,15 @@ def make_bar(value, maximum, length, gradient):
 
 class CmdLook(MuxCommand):
     """
-    look at location or object
+    sense location or object
     Usage:
-      look
-      look <obj>
-      look *<player>
+      <sense verb>
+      <sense verb> <obj>
+      <sense verb> *<player>
     Observes your location or objects in your vicinity.
     """
-    key = "look"
-    aliases = ["l", "ls"]
+    key = "sense"
+    aliases = ["l", "look", "taste", "touch", "smell", "listen"]
     locks = "cmd:all()"
     arg_regex = r"\s|$"
 
@@ -715,8 +715,7 @@ class CmdSpoof(MuxCommand):
     Send a spoofed message to your current location.
     Usage:
       spoof <message>
-     Switches
-      spoof/music <musical message>
+     Switch:
       spoof/self <message only to you>
     """
 
@@ -744,10 +743,7 @@ class CmdSpoof(MuxCommand):
         # An NPC would know who spoofed.
         spoof = caller.location.at_say(caller, spoof)
 
-        if 'music' in self.switches:
-            caller.location.msg_contents("|g_/)|w %s |g_/)" % spoof)
-        else:
-            caller.location.msg_contents('|m%s|n' % spoof)
+        caller.location.msg_contents(spoof, options={"raw":True})
 
 
 class CmdSay(MuxCommand):
@@ -794,9 +790,78 @@ class CmdSay(MuxCommand):
         caller.location.msg_contents(emit_string)
 
 
-class CmdVerb(MuxPlayerCommand):
+class CmdForge(MuxCommand):
     """
-    Set a verb lock.
+    Retool tutorial object
+        Usage:
+      forge <object>
+    """
+
+    key = "forge"
+    locks = "cmd:all()"
+
+    def func(self):
+        """
+        Here's where the forge magic happens.
+        """
+        my_char = self.caller
+        args = self.args
+        if my_char and my_char.location:
+            obj_list = my_char.search(args, location=[my_char, my_char.location]) if args else my_char
+            obj = obj_list
+
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("Usage: %s <object>" % self.cmdstring)
+            return
+
+        # get object to swap on
+        obj = caller.search(self.args)
+        if not obj:
+            caller.msg("Your hammer swing misses its mark.")
+            return
+
+        if not hasattr(obj, "__dbclass__"):
+            string = "%s is not a typed object." % obj.name
+            caller.msg(string)
+            return
+
+        new_typeclass = 'typeclasses.objects.Tool' or obj.path
+
+        if "show" in self.switches:
+            string = "%s's current typeclass is %s." % (obj.name, obj.__class__)
+            return
+
+        if not hasattr(obj, 'swap_typeclass'):
+            caller.msg("This object cannot have a type at all!")
+            return
+
+        is_same = obj.is_typeclass(new_typeclass, exact=True)
+        if is_same:
+            string = "%s is already forged as typeclass '%s'." % (obj.name, new_typeclass)
+        else:
+            old_typeclass_path = obj.typeclass_path
+
+            # Raise exception if needed
+            obj.swap_typeclass(new_typeclass, clean_attributes=False)
+
+            if is_same:
+                string = "%s (%s) is re-forged.\n" % (obj.name, obj.path)
+            else:
+                string = "%s (%s) is reforged to %s.\n" % (obj.name,
+                                                         old_typeclass_path,
+                                                         obj.typeclass_path)
+            string += "Creation occurred."
+            string += " Attributes set before swap were not removed."
+
+        caller.msg(string)
+
+
+
+class CmdVerb(MuxCommand):
+    """
+    List interaction verbs for an object.
     Usage:
       @verb <object>
     """
@@ -809,29 +874,32 @@ class CmdVerb(MuxPlayerCommand):
         Here's where the @verbing magic happens.
         """
 
-        my_char = self.caller.get_puppet(self.session)
+        my_char = self.caller
         args = self.args
         if my_char and my_char.location:
             obj_list = my_char.search(args, location=[my_char, my_char.location]) if args else my_char
             if obj_list:
                 obj = obj_list
-                verb_msg = "Verbs of %s: " % obj_list.full_name(self.session)
+                verb_msg = "Interact with %s: " % obj_list.get_display_name(self.session)
             else:
                 obj = my_char
-                verb_msg = "Verbs on you: "
+                verb_msg = "Your interactions: "
             verbs = obj.locks
             collector = ''
             show_red = True if obj.access(my_char, 'examine') else False
             for verb in ("%s" % verbs).split(';'):
                 element = verb.split(':')[0]
+                if element == 'call':
+                    continue
                 name = element[2:] if element[:2] == 'v-' else element
-                # obj lock checked against character
+                # obj lock checked against interactor
                 if obj.access(my_char, element):
-                    collector += "|g%s " % name
+                    collector += "|lctry %s #%s|lt|g%s|n|le " % (name, obj.id, name)
                 elif show_red:
-                    collector += "|r%s " % name
-            collector = collector + '|n'
+                    collector += "|r%s|n " % name
             my_char.msg(verb_msg + "%s" % collector)
+            # my_char.msg("You are not able to interact with %s." % obj.name)
+            # return  # If no green actions, then no interactions. TODO
 
 
 class CmdWho(MuxPlayerCommand):
@@ -1001,6 +1069,7 @@ class CmdPose(MuxCommand):
 
         self.verb = None
         self.obj = None
+        self.msg = ''
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if 'magnet' in self.switches or 'm' in self.switches:
@@ -1010,25 +1079,21 @@ class CmdPose(MuxCommand):
             args += '::'
         if len(args.split('::')) > 1:
             verbnoun, pose = args.split('::', 1)
-            if 0 < len(verbnoun.split()) <= 2:
+            if 0 < len(verbnoun.split()):
                 args = pose
-                if len(verbnoun.split()) == 2:
-                    self.verb, noun = verbnoun.split()
-                else:
-                    self.verb = verbnoun.strip()
-
+                self.verb = verbnoun.split()[0]
+                noun = ' '.join(verbnoun.split()[1:])
+                if noun == '':
                     # if self.verb is any of the current exits or aliases of the exits:
-                    # x = self.caller.location.exits
-                    # caller.msg("%s" % x)
-                    # caller.msg("%s" % self.verb)
-                    # if x == self.verb:
-
-                    # if self.verb in x:
-                    #    noun = self.verb
-                    #    self.verb = 'go' 
-                    # else:
-                    noun = 'me'
-                self.obj = caller.search(noun, location=[caller, caller.location])
+                    exit_list = self.caller.location.exits
+                    if self.verb in exit_list: # TODO: Test if the verb is an exit name
+                        noun = self.verb
+                        self.verb = 'go' 
+                    else:
+                        self.obj = caller
+                        noun = 'me'
+                else:
+                    self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
             if not self.cmdstring == ";" :
                 args = " %s" % args.strip()
@@ -1037,25 +1102,32 @@ class CmdPose(MuxCommand):
     def func(self):
         "Hook function"
 
+        self.text = ''
         caller = self.caller
         if self.args:
             if 'o' in self.switches or 'ooc' in self.switches:
-                msg = '[OOC]|n %s%s' % (caller.full_name(self.session), self.args)
+                self.text = "[OOC] %s%s" % (caller.full_name(self.session), self.args)
             else:
-                msg = "%s%s" % (caller.full_name(self.session), self.args)
-            caller.location.msg_contents(msg)
+                self.text = "%s%s" % (caller.full_name(self.session), self.args)
+            if self.obj and self.verb:
+                pass
+            else:
+                caller.location.msg_contents(self.text)
+
         elif self.cmdstring != 'try':
             return
 
-#    def at_post_command(self):
-#        "Verb response here."
+    def at_post_cmd(self):
+        "Verb response here."
 
-#        super(CmdPose, self).at_post_command()
+        super(CmdPose, self).at_post_cmd()
         if self.obj:
             obj = self.obj
             verb = self.verb
             safe_verb = verb
             caller = self.caller
+            pose = self.text
+
             if verb == 'go':
                 verb = 'traverse'
                 safe_verb = 'traverse'
@@ -1063,28 +1135,42 @@ class CmdPose(MuxCommand):
                 safe_verb = 'v-' + verb  # If that does not work, then...
             if obj.access(caller, safe_verb):  # try the safe verb form.
                 if verb == 'drop':
-                    obj.drop(caller)
+                    obj.drop(pose, caller)
                 elif verb == 'get':
-                    obj.get(caller)
+                    obj.get(pose, caller)
                 elif verb == 'traverse':
-                    caller.execute_cmd(obj.name)
+                    caller.execute_cmd(obj.name, caller)
                 elif verb == 'sit':
-                    obj.surface_put(caller,'on')
+                    obj.surface_put(pose, caller,'on')
                 elif verb == 'leave':
-                    obj.surface_off(caller)
+                    obj.surface_off(pose, caller)
                 elif verb == 'read':
-                    obj.read(caller)
+                    obj.read(pose, caller)
                 elif verb == 'drink':
                     obj.drink(caller)
                 elif verb == 'eat':
                     obj.eat(caller)
+                elif verb == 'view':
+                    caller.execute_cmd('%s #%s' % ('l', obj.id))
+                elif verb == 'puppet':
+                    caller.execute_cmd('@ic ' + obj.name, caller)
+                elif verb == 'examine':
+                    caller.execute_cmd('examine ' + obj.name, caller)
                 else:
-                    msg = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
-                    caller.location.msg_contents(msg)
+                    if self.text != '':
+                        # self.text += " |g|S|n is able to %s %s." % (verb, obj.name) # TODO: When pronoun substituion works.
+                        self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name) # TODO: Otherwise, do this.
+                    else:
+                        self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
+                    caller.location.msg_contents(self.text)  # TODO: Show actual message response below. TODO - show full_name once session is availiable.
+                    caller.location.msg_contents("%s responds to %s %s. |R(Response effect goes here)|n" % (obj.name, caller.name, verb))
             else:
                 if self.obj.locks.get(verb): # Test to see if a lock string exists.
-                    msg = "|r%s|n fails to %s %s." % (caller.name, verb, obj.name)
-                    caller.location.msg_contents(msg, exclude=caller)
-                    caller.msg("You failed to %s %s." % (verb, obj.name))
+                    if self.text != '':
+                        self.text += " |r|S|n fails to %s %s." % (verb, obj.name)
+                    else:
+                        self.text = "|r%s|n fails to %s %s." % (caller.name, verb, obj.name)
+                    caller.location.msg_contents(self.text) # , exclude=caller)
+                    # caller.msg("You failed to %s %s." % (verb, obj.name))
                 else:
                     caller.msg("It is not possible to %s %s." % (verb, obj.name))

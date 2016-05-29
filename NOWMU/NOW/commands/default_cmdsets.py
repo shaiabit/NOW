@@ -14,10 +14,12 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
 from evennia import default_cmds
-from commands.command import CmdLook, CmdInventory, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb
+from commands.command import CmdLook, CmdInventory, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
 from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdSysinfo
 # from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSetSpeed
+from commands import exitdirections
+from commands import prelogin
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -38,16 +40,24 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdDrop)
+# [...]
         self.add(CmdLook)
         self.add(CmdInventory)
         self.add(CmdPose)
         self.add(CmdSay)
         self.add(CmdOoc)
         self.add(CmdSpoof)
+        self.add(CmdVerb)
+# [...]
         self.add(CmdStop)
         self.add(CmdSetSpeed)
         self.add(CmdContinue)
         self.add(CmdBack)
+# [...]
+        self.add(exitdirections.CmdExitNorth())
+        self.add(exitdirections.CmdExitEast()) 
+        self.add(exitdirections.CmdExitSouth())
+        self.add(exitdirections.CmdExitWest())
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
@@ -78,11 +88,11 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.remove(default_cmds.CmdCWho)
         self.add(CmdQuit)
         self.add(CmdWho)
-        self.add(CmdVerb)
         self.add(CmdAccess)
         self.add(CmdSysinfo)
         self.add(CmdChannels)
-        # self.add(CmdChannelWizard) # Too dangerous to add without testing.
+        # self.add(CmdForge) # TODO: Make this a verb, along with "quench"
+        # self.add(CmdChannelWizard) # TODO: Too dangerous to add without testing.
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
@@ -98,6 +108,7 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
         """
         super(UnloggedinCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
+        self.add(prelogin.CmdWhoUs())
 
 
 class SessionCmdSet(default_cmds.SessionCmdSet):
