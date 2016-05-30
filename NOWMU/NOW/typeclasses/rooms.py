@@ -79,7 +79,7 @@ class Room(DefaultRoom):
         if exits:
             string += "\n|wVisible exits|n: " + ", ".join("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) for e in exits)
         if users or things:
-            user_list = ", ".join(u.mxp_name(viewer, u.mxp_name(viewer, '@verb #%s' % u.id)) for u in users)
+            user_list = ", ".join(u.mxp_name(viewer, '@verb #%s' % u.id) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.mxp_name(viewer, '@verb #%s' % t.id) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list

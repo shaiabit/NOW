@@ -124,7 +124,7 @@ class Character(DefaultCharacter):
         """
 
         if viewer and self.access(viewer, "view"):
-            return "|lc@verb %s|lt%s%s|n|le" % (command, self.name, self.STYLE, self.full_name(viewer))
+            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
         else:
             return ''
 
