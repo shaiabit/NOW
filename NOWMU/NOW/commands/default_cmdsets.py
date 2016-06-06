@@ -54,9 +54,13 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdContinue)
         self.add(CmdBack)
 # [...]
+        self.add(exitdirections.CmdExitNorthwest())
         self.add(exitdirections.CmdExitNorth())
-        self.add(exitdirections.CmdExitEast()) 
+        self.add(exitdirections.CmdExitNortheast())
+        self.add(exitdirections.CmdExitEast())
+        self.add(exitdirections.CmdExitSoutheast())
         self.add(exitdirections.CmdExitSouth())
+        self.add(exitdirections.CmdExitSouthwest())
         self.add(exitdirections.CmdExitWest())
 
 

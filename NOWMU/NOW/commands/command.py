@@ -263,21 +263,24 @@ class CmdChannels(MuxPlayerCommand):
 
         if 'list' in self.switches:
             # full listing (of channels caller is able to listen to) ✔ or ✘
-            comtable = evtable.EvTable("|wchannel|n", "|wdescription|n", "|wmy aliases|n",
-                                       "|wsub|n", "|wlocks|n", maxwidth=_DEFAULT_WIDTH)
+            comtable = evtable.EvTable("|wchannel|n", "|wdescription|n", "|wown sub send|n",
+                                       "|wmy aliases|n", maxwidth=_DEFAULT_WIDTH)
             for chan in channels:
                 clower = chan.key.lower()
                 nicks = caller.nicks.get(category="channel", return_obj=True)
                 nicks = nicks or []
+                control = '|gYes|n ' if chan.access(caller, 'control') else '|rNo|n  '
+                send = '|gYes|n ' if chan.access(caller, 'send') else '|rNo|n  '
+                sub = '|gYes|n ' if chan.access(caller, 'listen') else '|rNo  '
                 comtable.add_row(*["%s%s" % (chan.key, chan.aliases.all() and
                                    "(%s)" % ",".join(chan.aliases.all()) or ''),
                                    chan.db.desc,
+                                   # chan in subs and '|gYes|n' or '|rNo|n ' + send + control,
+                                   control + sub + send,
                                    "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
-                                   if nick.strvalue.lower() == clower),
-                                   chan in subs and '|gYes|n' or '|rNo|n',
-                                   str(chan.locks)])
-            caller.msg("\n|wAvailable channels|n" +
-                       " (Use |w/list|n, |w/join|n and |w/part|n to manage received channels.):\n%s" % comtable)
+                                   if nick.strvalue.lower() == clower)])
+            caller.msg("|/|wAvailable channels|n:|/" +
+                       "%s|/(Use |w/list|n, |w/join|n and |w/part|n to manage received channels.)" % comtable)
         elif 'join' in self.switches or 'on' in self.switches:
             if not args:
                 self.msg("Usage: %s/join [alias =] channelname." % self.cmdstring)
@@ -522,21 +525,6 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
 
 
-def make_bar(value, maximum, length, gradient):
-    """
-    Make a bar of length, of color value along the gradient.
-    """
-
-    maximum = float(maximum)
-    length = float(length)
-    value = min(float(value), maximum)
-    barcolor = gradient[max(0, (int(round((value / maximum) * len(gradient))) - 1))]
-    rounded_percent = int(min(round((value / maximum) * length), length - 1))
-    barstring = (("{:<%i}" % int(length)).format("%i / %i" % (int(value), int(maximum))))
-    barstring = ("|555" + barcolor + barstring[:rounded_percent] + '|[011' + barstring[rounded_percent:])
-    return barstring[:int(length) + 13] + "|n"
-
-
 class CmdLook(MuxCommand):
     """
     sense location or object
@@ -565,9 +553,9 @@ class CmdLook(MuxCommand):
             if not self.target:
                 return
         self.msg(self.caller.at_look(self.target))
-        if self.target.attributes.has('health'):
-            gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-            self.msg(make_bar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40, gradient))
+        #if self.target.attributes.has('health'):
+        #    gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
+        #    self.msg(make_baar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40, gradient))
 
 
 class CmdInventory(MuxCommand):

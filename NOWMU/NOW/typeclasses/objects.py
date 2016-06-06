@@ -10,7 +10,9 @@ the other types, you can do so by adding this as a multiple
 inheritance.
 
 """
+#from evennia import Command
 from evennia import DefaultObject
+from evennia.utils.evmenu import get_input
 
 class Object(DefaultObject):
     """
@@ -225,7 +227,6 @@ class Object(DefaultObject):
             (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
         self.at_drop(caller) # Call at_drop() method.
 
-
     def get(self, pose, caller):
         """
         Implements the attempt to get this object.
@@ -239,7 +240,6 @@ class Object(DefaultObject):
             caller.location.msg_contents("%s |g%s|n takes %s." %
                 (pose, caller.key, self.full_name(caller)))
             self.at_get(caller) # calling hook method
-
 
     def surface_put(self, pose, caller, connection):
         """
@@ -258,7 +258,6 @@ class Object(DefaultObject):
             (pose, caller.key, connection, self.full_name(caller)))
         return True
 
-
     def surface_off(self, pose, caller):
         """
         Implements the surface disconnection of object by caller.
@@ -276,7 +275,6 @@ class Object(DefaultObject):
             return True
         return False
 
-
     def full_name(self, viewer):
         """
         Returns the full styled and database id (if accessable by player)
@@ -287,7 +285,6 @@ class Object(DefaultObject):
             return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
         else:
             return ''
-
 
     def mxp_name(self, viewer, command):
         """
@@ -300,6 +297,9 @@ class Object(DefaultObject):
         else:
             return ''
 
+    def get_mass(self):
+        mass = self.attributes.get('mass') or 1
+        return reduce(lambda x, y: x+y.get_mass(),[mass] + self.contents)
 
     def return_appearance(self, viewer):
         """
@@ -324,6 +324,7 @@ class Object(DefaultObject):
                 things.append(con)
         # get description, build string
         string = self.mxp_name(viewer, '@verb #%s' % self.id)
+        string += " (%s)" % self.get_mass()
         if self.db.surface:
             string += " -- %s" % self.db.surface
         string += "\n"
@@ -354,6 +355,16 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
 
     STYLE='|321'
 
+    def consume(self, caller):
+        """
+        Use health.
+        """
+        if self.attributes.has('health'):
+            self.db.health -= 1
+            if self.db.health < 1:
+                self.db.health = 0
+            return self.db.health
+
     def drink(self, caller): # TODO: Make this use a more generic def consume
         """
         Response to driinking the object.
@@ -369,7 +380,7 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
             self.db.health -= 1
             if self.db.health < 1:
                 finish = ', finishing it'
-                self.location = None
+                # self.location = None # Leaves empty container.
         else:
             finish = ', finishing it'
             self.location = None
@@ -377,6 +388,15 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
             self.full_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
 
+        def drink_callback(caller, prompt, user_input):
+            "Response to input given after drink potion"
+
+            msg = "%s begins to have an effect on %s, transorming into species %s." % (self.full_name(caller.sessions),
+                caller.full_name(caller.sessions), user_input)
+            caller.location.msg_contents(msg)
+            caller.db.species = user_input[0:20]
+
+        get_input(caller, "Species? (Type your species setting now, and then [enter]) ", drink_callback)
 
     def eat(self, caller): # TODO: Make this use a more generic def consume
         """
@@ -409,5 +429,37 @@ class Tool(Consumable):
     """
 
     STYLE = '|511'
+
+    # Currently there is nothing special about a tool compared to a Consumable.
+
+
+class Dispenser(Consumable):
+    """
+    This is the Tool typeclass object, implementing an in-game
+    object, to be used to craft, alter, or destroy other objects.
+    """
+
+    STYLE = '|350'
+
+    def produce_weapon(self, caller):
+        """
+        This will produce a new weapon from the rack,
+        assuming the caller hasn't already gotten one. When
+        doing so, the caller will get Tagged with the id
+        of this rack, to make sure they cannot keep
+        pulling weapons from it indefinitely.
+        """
+        rack_id = self.db.rack_id
+        # if caller.tags.get(rack_id, category="tutorial_world"):
+        if True:
+            caller.msg(self.db.no_more_weapons_msg)
+        else:
+            prototype = random.choice(self.db.available_weapons)
+            # use the spawner to create a new Weapon from the
+            # spawner dictionary, tag the caller
+            wpn = spawn(WEAPON_PROTOTYPES[prototype], prototype_parents=WEAPON_PROTOTYPES)[0]
+            caller.tags.add(rack_id, category="tutorial_world")
+            wpn.location = caller
+            caller.msg(self.db.get_weapon_msg % wpn.key)
 
     # Currently there is nothing special about a tool compared to a Consumable.

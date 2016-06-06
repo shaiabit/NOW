@@ -100,7 +100,7 @@ class Exit(DefaultExit):
             else:
                 things.append(con)
         # get description, build string
-        string = "%s " % (self.mxp_name(viewer, '@verb #%s' % self.id))
+        string = "%s " % (self.mxp_name(viewer, '@verb #%s' % self.id) if hasattr(self, "mxp_name") else self.get_display_name(viewer))
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc and viewer.location == self:
@@ -108,7 +108,7 @@ class Exit(DefaultExit):
         elif desc_brief:
             string += "%s" % desc_brief
         else:
-            string += "leads to %s" % self.destination.mxp_name(viewer, '@verb #%s' % self.destination.id)
+            string += "leads to %s" % self.destination.mxp_name(viewer, '@verb #%s' % self.destination.id) if hasattr(self.destination, "mxp_name") else self.destination.get_display_name(viewer)
         if exits:
             string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
         if users or things:

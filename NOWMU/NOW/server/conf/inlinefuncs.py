@@ -46,21 +46,41 @@ and can be used to customize it to each session.
 """
 
 def capitalize(text, *args, **kwargs):
-    "Silly capitalize example. Used as {capitalize() ... {/capitalize"
+    "Capitalizes the first character of the line."
 
     session = kwargs.get("session")
     return text.capitalize()
 
+from random import *
 
-def annotate(text, *args, **kwargs):
-    "session sees original, unless session is a screen reader."
+def usage(text, *args, **kwargs):
+    "Verbally describes how busy an area is"
 
     session = kwargs.get("session")
-    annotation = ''
+
+    text = 'quiet' 
+    if random() > 0.5:
+	text = 'busy'
+    return text
+
+
+def annotate(text, *args, **kwargs):
+    """
+    session sees original, unless session is a screen reader.
+    ex. $annotate(original,annotation) or
+        $annotate(original) for no annotation.
+    """
+
+    session = kwargs.get("session")
+
+    nargs = len(args)
+    annotate = ''
     original = ''
-    if nargs > 2:
-        annotation, original =  args
-    return annotation if session.protocol_key['SCREENREADER'] else original
+
+    if nargs > 0:
+        annotate = args[0]
+        original = text
+    return annotate if session.protocol_flags['SCREENREADER'] else original
 
 
 def verb(text, *args, **kwargs):
