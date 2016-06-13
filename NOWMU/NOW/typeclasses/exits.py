@@ -8,6 +8,11 @@ for allowing Characters to traverse the exit to its destination.
 """
 from evennia import DefaultExit, utils, Command
 
+from evennia.utils import lazy_property
+
+from traits import TraitHandler
+from effects import EffectHandler
+
 MOVE_DELAY = {"stroll": 16,
               "walk": 8,
               "run": 4,
@@ -42,6 +47,22 @@ class Exit(DefaultExit):
 
     STYLE = '|g'
     STYLE_PATH = '|252'
+
+    @lazy_property
+    def traits(self):
+        return TraitHandler(self)
+
+    @lazy_property
+    def skills(self):
+        return TraitHandler(self, db_attribute='skills')
+
+    @lazy_property
+    def effects(self):
+        return EffectHandler(self)
+
+    # @lazy_property
+    # def equipment(self):
+    #     return EquipmentHandler(self)
 
     def at_desc(self, looker=None):
         """
@@ -202,6 +223,7 @@ class CmdSetSpeed(Command):
     is assumed.
     """
     key = "setspeed"
+    help_category = "Travel"
 
     def func(self):
         """
@@ -226,6 +248,7 @@ class CmdStop(Command):
     """
     key = "stop"
     locks = "cmd:on_path()"
+    help_category = "Travel"
 
     def func(self):
         """
@@ -251,6 +274,7 @@ class CmdContinue(Command):
     key = "continue"
     aliases = ["move", "go"]
     locks = "cmd:on_path()"
+    help_category = "Travel"
 
     def func(self):
         """
@@ -286,6 +310,7 @@ class CmdBack(Command):
     key = "back"
     aliases = ["return", "u-turn"]
     locks = "cmd:NOT no_back()"
+    help_category = "Travel"
 
     def func(self):
         """

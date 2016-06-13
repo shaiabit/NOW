@@ -5,10 +5,14 @@ Commands
 Commands describe the input the player can do to the world.
 
 """
-
+from evennia import gametime
+from django.conf import settings
 from evennia import Command as BaseCommand
 from evennia import default_cmds
+from evennia import utils
 
+# error return function, needed by Extended Look command
+_AT_SEARCH_RESULT = utils.variable_from_module(*settings.SEARCH_AT_RESULT.rsplit('.', 1))
 
 class Command(BaseCommand):
     """
@@ -176,16 +180,21 @@ def find_channel(caller, channelname, silent=False, noaliases=False):
     return channels[0]
 
 
-class CmdSysinfo(MuxCommand):
+import os
+import sys
+import twisted
+import django
+
+class CmdAbout(MuxCommand):
     """
     show Evennia info
     Usage:
-      !about
+      about
     Display info about the game engine.
     """
 
-    key = "!about"
-    locks = "perm(Wizard)"
+    key = "about"
+    locks = "cmd:all()"
     help_category = "System"
 
     def func(self):
@@ -217,7 +226,7 @@ class CmdChannels(MuxPlayerCommand):
     """
     list all channels available to you
     Usage:
-      @chan,  @channel, @channels
+      chan,  channel, channels
     Switches:
     Lists channels you are currently receiving.
       /list to display all available channels.
@@ -241,8 +250,8 @@ class CmdChannels(MuxPlayerCommand):
     particular interest or subject.  Channels are free of being at a particular
     location. Channels use their alias as the command to post to then.
     """
-    key = "@channel"
-    aliases = ["@chan", "@channels"]
+    key = "channel"
+    aliases = ["chan", "channels"]
     help_category = "Communication"
     locks = "cmd: not pperm(channel_banned)"
 
@@ -519,7 +528,6 @@ class CmdChannels(MuxPlayerCommand):
 
 import time
 from builtins import range
-from django.conf import settings
 from evennia.server.sessionhandler import SESSIONS
 from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
@@ -541,50 +549,50 @@ class CmdLook(MuxCommand):
 
     def func(self):
         """
-        Handle looking at objects.
+        Handle looking at objects. WIP: Expanding to handle other senses.
         """
-        if not self.args:
-            self.target = self.caller.location
-            if not self.target:
-                self.caller.msg("You have no location to look at!")
+
+        caller = self.caller
+        args = self.args
+        if args:
+            obj = caller.search(args,
+                                           candidates=caller.location.contents + caller.contents,
+                                           use_nicks=True,
+                                           quiet=True)
+            if not obj:
+                # no object found. Check if there is a matching detail around the location.
+                # TODO: Restrict search for details by posessive parse:  [object]'s [detail]
+                candidates = [caller.location] + caller.location.contents + caller.contents
+                for location in candidates:
+                    # TODO: Continue if look location is not visibile to looker.
+                    if location and hasattr(location, "return_detail") and callable(location.return_detail):
+                        detail = location.return_detail(args)
+                        if detail:
+                            # Show found detail.
+                            caller.msg(detail)
+                            return  # TODO: Add /all switch to override return here to view all details.
+                # no detail found. Trigger delayed error messages
+                _AT_SEARCH_RESULT(obj, caller, args, quiet=False)
                 return
+            else:
+                # we need to extract the match manually.
+                obj = utils.make_iter(obj)[0]
         else:
-            self.target = self.caller.search(self.args)
-            if not self.target:
+            obj = caller.location
+            if not obj:
+                caller.msg("There is nothing to see here.")
                 return
-        self.msg(self.caller.at_look(self.target))
-        #if self.target.attributes.has('health'):
-        #    gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-        #    self.msg(make_baar(self.target.attributes.get('health'), self.target.attributes.get('health_max'), 40, gradient))
 
-
-class CmdInventory(MuxCommand):
-    """
-    view inventory
-    Usage:
-      inventory
-      inv
-    Shows your inventory: carrying, wielding, wearing, obscuring.
-    """
-
-    key = "inventory"
-    aliases = ["inv", "i"]
-    locks = "cmd:all()"
-
-    def func(self):
-        "check inventory"
-        items = self.caller.contents
-        if not items:
-            string = "You are not carrying anything."
-        else:
-            table = prettytable.PrettyTable(["name", "desc_brief"])
-            table.header = False
-            table.border = False
-            for item in items:
-                second = item.db.mass if 'weight' in self.switches else item.db.desc_brief
-                table.add_row(["%s" % item.full_name(self.caller.sessions), second and second or ""])
-            string = "|wYou are carrying:\n%s" % table
-        self.caller.msg(string)
+        if not hasattr(obj, 'return_appearance'):
+            # this is likely due to a player calling the command.
+            obj = obj.character
+        if not obj.access(caller, "view"):
+            caller.msg("Could not find '%s'." % args)
+            return
+        # get object's appearance
+        caller.msg(obj.return_appearance(caller))
+        # the object's at_desc() method.
+        obj.at_desc(looker=caller)
 
 
 class CmdQuit(MuxPlayerCommand):
@@ -632,12 +640,9 @@ class CmdAccess(MuxCommand):
     """
     Displays your current world access levels.
     Usage:
-      @access
+      @access - Displays permissions for your current player and character account.
     Switches:
-      @access /groups
-
-    Displays the system's permission groups hierarchy and the
-    permissions for your current player and character account.
+      @access/groups - Displays the system's permission groups hierarchy.
     """
 
     key = "@access"
@@ -651,12 +656,12 @@ class CmdAccess(MuxCommand):
         hierarchy_full = settings.PERMISSION_HIERARCHY
         string = ''
         if 'groups' in self.switches:
-            string = "|wPermission Hierarchy|n (climbing): %s\n" % ", ".join(hierarchy_full)
+            string = "|wPermission Hierarchy|n (climbing): %s|/" % ", ".join(hierarchy_full)
             #hierarchy = [p.lower() for p in hierarchy_full]
 
         if self.caller.player.is_superuser:
-            cperms = "<Superuser>"
-            pperms = "<Superuser>"
+            cperms = "<Superuser> " + ", ".join(caller.permissions.all())
+            pperms = "<Superuser> " + ", ".join(caller.player.permissions.all())
         else:
             cperms = ", ".join(caller.permissions.all())
             pperms = ", ".join(caller.player.permissions.all())

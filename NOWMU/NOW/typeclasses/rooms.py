@@ -11,6 +11,11 @@ from evennia import TICKER_HANDLER
 from evennia.comms.models import ChannelDB, Msg
 from evennia.comms.channelhandler import CHANNELHANDLER
 
+from evennia.utils import lazy_property
+
+from traits import TraitHandler
+from effects import EffectHandler
+
 class Room(DefaultRoom):
     """
     Rooms are like any Object, except their location is None
@@ -23,6 +28,22 @@ class Room(DefaultRoom):
     """
 
     STYLE = '|y'
+
+    @lazy_property
+    def traits(self):
+        return TraitHandler(self)
+
+    @lazy_property
+    def skills(self):
+        return TraitHandler(self, db_attribute='skills')
+
+    @lazy_property
+    def effects(self):
+        return EffectHandler(self)
+
+    # @lazy_property
+    # def equipment(self):
+    #     return EquipmentHandler(self)
 
     def full_name(self, viewer):
         """
@@ -50,7 +71,6 @@ class Room(DefaultRoom):
             if hasattr(obj, "at_new_arrival"):
                 obj.at_new_arrival(new_arrival)
 
-
     def return_appearance(self, viewer):
         """
         This formats a description. It is the hook a 'look' command
@@ -68,6 +88,23 @@ class Room(DefaultRoom):
 
         way_dir = {'ne': 'northeast', 'n': 'north', 'nw': 'northwest', 'e': 'east',
                    'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west'}
+
+        default_exits = [u'north',u'south',u'east',u'west',u'northeast',u'northwest',u'southeast',u'southwest']
+
+        exits_simple, exits_complex = [], []
+
+        def sort_exits(x, y):
+            """
+            sort supplied list of exit strings, based on default_exits, returns sorted list.
+            """
+            matches = [] # start empty and build a sorted list
+
+            for exit in default_exits:
+                for i, easy in enumerate(x):  
+                    if exit == easy:
+                        matches.append(y[i])
+            s =  set(matches) # Set magic for adding back non-matches.
+            return matches + [z for z in y if z not in s]
 
         for con in visible:
             if con.destination:
@@ -90,10 +127,15 @@ class Room(DefaultRoom):
         if self.attributes.has('exits'):
             ways = self.db.exits
         if exits or ways:
-            string += "\n|wVisible exits|n: " + ", ".join("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) if hasattr(e, "mxp_name") else e.get_display_name(viewer) for e in exits)
+            string += "\n|wVisible exits|n: "
+            for e in exits:
+                exits_simple.append(e.name)
+                exits_complex.append("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) if hasattr(e, "mxp_name") else e.get_display_name(viewer))
             if ways and not ways == {}:
-                ew_joiner = ', ' if exits and ways else ''
-                string += ew_joiner + ", ".join("|lc%s|lt|540%s|n|le" % (w, way_dir[w]) for w in ways.keys())
+                for w in ways:
+                    exits_simple.append(way_dir[w])
+                    exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
+            string += ", ".join(dir for dir in sort_exits(exits_simple, exits_complex))
         else:
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.name
         if users or things:
@@ -251,3 +293,13 @@ class RealmEntry(Room):
             string = "-"*78 + SUPERUSER_WARNING + "-"*78
             character.msg("|r%s|n" % string.format(name=character.key, quell="|w@quell|r"))
 
+
+class Grid(Room):
+    """
+    Grid Rooms are like any Room, except they have sub locations within
+     by default. Objects dropped here are associated with a specific 
+    location prevending them from being picked up unless the character
+    is next to them.
+    """
+
+    STYLE = '|204'

@@ -14,19 +14,29 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
 from evennia import default_cmds
-from commands.command import CmdLook, CmdInventory, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
-from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdSysinfo
-# from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
+
+#[Traversal of path-exits]
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSetSpeed
-from commands import exitdirections
+
+#[commands modules]
 from commands import prelogin
+from commands import exitdirections
+from commands import desc
+from commands.desc import CmdDesc
+from commands.inventory import CmdInventory
+from commands.teleport import CmdTeleport
+from commands.home import CmdHome
+#from commands import destroy # Not ready for testing.
+from commands.command import CmdLook, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
+from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdAbout
+# from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
-    The `CharacterCmdSet` contains general in-game commands like `look`,
-    `get`, etc available on in-game Character objects. It is merged with
-    the `PlayerCmdSet` when a Player puppets a Character.
+    The `CharacterCmdSet` contains general in-game commands available to
+    in-world Character objects. It is merged with the `PlayerCmdSet` when
+    a Player puppets a Character.
     """
     key = "DefaultCharacter"
 
@@ -37,31 +47,37 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
 
         super(CharacterCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
-        self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdDrop)
+        self.remove(default_cmds.CmdAbout)
+        self.remove(default_cmds.CmdAccess)
+        self.remove(default_cmds.CmdDestroy) # Need an alternate destroy method
+        self.remove(default_cmds.CmdTeleport) # Teleport that costs and has conditions.
 # [...]
-        self.add(CmdLook)
-        self.add(CmdInventory)
-        self.add(CmdPose)
         self.add(CmdSay)
         self.add(CmdOoc)
-        self.add(CmdSpoof)
+        self.add(CmdHome)
+        self.add(CmdLook)
+        self.add(CmdDesc)
+        self.add(CmdPose)
         self.add(CmdVerb)
+        self.add(CmdSpoof)
+        self.add(CmdTeleport)
+        self.add(CmdInventory)
 # [...]
         self.add(CmdStop)
+        self.add(CmdBack)
         self.add(CmdSetSpeed)
         self.add(CmdContinue)
-        self.add(CmdBack)
 # [...]
-        self.add(exitdirections.CmdExitNorthwest())
         self.add(exitdirections.CmdExitNorth())
-        self.add(exitdirections.CmdExitNortheast())
-        self.add(exitdirections.CmdExitEast())
-        self.add(exitdirections.CmdExitSoutheast())
         self.add(exitdirections.CmdExitSouth())
-        self.add(exitdirections.CmdExitSouthwest())
+        self.add(exitdirections.CmdExitEast())
         self.add(exitdirections.CmdExitWest())
+        self.add(exitdirections.CmdExitNortheast())
+        self.add(exitdirections.CmdExitNorthwest())
+        self.add(exitdirections.CmdExitSoutheast())
+        self.add(exitdirections.CmdExitSouthwest())
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
@@ -79,23 +95,23 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         """
         super(PlayerCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
-        self.remove(default_cmds.CmdAddCom)
-        self.remove(default_cmds.CmdAllCom)
+        self.remove(default_cmds.CmdCWho)
         self.remove(default_cmds.CmdCBoot)
         self.remove(default_cmds.CmdPage)
-        self.remove(default_cmds.CmdChannelCreate)
-        self.remove(default_cmds.CmdCdestroy)
-        self.remove(default_cmds.CmdDelCom)
         self.remove(default_cmds.CmdCdesc)
         self.remove(default_cmds.CmdClock)
         self.remove(default_cmds.CmdCemit)
-        self.remove(default_cmds.CmdCWho)
-        self.add(CmdQuit)
+        self.remove(default_cmds.CmdAddCom)
+        self.remove(default_cmds.CmdDelCom)
+        self.remove(default_cmds.CmdAllCom)
+        self.remove(default_cmds.CmdCdestroy)
+        self.remove(default_cmds.CmdChannelCreate)
         self.add(CmdWho)
+        self.add(CmdQuit)
+        self.add(CmdAbout)
         self.add(CmdAccess)
-        self.add(CmdSysinfo)
         self.add(CmdChannels)
-        # self.add(CmdForge) # TODO: Make this a verb, along with "quench"
+        # self.add(CmdForge) # TODO: Make this a verb, along with "quench" and place on forge room.
         # self.add(CmdChannelWizard) # TODO: Too dangerous to add without testing.
 
 

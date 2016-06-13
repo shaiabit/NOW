@@ -11,6 +11,11 @@ import re
 from world.helpers import make_bar
 from evennia import DefaultCharacter
 
+from evennia.utils import lazy_property
+
+from traits import TraitHandler
+from effects import EffectHandler
+
 class Character(DefaultCharacter):
     """
     The Character defaults to implementing some of its hook methods with the
@@ -32,6 +37,22 @@ class Character(DefaultCharacter):
 
     STYLE = '|c'
 
+    @lazy_property
+    def traits(self):
+        return TraitHandler(self)
+
+    @lazy_property
+    def skills(self):
+        return TraitHandler(self, db_attribute='skills')
+
+    @lazy_property
+    def effects(self):
+        return EffectHandler(self)
+
+    # @lazy_property
+    # def equipment(self):
+    #     return EquipmentHandler(self)
+
     def at_before_move(self, destination):
         """
         Called just before moving object - here we check to see if
@@ -50,6 +71,9 @@ class Character(DefaultCharacter):
         if self.db.Combat_TurnHandler:
             self.caller.msg("You can't leave while engaged in combat!")
             return False
+        # if self.db.HP <= 0:
+        #    self.caller.msg("You can't move, you've been defeated! Type 'return' to go back to the Institute and recover!")
+        #    return False
         return True
 
     def at_after_move(self, source_location):
@@ -59,7 +83,7 @@ class Character(DefaultCharacter):
         if self.location.access(self, "view"):
             self.msg(text=((self.at_look(self.location),), {"window":"room"}))
             # TODO: Display name for objects in message.
-            self.location.msg_contents("%s arrives at %s from %s." % (self, self.location, source_location))
+            # self.location.msg_contents("%s arrives at %s from %s." % (self, self.location, source_location))
             # self.location.msg_contents("%s arrives at %s from %s." % \
                # self.full_name(viewer) if hasattr(self, "full_name") else self, self.location, \
                # self.location.get_display_name(viewer) if hasattr(self.location, "full_name") else self.location, \
@@ -70,6 +94,14 @@ class Character(DefaultCharacter):
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
+
+#Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
+#That will go only to the session actually triggering the command. You can then do player.sessions.all() and send to all but the current session.
+#There is no way to know that unless the session sends themself as an argument to said method.
+#The session has to be in an argument to that method, like you said.
+#I see that the session is indeed available in the puppet_object method (which calls at_post_puppet) so I suppose we could extend that hook with a session argument.
+#I think it may have originally been defined at a time when an object only ever had one session, so once you were puppeted you could easily retrieve it.
+
         self.msg("\nYou assume the role of %s.\n" % self.full_name(self))
         self.msg(self.at_look(self.location))
 
@@ -231,6 +263,10 @@ class NPC(Character):
         """
         self.msg("\nYou assume the role of %s.\n" % self.full_name(self))
         self.msg(self.at_look(self.location))
+
+#    Testing Trait system
+        # self.traits.add('health', 'Health', type='gauge', base=20, min=0, max=20)
+        # print(self.traits.health.current)
 
         # def message(obj, from_obj):
         #    obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)

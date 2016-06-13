@@ -10,9 +10,14 @@ the other types, you can do so by adding this as a multiple
 inheritance.
 
 """
-#from evennia import Command
+
 from evennia import DefaultObject
 from evennia.utils.evmenu import get_input
+
+from evennia.utils import lazy_property
+
+from traits import TraitHandler
+from effects import EffectHandler
 
 class Object(DefaultObject):
     """
@@ -164,18 +169,32 @@ class Object(DefaultObject):
 
     STYLE = '|334'
 
+    @lazy_property
+    def traits(self):
+        return TraitHandler(self)
+
+    @lazy_property
+    def skills(self):
+        return TraitHandler(self, db_attribute='skills')
+
+    @lazy_property
+    def effects(self):
+        return EffectHandler(self)
+
+    # @lazy_property
+    # def equipment(self):
+    #     return EquipmentHandler(self)
+
     def reset(self):
         "Resets the object - quietly sends it home or nowhere."
 
         self.location = self.home
-
 
     def junk(self):
         "Tags the object as junk to decay."
 
         # TODO: Create a timer for final stage of decay.
         pass
-
 
     def read(self, pose, caller):
         """
@@ -193,7 +212,6 @@ class Object(DefaultObject):
             string = "There is nothing to read on %s." % obj_name
         caller.msg(string)
 
-
     def at_before_move(self, destination):
         """
         Called just before moving object - here we check to see if
@@ -205,14 +223,12 @@ class Object(DefaultObject):
         # When self is supporting something, do not move it.
         return False if self.attributes.has('locked') else True
 
-
     def at_get(self, caller):
         """
         Called after getting an object in the room.
         """
 
         caller.msg("%s is now in your posession." % self.mxp_name(caller, '@verb #%s' % self.id))
-
 
     def drop(self, pose, caller):
         """
@@ -391,10 +407,10 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
         def drink_callback(caller, prompt, user_input):
             "Response to input given after drink potion"
 
-            msg = "%s begins to have an effect on %s, transorming into species %s." % (self.full_name(caller.sessions),
+            msg = "%s begins to have an effect on %s, transforming into species %s." % (self.full_name(caller.sessions),
                 caller.full_name(caller.sessions), user_input)
             caller.location.msg_contents(msg)
-            caller.db.species = user_input[0:20]
+            caller.db.species = user_input[0:20].strip()
 
         get_input(caller, "Species? (Type your species setting now, and then [enter]) ", drink_callback)
 
