@@ -46,6 +46,23 @@ def on_path(accessing_obj, accessed_obj, *args, **kwargs):
     destination = accessing_obj.location.destination
     return False if destination == None else True
 
+def on_exit(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with on_exit() and returns True
+    only when accessing_obj is on an exit within the room.
+    """
+    location = accessing_obj.location
+    reached = accessing_obj.db.reached
+    print("args=%s, reached=%s, in location=%s" % (args[0], reached, location))
+
+    if not location or not reached:
+        return False # Nowhere is not on an path.
+    else:
+        if args:
+            return True if args[0] in accessing_obj.db.reached else False
+        else:
+            return False
+
 def no_back(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with no_back() and returns True

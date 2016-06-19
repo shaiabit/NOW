@@ -195,7 +195,7 @@ class Character(DefaultCharacter):
 
     def get_mass(self):
         mass = self.attributes.get('mass') or 10
-        return reduce(lambda x, y: x+y.get_mass(),[mass] + self.contents)
+        return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0,[mass] + self.contents)
 
     def get_carry_limit(self):
         return 80 * self.get_attribute_value('health')
@@ -244,7 +244,7 @@ class Character(DefaultCharacter):
         if users or things:
             user_list = ", ".join(u.full_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name(viewer) for t in things)
+            item_list = ", ".join(t.full_name(viewer) if hasattr(t, 'full_name') else t.name for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         return string
 

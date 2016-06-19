@@ -16,6 +16,9 @@ from evennia.utils import lazy_property
 from traits import TraitHandler
 from effects import EffectHandler
 
+from evennia import CmdSet # For the class Grid
+from evennia import default_cmds  # For the class Grid's commands
+
 class Room(DefaultRoom):
     """
     Rooms are like any Object, except their location is None
@@ -89,7 +92,7 @@ class Room(DefaultRoom):
         way_dir = {'ne': 'northeast', 'n': 'north', 'nw': 'northwest', 'e': 'east',
                    'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west'}
 
-        default_exits = [u'north',u'south',u'east',u'west',u'northeast',u'northwest',u'southeast',u'southwest']
+        default_exits = [u'north', u'south', u'east', u'west', u'northeast', u'northwest', u'southeast', u'southwest']
 
         exits_simple, exits_complex = [], []
 
@@ -136,7 +139,7 @@ class Room(DefaultRoom):
                     exits_simple.append(way_dir[w])
                     exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
             string += ", ".join(dir for dir in sort_exits(exits_simple, exits_complex))
-        else:
+        elif viewer.db.last_room:
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.name
         if users or things:
             user_list = ", ".join(u.mxp_name(viewer, '@verb #%s' % u.id) for u in users)
@@ -294,12 +297,231 @@ class RealmEntry(Room):
             character.msg("|r%s|n" % string.format(name=character.key, quell="|w@quell|r"))
 
 
+class CmdSetGridRoom(CmdSet):    
+        """
+        The only thing this method should need
+        to do is to add commands to the set.
+        """ 
+        key = "Grid Nav"
+        priority = 101 # Same as Exit objects
+
+        def at_cmdset_creation(self):
+            self.add(CmdGrid())
+            self.add(CmdGridNorth())
+            self.add(CmdGridSouth())
+            self.add(CmdGridEast())
+            self.add(CmdGridWest())
+            self.add(CmdGridNortheast())
+            self.add(CmdGridNorthwest())
+            self.add(CmdGridSoutheast())
+            self.add(CmdGridSouthwest())
+
+
+class CmdGridMotion(default_cmds.MuxCommand):
+    """
+    Parent class for all simple exit-directions. 
+    Actual exit objects superceed these in every way.
+
+    Grid locations are stored on the Grid room that is navigated by these commands.
+
+    <direction>/add [destination] -- adds simple exit to destination in the given direction.
+    <direction>/del  -- removes simple exit in given direction. 
+    """
+    arg_regex = r"^/|\s|$"
+    auto_help = True
+    help_category = "Travel"
+
+    def func(self):
+        "Command for all simple exit directions."
+
+        player_caller = True
+        you = self.caller
+        session = self.session
+        loc = you.location
+
+        loc.msg_contents("%s chooses to go |g%s|n on the grid." % (you.full_name(session), self.key))
+        # Update character's position in room
+        you.msg(loc.return_appearance(you)) # Show view from location.
+
+class CmdGrid(CmdGridMotion):
+    """
+    grid  -- manage the room's grid.
+    """
+    key = "grid"
+    help_category = "Building"
+    locks = "cmd:perm(Builders)"
+
+    def func(self):
+        "Command to manage all grid room properties."
+
+        player_caller = True
+        you = self.caller
+        session = self.session
+        loc = you.location
+
+        loc.msg_contents("%s examines %s." % (you.full_name(session), loc.full_name(session)))
+        x, y = (loc.grid.x, loc.grid.y)
+        if 'exits' in self.switches:
+            exits = []
+            for e in loc.exits:
+                short_name = str(e.key)
+                # loc.grid.exits.short_name = [0,0]
+                exits.append([e, short_name])
+            you.msg("Exits: %s" % exits)
+        if 'size' in self.switches:
+            if not self.args:
+                you.msg("Room: %sx%s as [%s..%s, %s..%s] Current editing position: [%s, %s]" %
+                    (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.current, y.current))
+            else:
+                x_y = self.args.split(',')
+                xr, yr = x_y[0], x_y[1] if len(x_y) > 1 else [xr, xr]
+                xmin, xmax = xr.split('..') if len(xr.split('..')) > 1 else [xr, xr+1]
+                ymin, ymax = yr.split('..') if len(yr.split('..')) > 1 else [yr, yr+1]
+                xmin, xmax, ymin, ymax = [int(xmin), int(xmax), int(ymin), int(ymax)]
+                if xmax-xmin < 99 and ymax-ymin < 99 and xmin <= x.base <= xmax and ymin <= y.base <= ymax:
+                    you.msg("Room: %sx%s as [%s..%s, %s..%s]" %
+                        (xmax-xmin+1, ymax-ymin+1, xmin, xmax, ymin, ymax))
+                    x.min, x.max, y.min, y.max = [xmin, xmax, ymin, ymax]
+                else:
+                    range_error = "[x0..x1, y0..y1] ranges must be at least 1 and at most 100."
+                    base_error = "Base values [%s, %s] must be within [x0..x1, y0..y1].|/Change ranges, or change base values." % (x.base, y.base)
+                    you.msg(base_error if xmax-xmin < 99 and ymax-ymin < 99 else range_error)
+            return
+        if 'base' in self.switches:
+            x_y = self.args.split(',')
+            xbase, ybase = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
+            print("x/ybase: [%s, %s]" % (xbase, ybase))
+            if x.min <= xbase <= x.max and y.min <= ybase <= y.max:
+                x.base, y.base = [xbase, ybase]
+                you.msg("|gRoom base set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" % \
+                        (x.base, y.base, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+            else:
+                you.msg("|rRoom base must be within %sx%s area|n [%s..%s, %s..%s]" % \
+                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+        if 'current' in self.switches:
+            x_y = self.args.split(',')
+            xcurr, ycurr = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
+            print("x/ycurr: [%s, %s]" % (xcurr, ycurr))
+            if x.min <= xcurr <= x.max and y.min <= ycurr <= y.max:
+                x.current, y.current = [xcurr, ycurr]
+                you.msg("|gRoom current edit location set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" % \
+                        (x.current, y.current, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+            else:
+                you.msg("|rRoom current edit location must be within %sx%s area|n [%s..%s, %s..%s]" % \
+                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+        small = True if 'small' in self.switches else False
+        if small or 'large' in self.switches:
+            intro = 'Small' if small else 'Large'
+            you.msg('%s grid display of room:|/' % intro)
+            for i in range(x.min, x.max+1):
+                line = ''
+                if small:
+                    for j in range(y.min, y.max+1):
+                        line += ' x ' if x.base == i and y.base == j else ' . '
+                    you.msg("%s|/" % line)
+                else:
+                    for k in range(0,2):
+                        for j in range(y.min, y.max+1):
+                            if k == 0:
+                                line += '[ _ ] ' if x.base == i and y.base == j else '[   ] '
+                            else:
+                                line += '[___] ' if x.base == i and y.base == j else '[___] '
+                        line += '|/'
+                    you.msg("%s" % line)
+        you.msg("Room: %sx%s as [%s..%s, %s..%s]|/Base editing position: [%s, %s]|/Current editing position: [%s, %s]" %
+            (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.base, y.base, x.current, y.current))
+
+
+class CmdGridNorth(CmdGridMotion):
+    """
+    north  or n        -- move north on the room's grid.
+    """
+    key = "north"
+    aliases = "n"
+    locks = "cmd:not on_exit(n)"
+
+
+class CmdGridNortheast(CmdGridMotion):
+    """
+    northeast  or ne   -- move northeast on the room's grid.
+    """
+    key = "northeast"
+    aliases = "ne"
+    locks = "cmd:not on_exit(ne)"
+
+
+class CmdGridNorthwest(CmdGridMotion):
+    """
+    northwest  or nw   -- move northwest on the room's grid.
+    """
+    key = "northwest"
+    aliases = "nw"
+    locks = "cmd:not on_exit(nw)"
+
+
+class CmdGridEast(CmdGridMotion):
+    """
+    east  or e         -- move east on the room's grid.
+    """
+    key = "east"
+    aliases = "e"
+    locks = "cmd:not on_exit(e)"
+
+
+class CmdGridSouth(CmdGridMotion):
+    """
+    south  or s        -- move south on the room's grid.
+    """
+    key = "south"
+    aliases = "s"
+    locks = "cmd:not on_exit(s)"
+
+
+class CmdGridSoutheast(CmdGridMotion):
+    """
+    sortheast  or se   -- move southeast on the room's grid.
+    """
+    key = "southeast"
+    aliases = "se"
+    locks = "cmd:not on_exit(se)"
+
+
+class CmdGridSouthwest(CmdGridMotion):
+    """
+    southwest  or sw   -- move southwest on the room's grid.
+    """
+    key = "southwest"
+    aliases = "sw"
+    locks = "cmd:not on_exit(sw)"
+
+
+class CmdGridWest(CmdGridMotion):
+    """
+    west  or w         -- move west on the room's grid.
+    """
+    key = "west"
+    aliases = "w"
+    locks = "cmd:not on_exit(w)"
+
+
 class Grid(Room):
     """
     Grid Rooms are like any Room, except they have sub locations within
-     by default. Objects dropped here are associated with a specific 
+    by default. Objects dropped here are associated with a specific 
     location prevending them from being picked up unless the character
     is next to them.
     """
 
     STYLE = '|204'
+
+    @lazy_property
+    def grid(self):
+        return TraitHandler(self, db_attribute='grid')
+
+    def at_object_creation(self):
+        """called when the object is first created"""
+
+        self.cmdset.add_default(CmdSetGridRoom)
+        self.db.grid = {'x':{'name': 'East/West size', 'type': 'counter', 'base': 0, 'current': 0,
+            'min': 0, 'max': 1}, 'y':{'name': 'North/South size', 'type': 'counter', 'base': 0,
+            'current': 0, 'min': 0, 'max': 1}}

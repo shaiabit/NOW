@@ -24,9 +24,11 @@ class CmdInventory(default_cmds.MuxCommand):
             table.header = False
             table.border = False
             for item in items:
-                second = item.get_mass() if 'weight' in self.switches else item.db.desc_brief
+                imass = item.get_mass() if hasattr(item, 'get_mass') else '- unknown -'
+                second = imass if 'weight' in self.switches else item.db.desc_brief
                 table.add_row(["%s" % item.mxp_name(self.caller.sessions, '@verb #%s' % item.id) if hasattr(item, "mxp_name") \
                     else item.get_display_name(self.caller.sessions), second and second or ""])
-            string = "|wYou and what you carry total %s g:\n%s" % (self.caller.get_mass(), table)
+            imass = self.caller.get_mass() if hasattr(item, 'get_mass') else '- unknown -'
+            string = "|wYou and what you carry total %s g:\n%s" % (imass, table)
         self.caller.msg(string)
 

@@ -23,11 +23,12 @@ from commands import prelogin
 from commands import exitdirections
 from commands import desc
 from commands.desc import CmdDesc
+from commands.sense import CmdSense
 from commands.inventory import CmdInventory
 from commands.teleport import CmdTeleport
 from commands.home import CmdHome
 #from commands import destroy # Not ready for testing.
-from commands.command import CmdLook, CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
+from commands.command import CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
 from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdAbout
 # from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
 
@@ -49,6 +50,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdDrop)
+        self.remove(default_cmds.CmdLook)
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdDestroy) # Need an alternate destroy method
@@ -57,10 +59,10 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdSay)
         self.add(CmdOoc)
         self.add(CmdHome)
-        self.add(CmdLook)
         self.add(CmdDesc)
         self.add(CmdPose)
         self.add(CmdVerb)
+        self.add(CmdSense)
         self.add(CmdSpoof)
         self.add(CmdTeleport)
         self.add(CmdInventory)

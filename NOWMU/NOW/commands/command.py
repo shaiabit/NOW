@@ -11,8 +11,6 @@ from evennia import Command as BaseCommand
 from evennia import default_cmds
 from evennia import utils
 
-# error return function, needed by Extended Look command
-_AT_SEARCH_RESULT = utils.variable_from_module(*settings.SEARCH_AT_RESULT.rsplit('.', 1))
 
 class Command(BaseCommand):
     """
@@ -185,6 +183,7 @@ import sys
 import twisted
 import django
 
+
 class CmdAbout(MuxCommand):
     """
     show Evennia info
@@ -280,11 +279,10 @@ class CmdChannels(MuxPlayerCommand):
                 nicks = nicks or []
                 control = '|gYes|n ' if chan.access(caller, 'control') else '|rNo|n  '
                 send = '|gYes|n ' if chan.access(caller, 'send') else '|rNo|n  '
-                sub = '|gYes|n ' if chan.access(caller, 'listen') else '|rNo  '
+                sub = chan in subs and '|gYes|n ' or '|rNo|n  '
                 comtable.add_row(*["%s%s" % (chan.key, chan.aliases.all() and
                                    "(%s)" % ",".join(chan.aliases.all()) or ''),
                                    chan.db.desc,
-                                   # chan in subs and '|gYes|n' or '|rNo|n ' + send + control,
                                    control + sub + send,
                                    "%s" % ",".join(nick.db_key for nick in make_iter(nicks)
                                    if nick.strvalue.lower() == clower)])
@@ -533,68 +531,6 @@ from evennia.commands.default.muxcommand import MuxPlayerCommand
 from evennia.utils import ansi, utils, create, search, prettytable
 
 
-class CmdLook(MuxCommand):
-    """
-    sense location or object
-    Usage:
-      <sense verb>
-      <sense verb> <obj>
-      <sense verb> *<player>
-    Observes your location or objects in your vicinity.
-    """
-    key = "sense"
-    aliases = ["l", "look", "taste", "touch", "smell", "listen"]
-    locks = "cmd:all()"
-    arg_regex = r"\s|$"
-
-    def func(self):
-        """
-        Handle looking at objects. WIP: Expanding to handle other senses.
-        """
-
-        caller = self.caller
-        args = self.args
-        if args:
-            obj = caller.search(args,
-                                           candidates=caller.location.contents + caller.contents,
-                                           use_nicks=True,
-                                           quiet=True)
-            if not obj:
-                # no object found. Check if there is a matching detail around the location.
-                # TODO: Restrict search for details by posessive parse:  [object]'s [detail]
-                candidates = [caller.location] + caller.location.contents + caller.contents
-                for location in candidates:
-                    # TODO: Continue if look location is not visibile to looker.
-                    if location and hasattr(location, "return_detail") and callable(location.return_detail):
-                        detail = location.return_detail(args)
-                        if detail:
-                            # Show found detail.
-                            caller.msg(detail)
-                            return  # TODO: Add /all switch to override return here to view all details.
-                # no detail found. Trigger delayed error messages
-                _AT_SEARCH_RESULT(obj, caller, args, quiet=False)
-                return
-            else:
-                # we need to extract the match manually.
-                obj = utils.make_iter(obj)[0]
-        else:
-            obj = caller.location
-            if not obj:
-                caller.msg("There is nothing to see here.")
-                return
-
-        if not hasattr(obj, 'return_appearance'):
-            # this is likely due to a player calling the command.
-            obj = obj.character
-        if not obj.access(caller, "view"):
-            caller.msg("Could not find '%s'." % args)
-            return
-        # get object's appearance
-        caller.msg(obj.return_appearance(caller))
-        # the object's at_desc() method.
-        obj.at_desc(looker=caller)
-
-
 class CmdQuit(MuxPlayerCommand):
     """
     Gracefully disconnect your current session
@@ -640,12 +576,12 @@ class CmdAccess(MuxCommand):
     """
     Displays your current world access levels.
     Usage:
-      @access - Displays permissions for your current player and character account.
+      access - Displays permissions for your current player and character account.
     Switches:
-      @access/groups - Displays the system's permission groups hierarchy.
+      access/groups - Displays the system's permission groups hierarchy.
     """
 
-    key = "@access"
+    key = "access"
     locks = "cmd:all()"
     help_category = "System"
 
