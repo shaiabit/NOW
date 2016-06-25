@@ -1,7 +1,7 @@
 """
 Room
 
-Rooms are simple containers that has no location of their own.
+Rooms are simple containers that have no location of their own.
 
 """
 
@@ -18,6 +18,7 @@ from effects import EffectHandler
 
 from evennia import CmdSet # For the class Grid
 from evennia import default_cmds  # For the class Grid's commands
+
 
 class Room(DefaultRoom):
     """
@@ -53,8 +54,7 @@ class Room(DefaultRoom):
         Returns the full styled non-clickable name
         for the viewer's perspective as a string.
         """
-
-        if viewer and (self != viewer) and self.access(viewer, "view"):
+        if viewer and (self != viewer) and self.access(viewer, 'view'):
             return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
         else:
             return ''
@@ -64,12 +64,10 @@ class Room(DefaultRoom):
         Returns the full styled and clickable-look name
         for the viewer's perspective as a string.
         """
-
-        if viewer and self.access(viewer, "view"):
-            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
+        if viewer and self.access(viewer, 'view'):
+            return '|lc%s|lt%s%s|n|le' % (command, self.STYLE, self.full_name(viewer))
         else:
             return ''
-
         for obj in self.contents_get(exclude=new_arrival):
             if hasattr(obj, "at_new_arrival"):
                 obj.at_new_arrival(new_arrival)
@@ -85,28 +83,25 @@ class Room(DefaultRoom):
         if not viewer:
             return
         # get and identify all objects
-        visible = (con for con in self.contents if con != viewer and
-                                                    con.access(viewer, "view"))
+        visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         exits, ways, users, things = [], [], [], []
 
         way_dir = {'ne': 'northeast', 'n': 'north', 'nw': 'northwest', 'e': 'east',
                    'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west'}
 
-        default_exits = [u'north', u'south', u'east', u'west', u'northeast', u'northwest', u'southeast', u'southwest']
+        default_exits = [u'north', u'south', u'east', u'west', u'northeast', u'northwest', u'southeast', u'southwest',
+                         u'up', u'down', u'in', u'out']
 
         exits_simple, exits_complex = [], []
 
         def sort_exits(x, y):
-            """
-            sort supplied list of exit strings, based on default_exits, returns sorted list.
-            """
-            matches = [] # start empty and build a sorted list
-
-            for exit in default_exits:
-                for i, easy in enumerate(x):  
-                    if exit == easy:
+            """sort supplied list of exit strings, based on default_exits, returns sorted list."""
+            matches = []  # start empty and build a sorted list
+            for e in default_exits:
+                for i, easy in enumerate(x):
+                    if e == easy:
                         matches.append(y[i])
-            s =  set(matches) # Set magic for adding back non-matches.
+            s = set(matches)  # Set magic for adding back non-matches.
             return matches + [z for z in y if z not in s]
 
         for con in visible:
@@ -133,25 +128,27 @@ class Room(DefaultRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) if hasattr(e, "mxp_name") else e.get_display_name(viewer))
+                exits_complex.append("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) if hasattr(e, "mxp_name")
+                                     else e.get_display_name(viewer))
             if ways and not ways == {}:
                 for w in ways:
                     exits_simple.append(way_dir[w])
                     exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
-            string += ", ".join(dir for dir in sort_exits(exits_simple, exits_complex))
+            string += ", ".join(d for d in sort_exits(exits_simple, exits_complex))
         elif viewer.db.last_room:
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.name
         if users or things:
             user_list = ", ".join(u.mxp_name(viewer, '@verb #%s' % u.id) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.mxp_name(viewer, '@verb #%s' % t.id) if hasattr(t, "mxp_name") else t.get_display_name(viewer) for t in things)
+            item_list = ", ".join(t.mxp_name(viewer, '@verb #%s' % t.id) if hasattr(t, "mxp_name")
+                                  else t.get_display_name(viewer) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
         return string
 
-#[...] class TutorialRoom(DefaultRoom):
+# [...] class TutorialRoom(DefaultRoom):
 
     def at_object_creation(self):
-        "Called when room is first created"
+        """Called when room is first created"""
         self.db.tutorial_info = "This is a tutorial room. It allows you to use the 'tutorial' command."
         # self.cmdset.add_default(TutorialRoomCmdSet) # 
         
@@ -167,7 +164,7 @@ class Room(DefaultRoom):
             source_location (Object): the previous location of new_arrival.
 
         """
-        if new_arrival.has_player: # and not new_arrival.is_superuser: # this is a character
+        if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
             outdoor = self.tags.get('outdoor', category='flags')
             if outdoor:
                 tickers = TICKER_HANDLER.all_display()
@@ -177,13 +174,15 @@ class Room(DefaultRoom):
                         notice = ''
                         counter += 1
                         show = '20%% chance every %s seconds in ' % tick[3]
-                        show += "%s%s" % (tick[0] or "[None]", tick[0] and " (#%s)" % (tick[0].id if hasattr(tick[0], "id") else "") or "")
+                        show += "%s%s" % (tick[0] or "[None]", tick[0] and " (#%s)" %
+                                          (tick[0].id if hasattr(tick[0], "id") else "") or "")
                         if counter > 1:
                             notice = '|rExtra Ticker|n - |yadditional|n '
                             # Too many weather tickers going, maybe remove extra?
                         channel = ChannelDB.objects.channel_search('MudInfo')
                         if channel[0]:
-                            channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show), keep_log=False)
+                            channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show),
+                                           keep_log=False)
                 if counter == 0:  # No weather ticker - add one.
                     interval = random.randint(50, 70)
                     TICKER_HANDLER.add(interval=interval, callback=self.update_weather, idstring='Weather')
@@ -205,7 +204,6 @@ class Room(DefaultRoom):
         details = self.db.details
         if details:
             return details.get(detailkey.lower(), None)
-
 
     def set_detail(self, detailkey, description):
         """
@@ -235,22 +233,21 @@ class Room(DefaultRoom):
         even though we don't actually use them in this example)
         """
 
-        WEATHER_STRINGS = (
-        "The rain coming down from the iron-grey sky intensifies.",
-        "A gush of wind throws the rain right in your face. Despite your cloak you shiver.",
-        "The rainfall eases a bit and the sky momentarily brightens.",
-        "For a moment it looks like the rain is slowing, then it begins anew with renewed force.",
-        "The rain pummels you with large, heavy drops. You hear the rumble of thunder in the distance.",
-        "The wind is picking up, howling around you, throwing water droplets in your face. It's cold.",
-        "Bright fingers of lightning flash over the sky, moments later followed by a deafening rumble.",
-        "It rains so hard you can hardly see your hand in front of you. You'll soon be drenched to the bone.",
-        "Lightning strikes in several thundering bolts, striking the trees in the forest to your west.",
-        "You hear the distant howl of what sounds like some sort of dog or wolf.",
-        "Large clouds rush across the sky, throwing their load of rain over the world.")
+        weather = self.db.weather or (
+            "The rain coming down from the iron-grey sky intensifies.",
+            "A gust of wind throws the rain right in your face. Despite your cloak you shiver.",
+            "The rainfall eases a bit and the sky momentarily brightens.",
+            "For a moment it looks like the rain is slowing, then it begins anew with renewed force.",
+            "The rain pummels you with large, heavy drops. You hear the rumble of thunder in the distance.",
+            "The wind is picking up, howling around you, throwing water droplets in your face. It's cold.",
+            "Bright fingers of lightning flash over the sky, moments later followed by a deafening rumble.",
+            "It rains so hard you can hardly see your hand in front of you. You'll soon be drenched to the bone.",
+            "Lightning strikes in several thundering bolts, striking the trees in the forest to your west.",
+            "You hear the distant howl of what sounds like some sort of dog or wolf.",
+            "Large clouds rush across the sky, throwing their load of rain over the world.")
 
-        if random.random() < 0.2:
-            # only update 20 % of the time
-            self.msg_contents("|w%s|n" % random.choice(WEATHER_STRINGS))
+        if random.random() < 0.2:  # only update 20 % of the time
+            self.msg_contents("|w%s|n" % random.choice(weather))
             # TODO: Weather channel? Send weather messages to a channel.   
 
 
@@ -264,7 +261,6 @@ class RealmEntry(Room):
     See examples/object.py for a list of
     properties and methods available on all Objects.
     """
-
     STYLE = '|242'
 
     def at_object_creation(self):
@@ -277,10 +273,7 @@ class RealmEntry(Room):
                                 "the character."
 
     def at_object_receive(self, character, source_location):
-        """
-        Assign properties on characters
-        """
-
+        """Assign properties on characters"""
         # setup character for the tutorial
         health = self.db.char_health or 20
 
@@ -289,21 +282,18 @@ class RealmEntry(Room):
             character.db.health_max = health
 
         if character.is_superuser:
-            SUPERUSER_WARNING = "|/WARNING: You are playing as a superuser ({name}). Use the {quell} command to|/" \
+            warning = "|/WARNING: You are playing as superuser ({name}). Use the {quell} command to|/" \
                     "play without superuser privileges (many functions and puzzles ignore the|/" \
                     "presence of a superuser, making this mode useful for exploring things behind|/" \
                     "the scenes later).|/"
-            string = "-"*78 + SUPERUSER_WARNING + "-"*78
+            string = "-"*78 + warning + "-"*78
             character.msg("|r%s|n" % string.format(name=character.key, quell="|w@quell|r"))
 
 
 class CmdSetGridRoom(CmdSet):    
-        """
-        The only thing this method should need
-        to do is to add commands to the set.
-        """ 
-        key = "Grid Nav"
-        priority = 101 # Same as Exit objects
+        """This method adds commands to the grid room command set."""
+        key = 'Grid Nav'
+        priority = 101  # Same as Exit objects
 
         def at_cmdset_creation(self):
             self.add(CmdGrid())
@@ -320,42 +310,39 @@ class CmdSetGridRoom(CmdSet):
 class CmdGridMotion(default_cmds.MuxCommand):
     """
     Parent class for all simple exit-directions. 
-    Actual exit objects superceed these in every way.
+    Actual exit objects superseded these in every way.
 
     Grid locations are stored on the Grid room that is navigated by these commands.
 
     <direction>/add [destination] -- adds simple exit to destination in the given direction.
     <direction>/del  -- removes simple exit in given direction. 
     """
-    arg_regex = r"^/|\s|$"
+    arg_regex = r'^/|\s|$'
     auto_help = True
-    help_category = "Travel"
+    help_category = 'Travel'
+    player_caller = True
 
     def func(self):
-        "Command for all simple exit directions."
-
-        player_caller = True
-        you = self.caller
+        """Command for all simple exit directions."""
+        you = self.character
         session = self.session
         loc = you.location
 
         loc.msg_contents("%s chooses to go |g%s|n on the grid." % (you.full_name(session), self.key))
-        # Update character's position in room
-        you.msg(loc.return_appearance(you)) # Show view from location.
+        # TODO: Update character's position in room   map(lambda x, y: x + y, [x, y], [-2, 3])
+        you.msg(loc.return_appearance(you))  # Show view from location.
+
 
 class CmdGrid(CmdGridMotion):
-    """
-    grid  -- manage the room's grid.
-    """
-    key = "grid"
-    help_category = "Building"
-    locks = "cmd:perm(Builders)"
+    """grid  -- manage the room's grid."""
+    key = 'grid'
+    help_category = 'Building'
+    locks = 'cmd:perm(Builders)'
+    player_caller = True
 
     def func(self):
-        "Command to manage all grid room properties."
-
-        player_caller = True
-        you = self.caller
+        """Command to manage all grid room properties."""
+        you = self.character
         session = self.session
         loc = you.location
 
@@ -371,43 +358,42 @@ class CmdGrid(CmdGridMotion):
         if 'size' in self.switches:
             if not self.args:
                 you.msg("Room: %sx%s as [%s..%s, %s..%s] Current editing position: [%s, %s]" %
-                    (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.current, y.current))
+                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.current, y.current))
             else:
                 x_y = self.args.split(',')
-                xr, yr = x_y[0], x_y[1] if len(x_y) > 1 else [xr, xr]
+                xr, yr = x_y[0], x_y[1] if len(x_y) > 1 else [x_y[0], x_y[0]]
                 xmin, xmax = xr.split('..') if len(xr.split('..')) > 1 else [xr, xr+1]
                 ymin, ymax = yr.split('..') if len(yr.split('..')) > 1 else [yr, yr+1]
                 xmin, xmax, ymin, ymax = [int(xmin), int(xmax), int(ymin), int(ymax)]
                 if xmax-xmin < 99 and ymax-ymin < 99 and xmin <= x.base <= xmax and ymin <= y.base <= ymax:
                     you.msg("Room: %sx%s as [%s..%s, %s..%s]" %
-                        (xmax-xmin+1, ymax-ymin+1, xmin, xmax, ymin, ymax))
+                            (xmax-xmin+1, ymax-ymin+1, xmin, xmax, ymin, ymax))
                     x.min, x.max, y.min, y.max = [xmin, xmax, ymin, ymax]
                 else:
                     range_error = "[x0..x1, y0..y1] ranges must be at least 1 and at most 100."
-                    base_error = "Base values [%s, %s] must be within [x0..x1, y0..y1].|/Change ranges, or change base values." % (x.base, y.base)
+                    base_error = "Base values [%s, %s] must be within [x0..x1, y0..y1]." \
+                                 "|/Change ranges, or change base values." % (x.base, y.base)
                     you.msg(base_error if xmax-xmin < 99 and ymax-ymin < 99 else range_error)
             return
         if 'base' in self.switches:
             x_y = self.args.split(',')
             xbase, ybase = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
-            print("x/ybase: [%s, %s]" % (xbase, ybase))
             if x.min <= xbase <= x.max and y.min <= ybase <= y.max:
                 x.base, y.base = [xbase, ybase]
-                you.msg("|gRoom base set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" % \
+                you.msg("|gRoom base set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" %
                         (x.base, y.base, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
             else:
-                you.msg("|rRoom base must be within %sx%s area|n [%s..%s, %s..%s]" % \
+                you.msg("|rRoom base must be within %sx%s area|n [%s..%s, %s..%s]" %
                         (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
         if 'current' in self.switches:
             x_y = self.args.split(',')
             xcurr, ycurr = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
-            print("x/ycurr: [%s, %s]" % (xcurr, ycurr))
             if x.min <= xcurr <= x.max and y.min <= ycurr <= y.max:
                 x.current, y.current = [xcurr, ycurr]
-                you.msg("|gRoom current edit location set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" % \
+                you.msg("|gRoom current edit location set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" %
                         (x.current, y.current, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
             else:
-                you.msg("|rRoom current edit location must be within %sx%s area|n [%s..%s, %s..%s]" % \
+                you.msg("|rRoom current edit location must be within %sx%s area|n [%s..%s, %s..%s]" %
                         (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
         small = True if 'small' in self.switches else False
         if small or 'large' in self.switches:
@@ -420,7 +406,7 @@ class CmdGrid(CmdGridMotion):
                         line += ' x ' if x.base == i and y.base == j else ' . '
                     you.msg("%s|/" % line)
                 else:
-                    for k in range(0,2):
+                    for k in range(0, 2):
                         for j in range(y.min, y.max+1):
                             if k == 0:
                                 line += '[ _ ] ' if x.base == i and y.base == j else '[   ] '
@@ -429,79 +415,63 @@ class CmdGrid(CmdGridMotion):
                         line += '|/'
                     you.msg("%s" % line)
         you.msg("Room: %sx%s as [%s..%s, %s..%s]|/Base editing position: [%s, %s]|/Current editing position: [%s, %s]" %
-            (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.base, y.base, x.current, y.current))
+                (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.base, y.base, x.current, y.current))
 
 
 class CmdGridNorth(CmdGridMotion):
-    """
-    north  or n        -- move north on the room's grid.
-    """
-    key = "north"
-    aliases = "n"
-    locks = "cmd:not on_exit(n)"
+    """north  or n        -- move north on the room's grid."""
+    key = 'north'
+    aliases = 'n'
+    locks = 'cmd:not on_exit(n)'
 
 
 class CmdGridNortheast(CmdGridMotion):
-    """
-    northeast  or ne   -- move northeast on the room's grid.
-    """
-    key = "northeast"
-    aliases = "ne"
-    locks = "cmd:not on_exit(ne)"
+    """northeast  or ne   -- move northeast on the room's grid."""
+    key = 'northeast'
+    aliases = 'ne'
+    locks = 'cmd:not on_exit(ne)'
 
 
 class CmdGridNorthwest(CmdGridMotion):
-    """
-    northwest  or nw   -- move northwest on the room's grid.
-    """
-    key = "northwest"
-    aliases = "nw"
-    locks = "cmd:not on_exit(nw)"
+    """northwest  or nw   -- move northwest on the room's grid."""
+    key = 'northwest'
+    aliases = 'nw'
+    locks = 'cmd:not on_exit(nw)'
 
 
 class CmdGridEast(CmdGridMotion):
-    """
-    east  or e         -- move east on the room's grid.
-    """
-    key = "east"
-    aliases = "e"
-    locks = "cmd:not on_exit(e)"
+    """east  or e         -- move east on the room's grid."""
+    key = 'east'
+    aliases = 'e'
+    locks = 'cmd:not on_exit(e)'
 
 
 class CmdGridSouth(CmdGridMotion):
-    """
-    south  or s        -- move south on the room's grid.
-    """
-    key = "south"
-    aliases = "s"
-    locks = "cmd:not on_exit(s)"
+    """south  or s        -- move south on the room's grid."""
+    key = 'south'
+    aliases = 's'
+    locks = 'cmd:not on_exit(s)'
 
 
 class CmdGridSoutheast(CmdGridMotion):
-    """
-    sortheast  or se   -- move southeast on the room's grid.
-    """
-    key = "southeast"
-    aliases = "se"
-    locks = "cmd:not on_exit(se)"
+    """sortheast  or se   -- move southeast on the room's grid."""
+    key = 'southeast'
+    aliases = 'se'
+    locks = 'cmd:not on_exit(se)'
 
 
 class CmdGridSouthwest(CmdGridMotion):
-    """
-    southwest  or sw   -- move southwest on the room's grid.
-    """
-    key = "southwest"
-    aliases = "sw"
-    locks = "cmd:not on_exit(sw)"
+    """southwest  or sw   -- move southwest on the room's grid."""
+    key = 'southwest'
+    aliases = 'sw'
+    locks = 'cmd:not on_exit(sw)'
 
 
 class CmdGridWest(CmdGridMotion):
-    """
-    west  or w         -- move west on the room's grid.
-    """
-    key = "west"
-    aliases = "w"
-    locks = "cmd:not on_exit(w)"
+    """west  or w         -- move west on the room's grid."""
+    key = 'west'
+    aliases = 'w'
+    locks = 'cmd:not on_exit(w)'
 
 
 class Grid(Room):
@@ -511,7 +481,6 @@ class Grid(Room):
     location prevending them from being picked up unless the character
     is next to them.
     """
-
     STYLE = '|204'
 
     @lazy_property
@@ -520,8 +489,7 @@ class Grid(Room):
 
     def at_object_creation(self):
         """called when the object is first created"""
-
         self.cmdset.add_default(CmdSetGridRoom)
-        self.db.grid = {'x':{'name': 'East/West size', 'type': 'counter', 'base': 0, 'current': 0,
-            'min': 0, 'max': 1}, 'y':{'name': 'North/South size', 'type': 'counter', 'base': 0,
-            'current': 0, 'min': 0, 'max': 1}}
+        self.db.grid = {'x': {'name': 'East/West size', 'type': 'counter', 'base': 0, 'current': 0,
+                              'min': 0, 'max': 1}, 'y': {'name': 'North/South size', 'type': 'counter', 'base': 0,
+                                                         'current': 0, 'min': 0, 'max': 1}}

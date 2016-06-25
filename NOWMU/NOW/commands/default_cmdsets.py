@@ -15,10 +15,10 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 
-#[Traversal of path-exits]
+# [Traversal of path-exits]
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSetSpeed
 
-#[commands modules]
+# [commands modules]
 from commands import prelogin
 from commands import exitdirections
 from commands import desc
@@ -27,10 +27,9 @@ from commands.sense import CmdSense
 from commands.inventory import CmdInventory
 from commands.teleport import CmdTeleport
 from commands.home import CmdHome
-#from commands import destroy # Not ready for testing.
-from commands.command import CmdQuit, CmdPose, CmdSay, CmdWho, CmdVerb, CmdForge
+# from commands import destroy # Not ready for testing.
+from commands.command import CmdQuit, CmdPose, CmdSay, CmdWho, CmdForge
 from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdAbout
-# from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdChannelWizard, CmdSysinfo
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -53,15 +52,15 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdLook)
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
-        self.remove(default_cmds.CmdDestroy) # Need an alternate destroy method
-        self.remove(default_cmds.CmdTeleport) # Teleport that costs and has conditions.
+        self.remove(default_cmds.CmdSetHome)
+        self.remove(default_cmds.CmdDestroy)  # Need an alternate destroy method
+        self.remove(default_cmds.CmdTeleport)  # Teleport that costs and has conditions.
 # [...]
         self.add(CmdSay)
         self.add(CmdOoc)
         self.add(CmdHome)
         self.add(CmdDesc)
         self.add(CmdPose)
-        self.add(CmdVerb)
         self.add(CmdSense)
         self.add(CmdSpoof)
         self.add(CmdTeleport)

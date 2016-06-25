@@ -25,17 +25,17 @@ class CmdExit(default_cmds.MuxCommand):
 
     This command never deletes rooms, but can create them in a simple fashion when needed.
     """
-    locks = "cmd:all()"
+    locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
+    help_category = 'Travel'
     auto_help = True
-    help_category = "Travel"
+    player_caller = True
 
     def func(self):
-        "Command for all simple exit directions."
-
-        player_caller = True
-        you = self.caller
+        """Command for all simple exit directions."""
+        you = self.character
         loc = you.location
+        player = self.player
 
         def new_room(room_name):
             """
@@ -47,13 +47,14 @@ class CmdExit(default_cmds.MuxCommand):
             print("Lock: %s" % lockstring)
             print("=====")
             """
-            if not self.caller.locks.check_lockstring(self.caller, "dummy:perm(Builders)"):
-                self.caller.msg("You must have |wBuilders|n or higher access to create a new room.")
+            if not player.check_permstring('Builders'):
+                you.msg("You must have |wBuilders|n or higher access to create a new room.")
                 return None
 
             typeclass = settings.BASE_ROOM_TYPECLASS
-            room = {'name':room_name.strip(), 'aliases': ''}  # No alias parsing.
-            lockstring = "control:id(%s) or perm(Immortals); delete:id(%s) or perm(Wizards); edit:id(%s) or perm(Wizards)"
+            room = {'name': room_name.strip(), 'aliases': ''}  # No alias parsing. TODO?
+            lockstring = "control:id(%s) or perm(Immortals); delete:id(%s)" \
+                         " or perm(Wizards); edit:id(%s) or perm(Wizards)"
             lockstring = lockstring % (self.caller.dbref, self.caller.dbref, self.caller.dbref)
 
             new_room = create.create_object(typeclass, room['name'],
@@ -61,7 +62,7 @@ class CmdExit(default_cmds.MuxCommand):
                                             report_to=you)
             new_room.locks.add(lockstring)
 
-            alias_string = '' # No parsing for aliases here yet, so new rooms never have aliases.
+            alias_string = ''  # No parsing for aliases here yet, so new rooms never have aliases.
             if new_room.aliases.all():
                 alias_string = " (%s)" % ", ".join(new_room.aliases.all())
             self.caller.msg("Created room %s(%s)%s of type %s." % (new_room,
@@ -72,31 +73,27 @@ class CmdExit(default_cmds.MuxCommand):
             search = search.strip()
             keyquery = Q(db_key__istartswith=search)
             aliasquery = Q(db_tags__db_key__istartswith=search,
-                           db_tags__db_tagtype__iexact="alias")
-
+                           db_tags__db_tagtype__iexact='alias')
 
             results = ObjectDB.objects.filter(keyquery | aliasquery).distinct()
             nresults = results.count()
 
-            if nresults: # convert multiple results to typeclasses.
+            if nresults:  # convert multiple results to typeclasses.
                 results = [result for result in results]
-                ROOM_TYPECLASS = settings.BASE_ROOM_TYPECLASS # Narrow reuslts to only rooms.
+                ROOM_TYPECLASS = settings.BASE_ROOM_TYPECLASS # Narrow results to only rooms.
                 results = [obj for obj in results if inherits_from(obj, ROOM_TYPECLASS)]
             return results
 
         def add(you, loc, ways):
-            "Command for adding an exit - checks location and permissions."
-
-            results = find_by_name(self.args)             
-
+            """"Command for adding an exit - checks location and permissions."""
+            results = find_by_name(self.args)
             if not results:
                 result = None
             else:
-                result = results[0] # Arbitrarily select the first result of usually only one.
-
+                result = results[0]  # Arbitrarily select the first result of usually only one.
             ways[self.aliases[0]] = result
-            you.msg("|ySearch found|n (%s)" % None if result == None else result.get_display_name(you))
-            if result == None:
+            you.msg("|ySearch found|n (%s)" % result.get_display_name(you) if result else None)
+            if not result:
                 return None
             if ways[self.aliases[0]]:
                 if loc.access(you, 'edit'):
@@ -115,10 +112,10 @@ class CmdExit(default_cmds.MuxCommand):
 
         def long_dir(dir):
             return {'n': 'north', 's': 'south', 'e': 'east', 'w': 'west', 'nw': 'northwest', 'se': 'southeast',
-                'ne': 'northeast', 'sw': 'southwest'}[dir]
+                    'ne': 'northeast', 'sw': 'southwest'}[dir]
 
         def tun(you, loc, dest, dir):
-            "Command for tunnling an exit back - checks existing exits, location and permissions."        
+            """Command for tunneling an exit back - checks existing exits, location and permissions."""
             # Check dest for dict with entry back_dir(dir), 
             tways = dest.db.exits if dest.db.exits else {}
             tway = tways.get(back_dir(self.aliases[0]))
@@ -131,14 +128,14 @@ class CmdExit(default_cmds.MuxCommand):
                     you.msg("|gAdded|n exit: %s from %s to %s." % (long_dir(back_dir(self.aliases[0])), dest, loc))
                 else:
                     you.msg("You do not control the destination, so can not connect an exit to it.")
-        dest = None # Hopeful destination for exits and moving to.
-        if 'add' in self.switches and 'del' in self.switches: # Can't do both!
+        dest = None  # Hopeful destination for exits and moving to.
+        if 'add' in self.switches and 'del' in self.switches:  # Can't do both!
             you.msg("|g%s|r/add/del|n: Switches are mutually exclusive - Can't do both!" % self.cmdstring)
             return  # No further action, not even check for /go.
         if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
             ways = loc.db.exits
             # Reference direction by short version of the direction name: self.aliases[0]
-            way =  ways.get(self.aliases[0])
+            way = ways.get(self.aliases[0])
             if way:  # Direction in the room's exit dictionary should know room.
                 dest = way
                 if 'del' in self.switches:
@@ -161,9 +158,9 @@ class CmdExit(default_cmds.MuxCommand):
                         you.msg("Exit %s to %s leading to %s already exists here." % (self.key, loc, dest))
                     else:
                         you.msg("You have no permission to edit here.")
-                if 'tun' in self.switches and not 'del' in self.switches:
+                if 'tun' in self.switches and 'del' not in self.switches:
                     dir = self.aliases[0]
-                    tun(you, loc, dest, dir) # Add is done, now see if tun can be done.
+                    tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
                 if 'new' in self.switches:
                     you.msg("Can't make a new room, already going to %s." % dest)
                 if 'go' in self.switches:
@@ -181,7 +178,7 @@ class CmdExit(default_cmds.MuxCommand):
                     dir = self.aliases[0]
                     dest = ways.get(dir)
                     if dest:
-                        tun(you, loc, dest, dir) # Add is done, now see if tun can be done.
+                        tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
                     else:
                         if self.args:
                             you.msg("|ySearching|n for \"%s\" to the %s." % (self.args, self.key))
@@ -189,7 +186,7 @@ class CmdExit(default_cmds.MuxCommand):
                             if dest:
                                 dest = dest[0]
                                 you.msg("|gFound|n \"%s\" to the %s." % (dest, self.key))
-                                tun(you, loc, dest, dir) # Add not done, but see if tun can be done.
+                                tun(you, loc, dest, dir)  # Add not done, but see if tun can be done.
                             else:
                                 you.msg(
                                     "|rDestination room not found|n \"{0:s}\" to the {1:s} when searching by: {2:s}."
@@ -219,11 +216,11 @@ class CmdExit(default_cmds.MuxCommand):
                     pass
                 else:
                     you.msg("No simple exit %s to delete." % self.key)
-            if 'tun' in self.switches and not 'del' in self.switches:
+            if 'tun' in self.switches and 'del' not in self.switches:
                 if 'add' in self.switches:
                     dir = self.aliases[0]
                     dest = ways[dir]
-                    tun(you, loc, dest, dir) # Add is done, now see if tun can be done.
+                    tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
                 else:
                     # TODO: Test - does this only work with 'add' option?
                     # It requires a destination, if not.
@@ -233,8 +230,8 @@ class CmdExit(default_cmds.MuxCommand):
             if not self.switches:
                 you.msg("You cannot travel %s." % self.key)
         if 'show' in self.switches:
-            if not self.caller.locks.check_lockstring(self.caller, "dummy:perm(Builders)"):
-                self.caller.msg("You must have |wBuilders|n or higher access to use this.")
+            if not player.check_permstring('Helpstaff'):
+                self.caller.msg("You must have |gHelpstaff|n or higher access to use this.")
                 return None
             if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
                 ways = loc.db.exits
@@ -249,10 +246,12 @@ class CmdExit(default_cmds.MuxCommand):
             else:
                 you.msg("No simple exits exist in %s." % you.location.full_name(you))
 
+
 class CmdExitNorth(CmdExit):
     __doc__ = CmdExit.__doc__
     key = "north"
     aliases = ["n"]
+
 
 class CmdExitNortheast(CmdExit):
     __doc__ = CmdExit.__doc__

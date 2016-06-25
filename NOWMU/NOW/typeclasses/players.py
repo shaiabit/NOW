@@ -19,10 +19,9 @@ activate them, add the following line to your settings file:
 You will also need to modify the connection screen to reflect the
 possibility to connect with a guest account. The setting file accepts
 several more options for customizing the Guest account system.
-
 """
-
 from evennia import DefaultPlayer, DefaultGuest
+
 
 class Player(DefaultPlayer):
     """
@@ -42,7 +41,8 @@ class Player(DefaultPlayer):
 
      key (string) - name of player
      name (string)- wrapper for user.username
-     aliases (list of strings) - aliases to the object. Will be saved to database as AliasDB entries but returned as strings.
+     aliases (list of strings) - aliases to the object.
+              Will be saved to database as AliasDB entries but returned as strings.
      dbref (int, read-only) - unique #id-number. Also "id" can be used.
      date_created (string) - time stamp of object creation
      permissions (list of strings) - list of permission strings
@@ -66,7 +66,8 @@ class Player(DefaultPlayer):
      msg(text=None, **kwargs)
      swap_character(new_character, delete_old_character=False)
      execute_cmd(raw_string, session=None)
-     search(ostring, global_search=False, attribute_name=None, use_nicks=False, location=None, ignore_errors=False, player=False)
+     search(ostring, global_search=False, attribute_name=None, use_nicks=False,
+            location=None, ignore_errors=False, player=False)
      is_typeclass(typeclass, exact=False)
      swap_typeclass(new_typeclass, clean_attributes=False, no_default=True)
      access(accessing_obj, access_type='read', default=False)
@@ -89,18 +90,12 @@ class Player(DefaultPlayer):
      at_message_send()
      at_server_reload()
      at_server_shutdown()
-
     """
 
     def full_name(self, viewer):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-
-        if viewer and self.access(viewer, "view"):
-            # return "|[y|[R|lcexamine %s|lt%s|le|n" % (self.name, self.get_display_name(viewer))
-            return "|[y|[R|lcexamine %s|lt%s|le|n" % (self.name, self.key) # No get_display_name ?
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        if viewer and self.access(viewer, 'view'):
+            return "|lcexamine %s|lt|y|[R|%s|n|le" % (self.name, self.key)  # No get_display_name ?
         else:
             return ''
 

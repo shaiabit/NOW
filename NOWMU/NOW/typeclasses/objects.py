@@ -13,6 +13,7 @@ inheritance.
 
 from evennia import DefaultObject
 from evennia.utils.evmenu import get_input
+from world.helpers import mass_unit
 
 from evennia.utils import lazy_property
 
@@ -186,13 +187,11 @@ class Object(DefaultObject):
     #     return EquipmentHandler(self)
 
     def reset(self):
-        "Resets the object - quietly sends it home or nowhere."
-
+        """Resets the object - quietly sends it home or nowhere."""
         self.location = self.home
 
     def junk(self):
-        "Tags the object as junk to decay."
-
+        """Tags the object as junk to decay."""
         # TODO: Create a timer for final stage of decay.
         pass
 
@@ -201,7 +200,6 @@ class Object(DefaultObject):
         Implements the read command. This simply looks for an
         Attribute "readable_text" on the object and displays that.
         """
-
         readtext = self.db.readable_text
         obj_name = self.full_name(caller.sessions)
         if readtext:  # Attribute read_text is defined.
@@ -219,35 +217,25 @@ class Object(DefaultObject):
         before allowing the move. If it is, we do prevent the move by
         returning False.
         """
-
         # When self is supporting something, do not move it.
         return False if self.attributes.has('locked') else True
 
     def at_get(self, caller):
-        """
-        Called after getting an object in the room.
-        """
-
+        """Called after getting an object in the room."""
         caller.msg("%s is now in your posession." % self.mxp_name(caller, '@verb #%s' % self.id))
 
     def drop(self, pose, caller):
-        """
-        Implements the attempt to drop this object.
-        """
-
+        """Implements the attempt to drop this object."""
         if self.location != caller: # If caller is not holding object,
             caller.msg("You do not have %s." % self.full_name(caller))
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
         caller.location.msg_contents("%s |g%s|n drops %s." %
             (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
-        self.at_drop(caller) # Call at_drop() method.
+        self.at_drop(caller)  # Call at_drop() method.
 
     def get(self, pose, caller):
-        """
-        Implements the attempt to get this object.
-        """
-
+        """Implements the attempt to get this object."""
         if caller == self:
             caller.msg("You can't get yourself.")
         elif self.location == caller:
@@ -258,10 +246,7 @@ class Object(DefaultObject):
             self.at_get(caller) # calling hook method
 
     def surface_put(self, pose, caller, connection):
-        """
-        Implements the surface connection of object by caller.
-        """
-
+        """Implements the surface connection of object by caller."""
         if not self.attributes.has('surface'):
             self.db.surface = {}
         surface = self.db.surface
@@ -275,10 +260,7 @@ class Object(DefaultObject):
         return True
 
     def surface_off(self, pose, caller):
-        """
-        Implements the surface disconnection of object by caller.
-        """
-
+        """Implements the surface disconnection of object by caller."""
         surface = self.db.surface
         if caller in surface:
             del(surface[caller])
@@ -292,22 +274,16 @@ class Object(DefaultObject):
         return False
 
     def full_name(self, viewer):
-        """
-        Returns the full styled and database id (if accessable by player)
-        for the viewer's perspective as a string.
-        """
-
+        """Returns the full styled and database id (if accessable by player)
+        for the viewer's perspective as a string."""
         if viewer and (self != viewer) and self.access(viewer, "view"):
             return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
         else:
             return ''
 
     def mxp_name(self, viewer, command):
-        """
-        Returns the full styled and clickable-name with command.
-        for the viewer's perspective as a string.
-        """
-
+        """Returns the full styled and clickable-name with command.
+        for the viewer's perspective as a string."""
         if viewer and (self != viewer) and self.access(viewer, "view"):
             return "|lc%s|lt%s|le" % (command, self.full_name(viewer))
         else:
@@ -318,8 +294,7 @@ class Object(DefaultObject):
         return reduce(lambda x, y: x+y.get_mass(),[mass] + self.contents)
 
     def return_appearance(self, viewer):
-        """
-        This formats a description. It is the hook a 'look' command
+        """This formats a description. It is the hook a 'look' command
         should call.
 
         Args:
@@ -340,7 +315,7 @@ class Object(DefaultObject):
                 things.append(con)
         # get description, build string
         string = self.mxp_name(viewer, '@verb #%s' % self.id)
-        string += " (%s)" % self.get_mass()
+        string += " (%s)" % mass_unit(self.get_mass())
         if self.db.surface:
             string += " -- %s" % self.db.surface
         string += "\n"
@@ -361,15 +336,43 @@ class Object(DefaultObject):
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
         return string
 
+    def return_detail(self, detailkey):
+        """
+        This looks for an Attribute "obj_details" and possibly
+        returns the value of it.
 
-class Consumable(Object): # TODO: State and analog decay. (State could be discrete analaog?)
+        Args:
+            detailkey (str): The detail being looked at. This is
+                case-insensitive.
+        """
+        details = self.db.details
+        if details:
+            return details.get(detailkey.lower(), None)
+
+    def set_detail(self, detailkey, description):
+        """
+        This sets a new detail, using an Attribute "details".
+
+        Args:
+            detailkey (str): The detail identifier to add (for
+                aliases you need to add multiple keys to the
+                same description). Case-insensitive.
+            description (str): The text to return when looking
+                at the given detailkey.
+        """
+        if self.db.details:
+            self.db.details[detailkey.lower()] = description
+        else:
+            self.db.details = {detailkey.lower(): description}
+
+
+class Consumable(Object):  # TODO: State and analog decay. (State could be discrete analaog?)
     """
     This is the consumable typeclass object, implementing an in-game
     object, to be consumed and decay, break, be eaten, drank, cast,
     burned, or wear out slowly like clothing or furniture.
     """
-
-    STYLE='|321'
+    STYLE = '|321'
 
     def consume(self, caller):
         """
@@ -381,16 +384,12 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
                 self.db.health = 0
             return self.db.health
 
-    def drink(self, caller): # TODO: Make this use a more generic def consume
-        """
-        Response to driinking the object.
-        """
-
-        if not self.locks.check_lockstring(caller,'holds()'):
+    def drink(self, caller):  # TODO: Make this use a more generic def consume
+        """Response to drinking the object."""
+        if not self.locks.check_lockstring(caller, 'holds()'):
             msg = "You are not holding %s." % self.full_name(caller.sessions)
             caller.msg(msg)
             return False
-
         finish = ''
         if self.attributes.has('health'):
             self.db.health -= 1
@@ -401,12 +400,11 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
             finish = ', finishing it'
             self.location = None
         msg = "%s takes a drink of %s%s." % (caller.full_name(caller.sessions),
-            self.full_name(caller.sessions), finish)
+                                             self.full_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
 
         def drink_callback(caller, prompt, user_input):
-            "Response to input given after drink potion"
-
+            """"Response to input given after drink potion"""
             msg = "%s begins to have an effect on %s, transforming into species %s." % (self.full_name(caller.sessions),
                 caller.full_name(caller.sessions), user_input)
             caller.location.msg_contents(msg)
@@ -414,16 +412,12 @@ class Consumable(Object): # TODO: State and analog decay. (State could be discre
 
         get_input(caller, "Species? (Type your species setting now, and then [enter]) ", drink_callback)
 
-    def eat(self, caller): # TODO: Make this use a more generic def consume
-        """
-        Response to eating the object.
-        """
-
+    def eat(self, caller):  # TODO: Make this use a more generic def consume
+        """Response to eating the object."""
         if not self.locks.check_lockstring(caller,'holds()'):
             msg = "You are not holding %s." % self.full_name(caller.sessions)
             caller.msg(msg)
             return False
-
         finish = ''
         if self.attributes.has('health'):
             self.db.health -= 1
@@ -443,7 +437,6 @@ class Tool(Consumable):
     This is the Tool typeclass object, implementing an in-game
     object, to be used to craft, alter, or destroy other objects.
     """
-
     STYLE = '|511'
 
     # Currently there is nothing special about a tool compared to a Consumable.
@@ -454,7 +447,6 @@ class Dispenser(Consumable):
     This is the Tool typeclass object, implementing an in-game
     object, to be used to craft, alter, or destroy other objects.
     """
-
     STYLE = '|350'
 
     def produce_weapon(self, caller):
@@ -474,8 +466,6 @@ class Dispenser(Consumable):
             # use the spawner to create a new Weapon from the
             # spawner dictionary, tag the caller
             wpn = spawn(WEAPON_PROTOTYPES[prototype], prototype_parents=WEAPON_PROTOTYPES)[0]
-            caller.tags.add(rack_id, category="tutorial_world")
+            caller.tags.add(rack_id, category='tutorial_world')
             wpn.location = caller
             caller.msg(self.db.get_weapon_msg % wpn.key)
-
-    # Currently there is nothing special about a tool compared to a Consumable.

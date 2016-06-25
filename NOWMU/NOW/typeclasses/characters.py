@@ -8,13 +8,14 @@ creation commands.
 
 """
 import re
-from world.helpers import make_bar
+from world.helpers import make_bar, mass_unit
 from evennia import DefaultCharacter
 
 from evennia.utils import lazy_property
 
 from traits import TraitHandler
 from effects import EffectHandler
+
 
 class Character(DefaultCharacter):
     """
@@ -34,7 +35,6 @@ class Character(DefaultCharacter):
                     old location and puts it back on the grid with a "charname
                     has connected" message echoed to the room
     """
-
     STYLE = '|c'
 
     @lazy_property
@@ -62,45 +62,43 @@ class Character(DefaultCharacter):
         """
 
         if self.attributes.has('locked'):
-            self.msg("\nYou're still sitting.") # stance, prep, obj
-            return False # Object is supporting something; do not move it
+            self.msg("\nYou're still sitting.")  # stance, prep, obj
+            return False  # Object is supporting something; do not move it
         elif self.attributes.has('health') and self.db.health <= 0:
-            self.msg("You can't move; you're incapacitated!") # Type 'home' to \ TODO:
-                # go back home and recover, or wait for a healer to come to you.")
+            self.msg("You can't move; you're incapacitated!")  # Type 'home' to TODO:
+            # go back home and recover, or wait for a healer to come to you.")
             return False
         if self.db.Combat_TurnHandler:
             self.caller.msg("You can't leave while engaged in combat!")
             return False
         # if self.db.HP <= 0:
-        #    self.caller.msg("You can't move, you've been defeated! Type 'return' to go back to the Institute and recover!")
+        #    self.caller.msg("You can't move, you've been defeated! Type 'return' to return home and recover!")
         #    return False
         return True
 
     def at_after_move(self, source_location):
-        """
-        Trigger look after a move.
-        """
+        """Trigger look after a move."""
         if self.location.access(self, "view"):
-            self.msg(text=((self.at_look(self.location),), {"window":"room"}))
+            self.msg(text=((self.at_look(self.location),), {"window": "room"}))
             # TODO: Display name for objects in message.
-            # self.location.msg_contents("%s arrives at %s from %s." % (self, self.location, source_location))
-            # self.location.msg_contents("%s arrives at %s from %s." % \
-               # self.full_name(viewer) if hasattr(self, "full_name") else self, self.location, \
-               # self.location.get_display_name(viewer) if hasattr(self.location, "full_name") else self.location, \
-               # source_location.get_display_name(viewer) if hasattr(source_location, "full_name") else source_location)
+            # self.full_name(viewer) if hasattr(self, "full_name") else self, self.location, \
+            # self.location.get_display_name(viewer) if hasattr(self.location, "full_name") else self.location, \
+            # source_location.get_display_name(viewer) if hasattr(source_location, "full_name") else source_location)
 
     def at_post_puppet(self):
         """
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
-
-#Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
-#That will go only to the session actually triggering the command. You can then do player.sessions.all() and send to all but the current session.
-#There is no way to know that unless the session sends themself as an argument to said method.
-#The session has to be in an argument to that method, like you said.
-#I see that the session is indeed available in the puppet_object method (which calls at_post_puppet) so I suppose we could extend that hook with a session argument.
-#I think it may have originally been defined at a time when an object only ever had one session, so once you were puppeted you could easily retrieve it.
+# Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
+# That will go only to the session actually triggering the command. You can then do player.sessions.all()
+        # and send to all but the current session.
+# There is no way to know that unless the session sends themself as an argument to said method.
+# The session has to be in an argument to that method, like you said.
+# I see that the session is indeed available in the puppet_object method (which calls at_post_puppet)
+        # so I suppose we could extend that hook with a session argument.
+# I think it may have originally been defined at a time when an object only ever had one session, so once you were
+        # puppeted you could easily retrieve it.
 
         self.msg("\nYou assume the role of %s.\n" % self.full_name(self))
         self.msg(self.at_look(self.location))
@@ -128,36 +126,25 @@ class Character(DefaultCharacter):
         if not self.sessions.count():
             # only remove this char from grid if no sessions control it anymore.
             if self.location:
+
                 def message(obj, from_obj):
                     obj.msg("|c%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
                 self.location = None
+
                 def message(obj, from_obj):
                     obj.msg("|r%s|n fades from view." % self.get_display_name(obj), from_obj=from_obj)
                 self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
 
     def full_name(self, viewer):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-
-        if viewer and self.access(viewer, "view"):
-            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
-        else:
-            return ''
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return "%s%s|n" % (self.STYLE, self.get_display_name(viewer)) if viewer and self.access(viewer, 'view') else ''
 
     def mxp_name(self, viewer, command):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-
-        if viewer and self.access(viewer, "view"):
-            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
-        else:
-            return ''
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer)) if viewer and \
+            self.access(viewer, 'view') else ''
 
     def get_pronoun(self, regex_match):
         """
@@ -187,23 +174,21 @@ class Character(DefaultCharacter):
 
         _RE_GENDER_PRONOUN = re.compile(r'[^\|]+(\|s|S|o|O|p|P|a|A)')
 
-        typ = regex_match.group()[2] # "s", "O" etc
-        gender = self.attributes.get("gender", default="neutral")
-        gender = gender if gender in ("male", "female", "neutral") else "neutral"
+        typ = regex_match.group()[2]  # "s", "O" etc
+        gender = self.attributes.get("gender", default='neutral')
+        gender = gender if gender in ("male", "female", 'neutral') else 'neutral'
         pronoun = _GENDER_PRONOUN_MAP[gender][typ.lower()]
         return pronoun.capitalize() if typ.isupper() else pronoun
 
     def get_mass(self):
         mass = self.attributes.get('mass') or 10
-        return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0,[mass] + self.contents)
+        return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
 
     def get_carry_limit(self):
         return 80 * self.get_attribute_value('health')
 
     def return_appearance(self, viewer):
-        """
-        This formats a description. It is the hook a 'look' command
-        should call.
+        """This formats a description. It is the hook a 'look' command should call.
 
         Args:
             viewer (Object): Object doing the looking.
@@ -212,7 +197,7 @@ class Character(DefaultCharacter):
             return
         # get and identify all objects
         visible = (con for con in self.contents if con != viewer and
-                                                    con.access(viewer, "view"))
+                   con.access(viewer, 'view'))
         exits, users, things = [], [], []
         for con in visible:
             if con.destination:
@@ -224,8 +209,8 @@ class Character(DefaultCharacter):
         # get description, build string
 
         string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)
-        string += " (%s) " % self.get_mass()
-        if self.attributes.has('health') and self.attributes.has('health_max'): # Add character health bar.
+        string += " (%s) " % mass_unit(self.get_mass())
+        if self.attributes.has('health') and self.attributes.has('health_max'):  # Add character health bar.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
             health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
             string += " %s\n" % health
@@ -248,15 +233,41 @@ class Character(DefaultCharacter):
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         return string
 
+    def return_detail(self, detailkey):
+        """
+        This looks for an Attribute "obj_details" and possibly
+        returns the value of it.
+
+        Args:
+            detailkey (str): The detail being looked at. This is
+                case-insensitive.
+        """
+        details = self.db.details
+        if details:
+            return details.get(detailkey.lower(), None)
+
+    def set_detail(self, detailkey, description):
+        """
+        This sets a new detail, using an Attribute "details".
+
+        Args:
+            detailkey (str): The detail identifier to add (for
+                aliases you need to add multiple keys to the
+                same description). Case-insensitive.
+            description (str): The text to return when looking
+                at the given detailkey.
+        """
+        if self.db.details:
+            self.db.details[detailkey.lower()] = description
+        else:
+            self.db.details = {detailkey.lower(): description}
+
 
 class NPC(Character):
-    """
-    Uses Character class as a starting point.
-    """
-
+    """Uses Character class as a starting point."""
     STYLE = '|m'
 
-    def at_post_puppet(self): # TODO: Fix this for multi-puppeters.
+    def at_post_puppet(self):  # TODO: Fix this for multi-puppeteers.
         """
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
@@ -273,7 +284,7 @@ class NPC(Character):
         # self.location.for_contents(message, exclude=[self], from_obj=self)
 
         def message(obj, from_obj):
-            obj.msg("|c%s|n awakens." % self.get_display_name(obj), from_obj=from_obj)
+            obj.msg("%s%s|n awakens." % (self.STYLE, self.get_display_name(obj)), from_obj=from_obj)
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
@@ -292,10 +303,10 @@ class NPC(Character):
             # only remove this char from grid if no sessions control it anymore.
             if self.location:
                 def message(obj, from_obj):
-                    obj.msg("|c%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
+                    obj.msg("%s%s|n sleeps." % (self.STYLE, self.get_display_name(obj)), from_obj=from_obj)
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
-                # self.location = None  # TODO: Send NPC home after unpuppeting.
+                # self.location = None  # TODO: Send NPC home after unpuppeting?
                 # def message(obj, from_obj):
                 #     obj.msg("|r%s|n fades from view." % self.get_display_name(obj), from_obj=from_obj)
                 # self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)

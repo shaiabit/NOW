@@ -2,14 +2,11 @@
 Helpers
 
 Methods that are helpful to have in a module.
-
 """
 
-def make_bar(value, maximum, length, gradient):
-    """
-    Make a bar of length, of color value along the gradient.
-    """
 
+def make_bar(value, maximum, length, gradient):
+    """Make a bar of length, of color value along the gradient."""
     maximum = float(maximum)
     length = float(length)
     value = min(float(value), maximum)
@@ -18,3 +15,19 @@ def make_bar(value, maximum, length, gradient):
     barstring = (("{:<%i}" % int(length)).format("%i / %i" % (int(value), int(maximum))))
     barstring = ("|555" + barcolor + barstring[:rounded_percent] + '|[011' + barstring[rounded_percent:])
     return barstring[:int(length) + 13] + "|n"
+
+def mass_unit(value):
+    """Present a suitable mass unit based on value"""
+    value = float(value)
+    if value <= 999:
+        return '%s g' % value
+    if value <= 999999:
+        return '%s kg' % str(value/1000).rstrip('0').rstrip('.')
+    if value <= 999999999:
+        return '%s t' % str(value / 1000000).rstrip('0').rstrip('.')
+    if value <= 999999999999:
+        return '%s kt' % str(value / 1000000000).rstrip('0').rstrip('.')
+    if value <= 999999999999999:
+        return '%s Mt' % str(value / 1000000000000).rstrip('0').rstrip('.')
+    else:
+        return 'super massive'

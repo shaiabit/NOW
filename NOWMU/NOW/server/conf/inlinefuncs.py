@@ -45,34 +45,29 @@ and can be used to customize it to each session.
 
 """
 
-def capitalize(text, *args, **kwargs):
-    "Capitalizes the first character of the line."
 
-    session = kwargs.get("session")
+def capitalize(text, *args, **kwargs):
+    """Capitalizes the first character of the line."""
+    session = kwargs.get('session')
     return text.capitalize()
 
 from random import *
 
 def usage(text, *args, **kwargs):
-    "Verbally describes how busy an area is"
-
-    session = kwargs.get("session")
+    """Verbally describes how busy an area is"""
+    session = kwargs.get('session')
 
     text = 'quiet' 
     if random() > 0.5:
-	text = 'busy'
+        text = 'busy'
     return text
 
 
 def annotate(text, *args, **kwargs):
-    """
-    session sees original, unless session is a screen reader.
-    ex. $annotate(original,annotation) or
-        $annotate(original) for no annotation.
-    """
-
-    session = kwargs.get("session")
-
+    """session sees original, unless session is a screen reader.
+    ex. $annotate(original, annotation) or
+        $annotate(original) for no annotation."""
+    session = kwargs.get('session')
     nargs = len(args)
     annotate = ''
     original = ''
@@ -82,10 +77,23 @@ def annotate(text, *args, **kwargs):
         original = text
     return annotate if session.protocol_flags['SCREENREADER'] else original
 
+def unicode(text, *args, **kwargs):
+    """session sees original, unless session uses unicode.
+    ex. $unicode(original, unicode) or
+        $unicode(original) for no annotation."""
+    session = kwargs.get('session')
+    nargs = len(args)
+    u = ''
+    o = ''
+
+    if nargs > 0:
+        u = unicode(args[0])
+        o = text
+    return u if session.protocol_flags['ENCODING'] == 'utf-8' else o
 
 def verb(text, *args, **kwargs):
-    "Proccess verb response messages"
-
-    session = kwargs.get("session")
+    """Proccess verb response messages"""
+    session = kwargs.get('session')
     verb = text
+
     return verb
