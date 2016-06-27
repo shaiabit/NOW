@@ -34,8 +34,8 @@ class CmdSense(default_cmds.MuxCommand):
         if cmd != 'l' and 'look' not in cmd:
             if 'sense' in cmd:
                 if char and char.location:
-                    obj_list = char.search(args, candidates=[char.location] + char.location.contents + char.contents +
-                                           char.location.contents.contents) if args else char
+                    obj_list = char.search(args, candidates=[char.location] + char.location.contents +
+                                           char.contents) if args else char
                     if obj_list and obj_list.db.senses:
                         char.msg('You can sense %s in the following ways: %s' % (obj_list, obj_list.db.senses.keys()))
                         obj = obj_list

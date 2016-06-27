@@ -149,7 +149,7 @@ class Room(DefaultRoom):
 
     def at_object_creation(self):
         """Called when room is first created"""
-        self.db.tutorial_info = "This is a tutorial room. It allows you to use the 'tutorial' command."
+        self.db.desc_brief = "This is a default room."
         # self.cmdset.add_default(TutorialRoomCmdSet) # 
         
     def at_object_receive(self, new_arrival, source_location):
@@ -268,29 +268,26 @@ class RealmEntry(Room):
         Called when the room is first created.
         """
         super(Room, self).at_object_creation()
-        self.db.tutorial_info = "The first room of the realm. " \
-                                "This assigns the needed attributes to "\
-                                "the character."
+        self.db.info = "The first room of the realm. This assigns the realm-specific attributes to the character."
 
     def at_object_receive(self, character, source_location):
         """Assign properties on characters"""
-        # setup character for the tutorial
-        health = self.db.char_health or 20
 
-        if character.has_player:
-            character.db.health = health
-            character.db.health_max = health
-
-        if character.is_superuser:
-            warning = "|/WARNING: You are playing as superuser ({name}). Use the {quell} command to|/" \
-                    "play without superuser privileges (many functions and puzzles ignore the|/" \
-                    "presence of a superuser, making this mode useful for exploring things behind|/" \
-                    "the scenes later).|/"
-            string = "-"*78 + warning + "-"*78
+        if character.is_superuser:  #
+            string = "-" * 78 + "|/WARNING: You are playing as superuser ({name}). Use the {quell} command to|/" \
+                    "play without superuser privileges (many functions and locks are bypassed by default by the|/" \
+                    "presence of a superuser, making this mode really only useful for exploring things behind|/" \
+                    "the scenes later or entering to make modifications).|/" + "-" * 78
             character.msg("|r%s|n" % string.format(name=character.key, quell="|w@quell|r"))
+        else:  # setup character for the particular realm:
+            # Load attributes needed into a dictionary then set the attributes on the character as needed.
+            health = self.db.char_health or 20
+            if character.has_player:
+                character.db.health = health
+                character.db.health_max = health
 
 
-class CmdSetGridRoom(CmdSet):    
+class CmdSetGridRoom(CmdSet):
         """This method adds commands to the grid room command set."""
         key = 'Grid Nav'
         priority = 101  # Same as Exit objects
