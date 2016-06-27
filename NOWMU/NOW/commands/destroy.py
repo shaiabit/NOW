@@ -4,26 +4,26 @@ from evennia import default_cmds
 
 class CmdDestroy(default_cmds.MuxCommand):
     """
-    permanently delete objects
+    Destroys one or many objects, removing its entry from the database.
+    If dbrefs are used, a range to delete can be given, e.g. 4-10.
+    Also the end points will be deleted.
     Usage:
-       @destroy[/switches] [obj, obj2, obj3, [dbref-dbref], ...]
-    switches:
-       override - The @destroy command will usually avoid accidentally
-                  destroying player objects. This switch overrides this safety.
+      @destroy[/switches] [obj, obj2, obj3, [dbref-dbref], ...]
+    Switches:
+    /override   The @destroy command will usually avoid accidentally
+                destroying player objects. This switch overrides this safety.
     examples:
        @destroy house, roof, door, 44-78
        @destroy 5-10, flower, 45
-    Destroys one or many objects. If dbrefs are used, a range to delete can be
-    given, e.g. 4-10. Also the end points will be deleted.
     """
 
-    key = "destroy"
-    aliases = ["delete", "recycle"]
-    locks = "cmd:perm(destroy) or perm(Builders)"
-    help_category = "Building"
+    key = 'destroy'
+    aliases = ['delete', 'recycle']
+    locks = 'cmd:perm(destroy) or perm(Builders)'
+    help_category = 'Building'
 
     def func(self):
-        "Implements the command."
+        """Implements the command."""
 
         caller = self.caller
 
@@ -48,14 +48,14 @@ class CmdDestroy(default_cmds.MuxCommand):
                         "Re-point settings.DEFAULT_HOME to another " \
                         "object before continuing." % objname
 
-            had_exits = hasattr(obj, "exits") and obj.exits
-            had_objs = hasattr(obj, "contents") and any(obj for obj in obj.contents
+            had_exits = hasattr(obj, 'exits') and obj.exits
+            had_objs = hasattr(obj, 'contents') and any(obj for obj in obj.contents
                                                         if not (hasattr(obj, "exits") and obj not in obj.exits))
             # do the deletion or removal
             obj.location = None
             # okay = obj.delete()
-            okay = True if obj.location == None else False
-            if not okay:
+            succ = True if obj.location == None else False
+            if not succ:
                 string += "\nERROR: %s not deleted, probably because delete() returned False." % objname
             else:
                 string += "\n%s vanishes." % objname  # Trigger effects
@@ -65,7 +65,7 @@ class CmdDestroy(default_cmds.MuxCommand):
                     string += " Objects inside %s were moved to their homes." % objname
             return string
 
-        string = ""
+        string = ''
         for objname in self.lhslist:
             if '-' in objname:
                 # might be a range of dbrefs

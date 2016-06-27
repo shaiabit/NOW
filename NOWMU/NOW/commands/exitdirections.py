@@ -12,13 +12,15 @@ class CmdExit(default_cmds.MuxCommand):
     All simple exits on the room use the same attribute, compared to object-based exits,
     which create a new database object.  Simple exits use much less database space.
     Actual exit objects superceed simple exits in every way.
-
-    <direction>/add [name] -- adds simple exit to destination in the given direction.
-    <direction>/del        -- removes simple exit in given direction.
-    <direction>/tun <name> -- adds simple exit from destination in opposite direction.
-    <direction>/new [name] -- creates a new room of given name as destination.
-    <direction>/go         -- after any above operations, move to destination.
-    <direction>/show       -- shows room exit information and back exit from <direction>.
+    Usage:
+    <direction>
+    Switches:
+    /add [name]  adds simple exit to destination in the given direction.
+    /del         removes simple exit in given direction.
+    /tun <name>  adds simple exit from destination in opposite direction.
+    /new [name]  creates a new room of given name as destination.
+    /go          after any above operations, move to destination.
+    /show        shows room exit information and back exit from <direction>.
 
     Switches combine in some combinations e.g. west/del/tun/go would remove the exits
     into and out of the room in the given direction, then take you to the destination room.

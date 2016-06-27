@@ -186,10 +186,9 @@ import django
 
 class CmdAbout(MuxCommand):
     """
-    show Evennia info
+    Display info about the game engine.
     Usage:
       about
-    Display info about the game engine.
     """
 
     key = "about"
@@ -223,36 +222,34 @@ class CmdAbout(MuxCommand):
 
 class CmdChannels(MuxPlayerCommand):
     """
-    list all channels available to you
-    Usage:
-      chan,  channel, channels
-    Switches:
-    Lists channels you are currently receiving.
-      /list to display all available channels.
-      /join (on) or /part (off) to join or depart channels.
-
-    Batch:
-      /all      to affect all channels at once:
-      /all on   to join all available channels.
-      /all off  to part all channels currently on.
-
-    If you control a channel:
-      /all who      to list who listens to all channels.
-      /who          who listens to a specific channel.
-      /lock         to set a lock on a channel.
-      /desc         to describe a channel.
-      /emit         to emit on a channel.
-      /emit/name    when emitting, to display your name.
-      /remove       to remove a player from the channel.
-      /remove/quiet to remove the user quietly.
     Channels provide communication with a group of other players based on a
     particular interest or subject.  Channels are free of being at a particular
     location. Channels use their alias as the command to post to then.
+    Usage:
+      chan
+    Switches:
+    /list to display all available channels.
+    /join (on) or /part (off) to join or depart channels.
+
+       Batch:
+    /all      to affect all channels at once:
+    /all on   to join all available channels.
+    /all off  to part all channels currently on.
+
+       If you control a channel:
+    /all who <channel> to list who listens to all channels.
+    /who  <channel>    who listens to a specific channel.
+    /lock <channel>    to set a lock on a channel.
+    /desc <channel> = <description>  to describe a channel.
+    /emit <channel> = <message>   to emit to channel.
+    /name <channel> = <message>   sends to channel as if you're joined.
+    /remove <channel> = <player> [:reason]  to remove a player from the channel.
+    /quiet <channel> = <player>[:reason]    to remove the user quietly.
     """
-    key = "channel"
-    aliases = ["chan", "channels"]
-    help_category = "Communication"
-    locks = "cmd: not pperm(channel_banned)"
+    key = 'channel'
+    aliases = ['chan', 'channels']
+    help_category = 'Communication'
+    locks = 'cmd: not pperm(channel_banned)'
 
     def func(self):
         """Implement function"""
@@ -402,9 +399,10 @@ class CmdChannels(MuxPlayerCommand):
             string = "Lock(s) applied on %s:" % channel.key
             string = "%s %s" % (string, channel.locks)
             self.msg(string)
-        elif 'emit' in self.switches:
+        elif 'emit' in self.switches or 'name' in self.switches:
             if not self.args or not self.rhs:
-                string = "Usage: %s/emit[/name] <channel> = <message>" % self.cmdstring
+                switch = 'emit' if 'emit' in self.switches else 'name'
+                string = "Usage: %s/%s <channel> = <message>" % (self.cmdstring, switch)
                 self.msg(string)
                 return
             channel = find_channel(self.caller, self.lhs)
@@ -470,9 +468,10 @@ class CmdChannels(MuxPlayerCommand):
             else:
                 # wrong input
                 self.msg("Usage: %s/all on | off | who | clear" % self.cmdstring)
-        elif 'remove' in self.switches:
+        elif 'remove' in self.switches or 'quiet' in self.switches:
             if not self.args or not self.rhs:
-                string = "Usage: %s/remove [/quiet] <channel> = <player> [:reason]" % self.cmdstring
+                switch = 'remove' if 'remove' in self.switches else 'quiet'
+                string = "Usage: %s/%s <channel> = <player> [:reason]" % (self.cmdstring, switch)
                 self.msg(string)
                 return
             channel = find_channel(self.caller, self.lhs)
@@ -530,25 +529,26 @@ from evennia.utils import ansi, utils, create, search, prettytable
 
 class CmdQuit(MuxPlayerCommand):
     """
-    Gracefully disconnect your current session
-      bye
-      quit
-      disconnect
-    Use the /all switch to disconnect from all sessions.
-    Use the /reason switch to send quit reason.
+    Gracefully disconnect your current session and send optional
+    quit reason message to your other sessions, if any.
+    Usage:
+      quit [reason]
+    Switches:
+    /all      disconnect from all sessions.
     """
     key = 'quit'
     aliases = ['bye', 'disconnect']
     locks = 'cmd:all()'
-    arg_regex = r"^/|\s|$"
+    arg_regex = r'^/|\s|$'
 
     def func(self):
         """hook function"""
         player = self.player
         bye = '|RDisconnecting|n'
-        if self.args.strip() and 'reason' in self.switches:
-            bye += " ( |w%s\n ) " % self.args.strip()
         exit_msg = 'Hope to see you again, soon.'
+
+        if self.args.strip():
+            bye += " ( |w%s\n ) " % self.args.strip()
 
         if 'all' in self.switches:
             msg = bye + ' all sessions. ' + exit_msg
@@ -573,11 +573,12 @@ class CmdQuit(MuxPlayerCommand):
 
 class CmdAccess(MuxCommand):
     """
-    Displays your current world access levels.
+    Displays your current world access levels for
+    your current player and character account.
     Usage:
-      access - Displays permissions for your current player and character account.
+      access
     Switches:
-      access/groups - Displays the system's permission groups hierarchy.
+    /groups  - Also displays the system's permission groups hierarchy.
     """
     key = 'access'
     locks = 'cmd:all()'
@@ -620,7 +621,7 @@ class CmdOoc(MuxCommand):
         caller = self.caller
         args = self.args.strip()
         if not args:
-            caller.execute_cmd("help ooc")
+            caller.execute_cmd('help ooc')
             return
         elif args[0] == '"' or args[0] == "'":
             caller.execute_cmd('say/o ' + caller.location.at_say(caller, args[1:]))
@@ -635,8 +636,8 @@ class CmdSpoof(MuxCommand):
     Send a spoofed message to your current location.
     Usage:
       spoof <message>
-     Switch:
-      spoof/self <message only to you>
+    Switches:
+    /self <message only to you>
     """
     key = 'spoof'
     aliases = ['~', '`', 'sp']
@@ -646,7 +647,7 @@ class CmdSpoof(MuxCommand):
         """Run the spoof command"""
         caller = self.caller
         if not self.args:
-            caller.execute_cmd("help spoof")
+            caller.execute_cmd('help spoof')
             return
         if 'self' in self.switches:
             caller.msg(self.args)
@@ -664,9 +665,9 @@ class CmdSay(MuxCommand):
     Speak as your character.
     Usage:
       say <message>
-    Switch:
-      /o or /ooc - Out-of-character to the room.
-      /v or /verb - set default say verb.
+    Switches:
+    /o or /ooc  - Out-of-character to the room.
+    /v or /verb - set default say verb.
     """
     key = 'say'
     aliases = ['"', "'"]
@@ -699,7 +700,7 @@ class CmdSay(MuxCommand):
 class CmdForge(MuxCommand):
     """
     Retool tutorial object
-        Usage:
+    Usage:
       forge <object>
     """
     key = 'forge'
@@ -755,9 +756,9 @@ class CmdWho(MuxPlayerCommand):
     Shows who is currently online.
     Usage:
       who
-    switch:
-      f - shows character locations, and more info for those with permissions.
-      s or species - shows species setting for characters in your location.
+    Switches:
+    /f             - shows character locations, and more info for those with permissions.
+    /s or /species - shows species setting for characters in your location.
     """
     key = 'who'
     aliases = 'ws'
@@ -853,17 +854,14 @@ class CmdPose(MuxCommand):
     """
     Describe and/or attempt to trigger an action on an object.
     The pose text will automatically begin with your name.
-
+    pose, try, :, ;
     Usage:
       pose <pose text>
       pose's <pose text>
-
       pose <verb> <noun>::<pose text>
-
       try <verb> <noun>
-    Switch:
-      /o or /ooc - Out-of-character to the room.
-
+    Switches:
+    /o or /ooc - Out-of-character to the room.
     Example:
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.

@@ -4,13 +4,11 @@ from world.helpers import mass_unit
 
 class CmdInventory(default_cmds.MuxCommand):
     """
-    view inventory
+    Shows your inventory: carrying, wielding, wearing, obscuring.
     Usage:
       inventory
-      inv
-    switch:
-      weight - shows inventory item weight and carry total
-    Shows your inventory: carrying, wielding, wearing, obscuring.
+    Switches:
+    /weight   shows inventory item weight and carry total
     """
     key = 'inventory'
     aliases = ['inv', 'i']

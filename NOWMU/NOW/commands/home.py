@@ -8,8 +8,8 @@ class CmdHome(default_cmds.MuxCommand):
     where your home is set, or provide a what and where to set its home.
     Usage:
       home
-    switch:
-      set <obj> [= home_location] - views or sets <obj>'s home location.
+    Switches:
+    /set <obj> [= home_location]  views or sets <obj>'s home location.
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
     should always have a home location for this reason.

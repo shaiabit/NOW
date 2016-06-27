@@ -23,16 +23,15 @@ class CmdDesc(default_cmds.MuxCommand):
     Describe yourself!
     Usage:
       desc [description]
-
     Switches:
-      edit  - Use a line-based editor similar to vi for more advanced editing.
-      brief - Add a brief description, 65 characters or less.
+    /edit  - Use a line-based editor similar to vi for more advanced editing.
+    /brief - Add a brief description, 65 characters or less.
 
     Add a description to your character, visible to characters who look at you.
     """
     key = 'desc'
-    locks = "cmd:all()"
-    arg_regex = r"^/|\s|$"
+    locks = 'cmd:all()'
+    arg_regex = r'^/|\s|$'
 
     def edit_handler(self):
         if self.args:
@@ -56,7 +55,7 @@ class CmdDesc(default_cmds.MuxCommand):
 
         def quit(obj):
             obj.attributes.remove('evmenu_target')
-            obj.msg("Exited editor.")
+            obj.msg('Exited editor.')
 
         self.caller.db.evmenu_target = obj  # launch the editor
         EvEditor(obj, loadfunc=load, savefunc=save, quitfunc=quit, key='desc', persistent=True)
@@ -85,4 +84,4 @@ class CmdDesc(default_cmds.MuxCommand):
             self.caller.msg("Your brief description has been saved: %s" % self.caller.db.desc_brief)
             return
         self.caller.db.desc = self.args.strip()
-        self.caller.msg("You successfully set your description.")
+        self.caller.msg('You successfully set your description.')

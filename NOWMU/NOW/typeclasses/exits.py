@@ -192,7 +192,7 @@ SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sp
 
 class CmdSetSpeed(Command):
     """
-    set your movement speed
+    Set your character's default movement speed
     Usage:
       speed [stroll||walk||run||sprint||scamper]
     This will set your movement speed, determining how long time
@@ -220,10 +220,9 @@ class CmdSetSpeed(Command):
 
 class CmdStop(Command):
     """
-    stop moving
+    Stops the current character movement, if any.
     Usage:
       stop
-    Stops the current movement, if any.
     """
     key = 'stop'
     locks = 'cmd:on_path()'
@@ -278,7 +277,7 @@ class CmdBack(Command):
     """
     About face! Exit the path into the location room.
     Usage:
-      back || return || u-turn
+      back
     """
     key = 'back'
     aliases = ['return', 'u-turn']

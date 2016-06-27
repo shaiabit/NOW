@@ -310,9 +310,7 @@ class CmdGridMotion(default_cmds.MuxCommand):
     Actual exit objects superseded these in every way.
 
     Grid locations are stored on the Grid room that is navigated by these commands.
-
-    <direction>/add [destination] -- adds simple exit to destination in the given direction.
-    <direction>/del  -- removes simple exit in given direction. 
+    Usage:
     """
     arg_regex = r'^/|\s|$'
     auto_help = True
@@ -331,7 +329,18 @@ class CmdGridMotion(default_cmds.MuxCommand):
 
 
 class CmdGrid(CmdGridMotion):
-    """grid  -- manage the room's grid."""
+    """
+    grid  -- manage the room's grid.
+    Usage:
+      grid
+    Switches:
+    /exits   Show exits of the room affected by grid motion commands.
+    /size <[xmin..xmax, ymin..ymax]>   Show or edit the current working grid size of the room.
+    /base <[x, y]>                     Show or edit the base (center) of the grid in the room.
+    /current <[x, y]>                  Show or edit the current working location in the room.
+    /large                             Show a large grid to represent the grid room layout.
+    /small                             Show a small grid to represent the grid room layout.
+    """
     key = 'grid'
     help_category = 'Building'
     locks = 'cmd:perm(Builders)'
@@ -416,56 +425,56 @@ class CmdGrid(CmdGridMotion):
 
 
 class CmdGridNorth(CmdGridMotion):
-    """north  or n        -- move north on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "north  or n        -- move north on the room's grid."
     key = 'north'
     aliases = 'n'
     locks = 'cmd:not on_exit(n)'
 
 
 class CmdGridNortheast(CmdGridMotion):
-    """northeast  or ne   -- move northeast on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "northeast  or ne   -- move northeast on the room's grid."
     key = 'northeast'
     aliases = 'ne'
     locks = 'cmd:not on_exit(ne)'
 
 
 class CmdGridNorthwest(CmdGridMotion):
-    """northwest  or nw   -- move northwest on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "northwest  or nw   -- move northwest on the room's grid."
     key = 'northwest'
     aliases = 'nw'
     locks = 'cmd:not on_exit(nw)'
 
 
 class CmdGridEast(CmdGridMotion):
-    """east  or e         -- move east on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "east  or e         -- move east on the room's grid."
     key = 'east'
     aliases = 'e'
     locks = 'cmd:not on_exit(e)'
 
 
 class CmdGridSouth(CmdGridMotion):
-    """south  or s        -- move south on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "south  or s        -- move south on the room's grid."
     key = 'south'
     aliases = 's'
     locks = 'cmd:not on_exit(s)'
 
 
 class CmdGridSoutheast(CmdGridMotion):
-    """sortheast  or se   -- move southeast on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "sortheast  or se   -- move southeast on the room's grid."
     key = 'southeast'
     aliases = 'se'
     locks = 'cmd:not on_exit(se)'
 
 
 class CmdGridSouthwest(CmdGridMotion):
-    """southwest  or sw   -- move southwest on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "southwest  or sw   -- move southwest on the room's grid."
     key = 'southwest'
     aliases = 'sw'
     locks = 'cmd:not on_exit(sw)'
 
 
 class CmdGridWest(CmdGridMotion):
-    """west  or w         -- move west on the room's grid."""
+    __doc__ = CmdGridMotion.__doc__ + "west  or w         -- move west on the room's grid."
     key = 'west'
     aliases = 'w'
     locks = 'cmd:not on_exit(w)'

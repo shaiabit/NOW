@@ -9,7 +9,6 @@ _AT_SEARCH_RESULT = utils.variable_from_module(*settings.SEARCH_AT_RESULT.rsplit
 class CmdSense(default_cmds.MuxCommand):
     """
     Handle sensing objects in different ways. WIP: Expanding to handle other senses.
-
     Sense yourself, your location or objects in your vicinity.
     Usage:
       <sense verb>[/switch] <object>['s aspect[ = [detail]]
@@ -17,6 +16,9 @@ class CmdSense(default_cmds.MuxCommand):
 
       Add detail following the equal sign after the object's aspect.
       Nothing following the equals sign (=) will remove the detail
+      Switches:
+      /set or add  Add detail to the senses/details dictionary
+      /del         Remove detail from senses/details dictionary
     """
     key = 'sense'
     aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen']
