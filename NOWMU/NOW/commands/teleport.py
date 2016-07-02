@@ -45,9 +45,9 @@ class CmdTeleport(default_cmds.MuxCommand):
         if to_none:  # teleporting to None
             if not args:
                 obj_to_teleport = caller
-                caller.msg("Teleported to None-location.")
+                caller.msg("|*Teleported to None-location.|n")
                 if caller.location and not tel_quietly:
-                    caller.location.msg_contents("%s teleported into nothingness." % caller, exclude=caller)
+                    caller.location.msg_contents("|r%s|n vanishes." % caller, exclude=caller)
             else:
                 obj_to_teleport = caller.search(lhs, global_search=True)
                 if not obj_to_teleport:

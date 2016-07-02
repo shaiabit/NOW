@@ -30,7 +30,6 @@ class Room(DefaultRoom):
     See examples/object.py for a list of
     properties and methods available on all Objects.
     """
-
     STYLE = '|y'
 
     @lazy_property
@@ -49,28 +48,17 @@ class Room(DefaultRoom):
     # def equipment(self):
     #     return EquipmentHandler(self)
 
-    def full_name(self, viewer):
-        """
-        Returns the full styled non-clickable name
-        for the viewer's perspective as a string.
-        """
-        if viewer and (self != viewer) and self.access(viewer, 'view'):
-            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
-            return ''
+            return "%s%s|n" % (self.STYLE, self.name)
 
     def mxp_name(self, viewer, command):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-        if viewer and self.access(viewer, 'view'):
-            return '|lc%s|lt%s%s|n|le' % (command, self.STYLE, self.full_name(viewer))
-        else:
-            return ''
-        for obj in self.contents_get(exclude=new_arrival):
-            if hasattr(obj, "at_new_arrival"):
-                obj.at_new_arrival(new_arrival)
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
+            self.access(viewer, 'view') else ''
 
     def return_appearance(self, viewer):
         """
@@ -97,9 +85,9 @@ class Room(DefaultRoom):
         def sort_exits(x, y):
             """sort supplied list of exit strings, based on default_exits, returns sorted list."""
             matches = []  # start empty and build a sorted list
-            for e in default_exits:
+            for j in default_exits:
                 for i, easy in enumerate(x):
-                    if e == easy:
+                    if j == easy:
                         matches.append(y[i])
             s = set(matches)  # Set magic for adding back non-matches.
             return matches + [z for z in y if z not in s]
@@ -112,7 +100,7 @@ class Room(DefaultRoom):
             else:
                 things.append(con)
         # get description, build string
-        command = '%s #%s' % ('@verb', self.id)
+        command = '%s #%s' % ('sense', self.id)
         string = "\n%s\n" % self.mxp_name(viewer, command)
         desc = self.db.desc
         desc_brief = self.db.desc_brief
@@ -128,7 +116,7 @@ class Room(DefaultRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.mxp_name(viewer, '@verb #%s' % e.id) if hasattr(e, "mxp_name")
+                exits_complex.append("%s" % e.mxp_name(viewer, 'sense #%s' % e.id) if hasattr(e, "mxp_name")
                                      else e.get_display_name(viewer))
             if ways and not ways == {}:
                 for w in ways:
@@ -138,9 +126,9 @@ class Room(DefaultRoom):
         elif viewer.db.last_room:
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.name
         if users or things:
-            user_list = ", ".join(u.mxp_name(viewer, '@verb #%s' % u.id) for u in users)
+            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.mxp_name(viewer, '@verb #%s' % t.id) if hasattr(t, "mxp_name")
+            item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, "mxp_name")
                                   else t.get_display_name(viewer) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
         return string
@@ -165,8 +153,7 @@ class Room(DefaultRoom):
 
         """
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
-            outdoor = self.tags.get('outdoor', category='flags')
-            if outdoor:
+            if self.tags.get('outdoor', category='flags'):
                 tickers = TICKER_HANDLER.all_display()
                 counter = 0
                 for tick in tickers:
@@ -224,7 +211,8 @@ class Room(DefaultRoom):
 
 # [...] class WeatherRoom(TutorialRoom):
 
-    def update_weather(self, *args, **kwargs):
+    # def update_weather(self, *args, **kwargs):
+    def update_weather(self):
         """
         Called by the tickerhandler at regular intervals. Even so, we
         only update 20% of the time, picking a random weather message
@@ -264,21 +252,21 @@ class RealmEntry(Room):
     STYLE = '|242'
 
     def at_object_creation(self):
-        """
-        Called when the room is first created.
-        """
+        """Called when the room is first created."""
         super(Room, self).at_object_creation()
         self.db.info = "The first room of the realm. This assigns the realm-specific attributes to the character."
 
     def at_object_receive(self, character, source_location):
         """Assign properties on characters"""
 
-        if character.is_superuser:  #
-            string = "-" * 78 + "|/WARNING: You are playing as superuser ({name}). Use the {quell} command to|/" \
-                    "play without superuser privileges (many functions and locks are bypassed by default by the|/" \
-                    "presence of a superuser, making this mode really only useful for exploring things behind|/" \
-                    "the scenes later or entering to make modifications).|/" + "-" * 78
-            character.msg("|r%s|n" % string.format(name=character.key, quell="|w@quell|r"))
+        if character.is_superuser:
+            string = "-" * 78 +\
+                     "|/WARNING: You are playing while superuser. Use the {quell} command|/" \
+                     " to play without superuser privileges (many functions and locks are bypassed|/" \
+                     " by default by the presence of a superuser, making this mode really only useful|/" \
+                     " for exploring things behind the scenes later or entering to make modifications).|/"\
+                     + "-" * 78
+            character.msg("|r%s|n" % string.format(quell="|w@quell|r"))
         else:  # setup character for the particular realm:
             # Load attributes needed into a dictionary then set the attributes on the character as needed.
             health = self.db.char_health or 20
@@ -323,9 +311,23 @@ class CmdGridMotion(default_cmds.MuxCommand):
         session = self.session
         loc = you.location
 
-        loc.msg_contents("%s chooses to go |g%s|n on the grid." % (you.full_name(session), self.key))
-        # TODO: Update character's position in room   map(lambda x, y: x + y, [x, y], [-2, 3])
+        loc.msg_contents("%s chooses to go |g%s|n on the grid." % (you.get_display_name(session), self.key))
         you.msg(loc.return_appearance(you))  # Show view from location.
+
+    def motion(self, position):
+        """Update character's position in room where position is [x, y]"""
+        direction = self.key
+        x_motion, y_motion = [0, 0]
+        if 'north' in direction:
+            y_motion = -1
+        if 'east' in direction:
+            x_motion = 1
+        if 'west' in direction:
+            x_motion = -1
+        if 'south' in direction:
+            y_motion = 1
+        x_pos, y_pos = position
+        return map(lambda x, y: x + y, [x_pos, y_pos], [x_motion, y_motion])
 
 
 class CmdGrid(CmdGridMotion):
@@ -352,7 +354,7 @@ class CmdGrid(CmdGridMotion):
         session = self.session
         loc = you.location
 
-        loc.msg_contents("%s examines %s." % (you.full_name(session), loc.full_name(session)))
+        loc.msg_contents("%s examines %s." % (you.get_display_name(session), loc.get_display_name(session)))
         x, y = (loc.grid.x, loc.grid.y)
         if 'exits' in self.switches:
             exits = []

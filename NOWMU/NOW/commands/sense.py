@@ -15,10 +15,10 @@ class CmdSense(default_cmds.MuxCommand):
       <sense verb>[/switch] *<player>['s aspect[ = [detail]]
 
       Add detail following the equal sign after the object's aspect.
-      Nothing following the equals sign (=) will remove the detail
-      Switches:
-      /set or add  Add detail to the senses/details dictionary
-      /del         Remove detail from senses/details dictionary
+      Nothing following the equals sign (=) will remove the detail.
+
+      The command 'sense' is strictly informative, while the more specific alternative
+      versions are interactive and may trigger a notification, response, or cause effects.
     """
     key = 'sense'
     aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen']
@@ -29,22 +29,41 @@ class CmdSense(default_cmds.MuxCommand):
     def func(self):
         """Handle sensing objects in different ways. WIP: Expanding to handle other senses."""
         char = self.character
-        # player = self.player
+        player = self.player
         args = self.args.strip()
         cmd = self.cmdstring
 
+        if self.rhs is not None:  # Equals sign exists.
+            if not self.rhs:  # Nothing on the right side
+                char.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+            else:
+                char.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
+            return
         if cmd != 'l' and 'look' not in cmd:
             if 'sense' in cmd:
                 if char and char.location:
-                    obj_list = char.search(args, candidates=[char.location] + char.location.contents +
-                                           char.contents) if args else char
-                    if obj_list and obj_list.db.senses:
-                        char.msg('You can sense %s in the following ways: %s' % (obj_list, obj_list.db.senses.keys()))
-                        obj = obj_list
-                        verb_msg = "You can interact with %s: " % obj_list.get_display_name(self.session)
+                    obj = char.search(args.strip(), candidates=[char.location] + char.location.contents +
+                                      char.contents) if args else char
+                    verb_msg = ''
+                    if obj and obj.db.senses:
+                        string = '%s can be sensed in the following ways: ' % obj.get_display_name(player)
+                        string += ", ".join('|lc%s #%s|lt|g%s|n|le' % (element, obj.id, element)
+                                            for element in obj.db.senses.keys())
+                        char.msg(string)
+                        string = ''  # list aspects.
+                        for element in obj.db.senses.keys():
+                            for aspect in obj.db.senses[element].keys():
+                                string += "|lc%s %s's %s|lt|g%s|n|le " % (element, obj.key, aspect, aspect)\
+                                    if aspect else ''
+                        if len(string) > 0:
+                            char.msg(obj.get_display_name(player) + ' has the following aspects that can be sensed: ' +
+                                     string)
                     else:
-                        obj = char
-                        verb_msg = "You can be interacted with by: "
+                        if obj:
+                            verb_msg = "%s responds to: " % obj.get_display_name(player)
+                        else:
+                            obj = char
+                            verb_msg = "%sYou|n respond to: " % char.STYLE
                     verbs = obj.locks
                     collector = ''
                     show_red = True if obj.access(char, 'examine') else False
@@ -59,17 +78,35 @@ class CmdSense(default_cmds.MuxCommand):
                             collector += "|r%s|n " % name
                     char.msg(verb_msg + "%s" % collector)
             elif 'taste' in cmd or 'touch' in cmd or 'smell' in cmd or 'listen' in cmd:  # Specific sense (not look)
-                obj_list = char.search(args, candidates=[char.location] + char.location.contents + char.contents)\
+                obj, aspect = [args, None] if "'s " not in args else args.rsplit("'s ", 1)
+                obj = char.search(obj, candidates=[char.location] + char.location.contents + char.contents)\
                     if args else char
-                char.msg('You try to sense %s.' % (obj_list if obj_list else 'something'))
+                if not obj:
+                    return
                 # Object to sense might have been found. Check the senses dictionary.
-                if obj_list and obj_list.db.senses and cmd in obj_list.db.senses:
-                    senses_of = obj_list.db.senses[cmd]
-                    if None in senses_of:
-                            details_of = obj_list.db.details
-                            if details_of and senses_of[None] in details_of:
-                                entry = details_of[senses_of[None]]
-                                char.msg('You sense %s from %s.' % (entry, obj_list))
+                if obj.db.senses and cmd in obj.db.senses:
+                    senses_of = obj.db.senses[cmd]  # senses_of is the sense dictionary for current sense.
+                    if aspect in senses_of:
+                        details_of = obj.db.details
+                        if details_of and senses_of[aspect] in details_of:
+                            entry = details_of[senses_of[aspect]]
+                            char.msg('%sYou|n sense %s from %s.' % (char.STYLE, entry, obj.get_display_name(player)))
+                        else:
+                            if aspect:
+                                char.msg("%sYou|n try to sense %s's %s, but can not."
+                                         % (char.STYLE, obj.get_display_name(player), aspect))
+                            else:
+                                char.msg("%sYou|n try to sense %s, but can not."
+                                         % (char.STYLE, obj.get_display_name(player)))
+                    else:
+                        if aspect:
+                            char.msg("%sYou|n try to sense %s's %s, but can not."
+                                     % (char.STYLE, obj.get_display_name(player), aspect))
+                        else:
+                            char.msg("%sYou|n try to sense %s, but can not."
+                                     % (char.STYLE, obj.get_display_name(player)))
+                else:
+                    char.msg('%sYou|n try to sense %s, but can not.' % (char.STYLE, obj.get_display_name(player)))
                 # First case: look for an object in room, inventory, room contents, their contents,
                 # and their contents contents with tagged restrictions, then if no match is found
                 # in their name or alias, look at the senses tables in each of these objects: The
@@ -82,15 +119,7 @@ class CmdSense(default_cmds.MuxCommand):
                 # when the /self;me and /inv;inventory switch is used?
             return
         if args:
-            # Parsing for object/aspect/detail:
-            # Box's wheel = Red spinners lit with pyrotechnics.
-            # object, aspect = args.rsplit("'s ", 1)
-            # detail = self.rhs.strip()
-
-            obj = char.search(args,
-                              candidates=char.location.contents + char.contents,
-                              use_nicks=True,
-                              quiet=True)
+            obj = char.search(args, candidates=char.location.contents + char.contents, use_nicks=True, quiet=True)
             if not obj:
                 # no object found. Check if there is a matching detail around the location.
                 # TODO: Restrict search for details by possessive parse:  [object]'s [aspect]
@@ -100,15 +129,13 @@ class CmdSense(default_cmds.MuxCommand):
                     if location and hasattr(location, "return_detail") and callable(location.return_detail):
                         detail = location.return_detail(args)
                         if detail:
-                            # Show found detail.
-                            char.msg(detail)
+                            char.msg(detail)  # Show found detail.
                             return  # TODO: Add /all switch to override return here to view all details.
                 # no detail found. Trigger delayed error messages
                 _AT_SEARCH_RESULT(obj, char, args, quiet=False)
                 return
             else:
-                # we need to extract the match manually.
-                obj = utils.make_iter(obj)[0]
+                obj = utils.make_iter(obj)[0]  # Use the first match in the list.
         else:
             obj = char.location
             if not obj:

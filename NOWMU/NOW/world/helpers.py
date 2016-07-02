@@ -20,7 +20,7 @@ def mass_unit(value):
     """Present a suitable mass unit based on value"""
     value = float(value)
     if value <= 999:
-        return '%s g' % value
+        return '%s g' % str(value).rstrip('0').rstrip('.')
     if value <= 999999:
         return '%s kg' % str(value/1000).rstrip('0').rstrip('.')
     if value <= 999999999:

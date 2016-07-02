@@ -26,11 +26,13 @@ class CmdInventory(default_cmds.MuxCommand):
             table.border = False
             for item in items:
                 imass = mass_unit(item.get_mass()) if hasattr(item, 'get_mass') else '- unknown -'
-                second = imass if 'weight' in self.switches else item.db.desc_brief
+                second = imass if 'weight' in self.switches else item.db.desc_brief or item.db.desc
                 table.add_row(['%s' % item.mxp_name(you.sessions, '@verb #%s' % item.id)
                                if hasattr(item, 'mxp_name')
                                else item.get_display_name(you.sessions), second and second or ''])
             imass = you.get_mass() if hasattr(item, 'get_mass') else '- unknown -'
-            string = "|wYou and what you carry total |y%s|n:\n%s" % (mass_unit(imass), table)
+            string = "|wYou (%s) and what you carry (%s) total |y%s|n:\n%s" % (mass_unit(you.db.mass),
+                                                                               mass_unit(imass - you.db.mass),
+                                                                               mass_unit(imass), table)
         you.msg(string)
 

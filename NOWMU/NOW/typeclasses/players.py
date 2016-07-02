@@ -91,13 +91,14 @@ class Player(DefaultPlayer):
      at_server_reload()
      at_server_shutdown()
     """
+    STYLE = '|[100'
 
-    def full_name(self, viewer):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        if viewer and self.access(viewer, 'view'):
-            return "|lcexamine %s|lt|y|[R|%s|n|le" % (self.name, self.key)  # No get_display_name ?
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
-            return ''
+            return "%s%s|n" % (self.STYLE, self.name)
 
 
 class Guest(DefaultGuest):
@@ -105,4 +106,11 @@ class Guest(DefaultGuest):
     This class is used for guest logins. Unlike Players, Guests and their
     characters are deleted after disconnection.
     """
-    pass
+    STYLE = '|[305'
+
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
+        else:
+            return "%s%s|n" % (self.STYLE, self.name)

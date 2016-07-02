@@ -58,18 +58,13 @@ class CmdExit(default_cmds.MuxCommand):
             lockstring = "control:id(%s) or perm(Immortals); delete:id(%s)" \
                          " or perm(Wizards); edit:id(%s) or perm(Wizards)"
             lockstring = lockstring % (self.caller.dbref, self.caller.dbref, self.caller.dbref)
-
-            new_room = create.create_object(typeclass, room['name'],
-                                            aliases=room['aliases'],
-                                            report_to=you)
-            new_room.locks.add(lockstring)
-
+            r = create.create_object(typeclass, room['name'], aliases=room['aliases'], report_to=you)
+            r.locks.add(lockstring)
             alias_string = ''  # No parsing for aliases here yet, so new rooms never have aliases.
-            if new_room.aliases.all():
-                alias_string = " (%s)" % ", ".join(new_room.aliases.all())
-            self.caller.msg("Created room %s(%s)%s of type %s." % (new_room,
-                new_room.dbref, alias_string, typeclass))
-            return new_room or None
+            if r.aliases.all():
+                alias_string = " (%s)" % ", ".join(r.aliases.all())
+            self.caller.msg("Created room %s(%s)%s of type %s." % (r, r.dbref, alias_string, typeclass))
+            return r or None
 
         def find_by_name(search):
             search = search.strip()
@@ -169,13 +164,17 @@ class CmdExit(default_cmds.MuxCommand):
                     you.move_to(dest)
                 if not self.switches:
                     you.move_to(dest)
-            else:  # No direction in the room's exit dictionary goes that way.
+            else:  # No direction in the room's exit dictionary goes that way. Or direction goes to None.
                 if 'new' in self.switches:
                     dest = new_room(self.args)
                 if 'add' in self.switches:
                     add(you, loc, ways)
                 elif 'del' in self.switches:
-                    you.msg("Exit %s does not exist here." % self.key)
+                    if ways.has_key(self.aliases[0]):
+                        del(ways[self.aliases[0]])
+                        you.msg("Exit %s was not valid. (|rremoved|n)" % self.key)
+                    else:
+                        you.msg("Exit %s does not exist here." % self.key)
                 if 'tun' in self.switches:
                     dir = self.aliases[0]
                     dest = ways.get(dir)
@@ -202,7 +201,11 @@ class CmdExit(default_cmds.MuxCommand):
                         if 'tun' in self.switches and dest:
                             you.move_to(dest)
                 if not self.switches:
-                    you.msg("You cannot travel %s." % self.key)
+                    if ways.has_key(self.aliases[0]):
+                        del(ways[self.aliases[0]])
+                        you.msg("Exit %s was not valid. (|rremoved|n)" % self.key)
+                    else:
+                        you.msg("You cannot travel %s." % self.key)
         else:  # No simple exits from this location.
             ways = {}
             way = None
@@ -239,14 +242,15 @@ class CmdExit(default_cmds.MuxCommand):
                 ways = loc.db.exits
                 dir = self.aliases[0]
                 dest = ways[dir]
-                you.msg("Simple exits exist in %s: %s" % (you.location.full_name(you), ways))
+                you.msg("Simple exits exist in %s: %s" % (you.location.get_display_name(you), ways))
                 tways = dest.db.exits
                 if tways:
                     tway = tways.get(back_dir(self.aliases[0]))
-                    you.msg("Simple exit exists in %s going %s back to %s." % 
-                        (dest.full_name(you), long_dir(back_dir(self.aliases[0])), you.location.full_name(you)))
+                    you.msg("Simple exit exists in %s going %s back to %s." %
+                            (dest.get_display_name(you), long_dir(back_dir(self.aliases[0])),
+                             you.location.get_display_name(you)))
             else:
-                you.msg("No simple exits exist in %s." % you.location.full_name(you))
+                you.msg("No simple exits exist in %s." % you.location.get_display_name(you))
 
 
 class CmdExitNorth(CmdExit):

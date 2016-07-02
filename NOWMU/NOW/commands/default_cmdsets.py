@@ -16,20 +16,21 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 from evennia import default_cmds
 
 # [Traversal of path-exits]
-from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSetSpeed
+from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 
 # [commands modules]
 from commands import prelogin
 from commands import exitdirections
 from commands import desc
 from commands.desc import CmdDesc
-from commands.sense import CmdSense
-from commands.inventory import CmdInventory
-from commands.teleport import CmdTeleport
 from commands.home import CmdHome
+from commands.about import CmdAbout
+from commands.sense import CmdSense
+from commands.teleport import CmdTeleport
+from commands.inventory import CmdInventory
 # from commands import destroy # Not ready for testing.
 from commands.command import CmdQuit, CmdPose, CmdSay, CmdWho, CmdForge
-from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels, CmdAbout
+from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -68,7 +69,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
 # [...]
         self.add(CmdStop)
         self.add(CmdBack)
-        self.add(CmdSetSpeed)
+        self.add(CmdSpeed)
         self.add(CmdContinue)
 # [...]
         self.add(exitdirections.CmdExitNorth())

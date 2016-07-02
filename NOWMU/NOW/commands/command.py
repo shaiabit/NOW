@@ -178,48 +178,6 @@ def find_channel(caller, channelname, silent=False, noaliases=False):
     return channels[0]
 
 
-import os
-import sys
-import twisted
-import django
-
-
-class CmdAbout(MuxCommand):
-    """
-    Display info about the game engine.
-    Usage:
-      about
-    """
-
-    key = "about"
-    locks = "cmd:all()"
-    help_category = "System"
-
-    def func(self):
-        """Show the version"""
-
-        string = """
-         |cEvennia|n %s|n
-         MUD/MUX/MU* development system
-         |wLicence|n BSD 3-Clause Licence:
-             https://opensource.org/licenses/BSD-3-Clause
-         |wWeb|n http://www.evennia.com
-         |wIrc|n #evennia on FreeNode
-         |wForum|n http://www.evennia.com/discussions
-         |wMaintainer|n (2010-)   Griatch (griatch AT gmail DOT com)
-         |wMaintainer|n (2006-10) Greg Taylor
-         |wOS|n %s
-         |wPython|n %s
-         |wTwisted|n %s
-         |wDjango|n %s
-        """ % (utils.get_evennia_version(),
-               os.name,
-               sys.version.split()[0],
-               twisted.version.short(),
-               django.get_version())
-        self.caller.msg(string)
-
-
 class CmdChannels(MuxPlayerCommand):
     """
     Channels provide communication with a group of other players based on a
@@ -600,7 +558,7 @@ class CmdAccess(MuxCommand):
         string += "|wYour Player/Character access|n: "
         if hasattr(caller, 'player'):
             string += "Player: (%s: %s) and " % (caller.player.key, pperms)
-        string += "Character (%s: %s)" % (caller.full_name(self.session), cperms)
+        string += "Character (%s: %s)" % (caller.get_display_name(self.session), cperms)
         caller.msg(string)
 
 
@@ -628,7 +586,7 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             caller.execute_cmd('pose/o %s' % args[1:])
         else:
-            caller.location.msg_contents('[OOC %s] %s' % (caller.full_name(self.session), args))
+            caller.location.msg_contents('[OOC %s] %s' % (caller.get_display_name(self.session), args))
 
 
 class CmdSpoof(MuxCommand):
@@ -681,7 +639,7 @@ class CmdSay(MuxCommand):
             return
         if 'v' in self.switches or 'verb' in self.switches:
             caller.attributes.add('say-verb', self.args)
-            emit_string = '%s warms up vocally with "%s|n"' % (caller.full_name(self.session), self.args)
+            emit_string = '%s warms up vocally with "%s|n"' % (caller.get_display_name(self.session), self.args)
             caller.location.msg_contents(emit_string)
             return
         if 'q' in self.switches or 'quote' in self.switches:
@@ -690,10 +648,10 @@ class CmdSay(MuxCommand):
                 return
         speech = caller.location.at_say(caller, self.args)  # Notify NPCs and listeners.
         if 'o' in self.switches or 'ooc' in self.switches:
-            emit_string = '[OOC]|n %s says, "%s"' % (caller.full_name(self.session), speech)
+            emit_string = '[OOC]|n %s says, "%s"' % (caller.get_display_name(self.session), speech)
         else:
             verb = caller.attributes.get('say-verb') if caller.attributes.has('say-verb') else 'says'
-            emit_string = '%s %s, "%s|n"' % (caller.full_name(self.session), verb, speech)
+            emit_string = '%s %s, "%s|n"' % (caller.get_display_name(self.session), verb, speech)
         caller.location.msg_contents(emit_string)
 
 
@@ -712,8 +670,7 @@ class CmdForge(MuxCommand):
         args = self.args
 
         if you and you.location:
-            obj_list = you.search(args, location=[you, you.location]) if args else you
-            obj = obj_list
+            obj = you.search(args, location=[you, you.location]) if args else you
         if not self.args:
             you.msg("Usage: %s <object>" % self.cmdstring)
             return
@@ -930,7 +887,7 @@ class CmdPose(MuxCommand):
                 else:
                     self.obj = caller.search(noun, location=[caller, caller.location])
         if args and not args[0] in non_space_chars:
-            if not self.cmdstring == ";" :
+            if not self.cmdstring == ";":
                 args = " %s" % args.strip()
         self.args = args
 
@@ -940,9 +897,9 @@ class CmdPose(MuxCommand):
         caller = self.caller
         if self.args:
             if 'o' in self.switches or 'ooc' in self.switches:
-                self.text = "[OOC] %s%s" % (caller.full_name(self.session), self.args)
+                self.text = "[OOC] %s%s" % (caller.get_display_name(self.session), self.args)
             else:
-                self.text = "%s%s" % (caller.full_name(self.session), self.args)
+                self.text = "%s%s" % (caller.get_display_name(self.session), self.args)
             if self.obj and self.verb:
                 pass
             else:
@@ -991,17 +948,17 @@ class CmdPose(MuxCommand):
                 else:
                     if self.text != '':
                         # self.text += " |g|S|n is able to %s %s." % (verb, obj.name)
-                        # TODO: When pronoun substituion works.
+                        # TODO: When pronoun substitution works.
                         self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
                         # TODO: Otherwise, do this.
                     else:
                         self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
                     caller.location.msg_contents(self.text)
-                    # TODO: Show actual message response below. TODO - show full_name once session is availiable.
+                    # TODO: Show actual message response below. TODO - show get_display_name once session is available.
                     caller.location.msg_contents("%s responds to %s %s. |R(Response effect goes here)|n" %
                                                  (obj.name, caller.name, verb))
             else:
-                if self.obj.locks.get(verb): # Test to see if a lock string exists.
+                if self.obj.locks.get(verb):  # Test to see if a lock string exists.
                     if self.text != '':
                         self.text += " |r|S|n fails to %s %s." % (verb, obj.name)
                     else:

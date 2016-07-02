@@ -14,6 +14,8 @@ inheritance.
 from evennia import DefaultObject
 from evennia.utils.evmenu import get_input
 from world.helpers import mass_unit
+# from evennia import CmdSet
+from commands.poll import PollCmdSet
 
 from evennia.utils import lazy_property
 
@@ -201,11 +203,11 @@ class Object(DefaultObject):
         Attribute "readable_text" on the object and displays that.
         """
         readtext = self.db.readable_text
-        obj_name = self.full_name(caller.sessions)
+        obj_name = self.get_display_name(caller.sessions)
         if readtext:  # Attribute read_text is defined.
             string = "You read %s:\n  %s" % (obj_name, readtext)
-            caller.location.msg_contents("%s |g%s|n reads %s." % \
-                (pose, caller.full_name(caller), obj_name))  # , exclude=caller)
+            caller.location.msg_contents("%s |g%s|n reads %s." %
+                                         (pose, caller.get_display_name(caller), obj_name))  # , exclude=caller)
         else:
             string = "There is nothing to read on %s." % obj_name
         caller.msg(string)
@@ -224,10 +226,15 @@ class Object(DefaultObject):
         """Called after getting an object in the room."""
         caller.msg("%s is now in your posession." % self.mxp_name(caller, '@verb #%s' % self.id))
 
+    def at_object_creation(self):
+            """Called after object is created."""
+            if self.tags.get('poll', category='flags'):
+                self.cmdset.add('commands.poll.PollCmdSet', permanent=True)
+
     def drop(self, pose, caller):
         """Implements the attempt to drop this object."""
         if self.location != caller: # If caller is not holding object,
-            caller.msg("You do not have %s." % self.full_name(caller))
+            caller.msg("You do not have %s." % self.get_display_name(caller))
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
         caller.location.msg_contents("%s |g%s|n drops %s." %
@@ -239,11 +246,11 @@ class Object(DefaultObject):
         if caller == self:
             caller.msg("You can't get yourself.")
         elif self.location == caller:
-            caller.msg("You already have %s." % self.full_name(caller))
+            caller.msg("You already have %s." % self.get_display_name(caller))
         elif self.move_to(caller, quiet=True):
             caller.location.msg_contents("%s |g%s|n takes %s." %
-                (pose, caller.key, self.full_name(caller)))
-            self.at_get(caller) # calling hook method
+                (pose, caller.key, self.get_display_name(caller)))
+            self.at_get(caller)  # calling hook method
 
     def surface_put(self, pose, caller, connection):
         """Implements the surface connection of object by caller."""
@@ -256,7 +263,7 @@ class Object(DefaultObject):
         self.db.locked = True
         caller.db.locked = True
         caller.location.msg_contents("%s |g%s|n sits %s %s." %
-            (pose, caller.key, connection, self.full_name(caller)))
+                                     (pose, caller.key, connection, self.get_display_name(caller)))
         return True
 
     def surface_off(self, pose, caller):
@@ -269,29 +276,25 @@ class Object(DefaultObject):
                 self.attributes.remove('locked')
             caller.attributes.remove('locked')
             caller.location.msg_contents("%s |r%s|n leaves %s." %
-                (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
+                                         (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
             return True
         return False
 
-    def full_name(self, viewer):
-        """Returns the full styled and database id (if accessable by player)
-        for the viewer's perspective as a string."""
-        if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "%s%s|n" % (self.STYLE, self.get_display_name(viewer))
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
-            return ''
+            return "%s%s|n" % (self.STYLE, self.name)
 
     def mxp_name(self, viewer, command):
-        """Returns the full styled and clickable-name with command.
-        for the viewer's perspective as a string."""
-        if viewer and (self != viewer) and self.access(viewer, "view"):
-            return "|lc%s|lt%s|le" % (command, self.full_name(viewer))
-        else:
-            return ''
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
+            self.access(viewer, 'view') else ''
 
     def get_mass(self):
         mass = self.attributes.get('mass') or 1
-        return reduce(lambda x, y: x+y.get_mass(),[mass] + self.contents)
+        return reduce(lambda x, y: x+y.get_mass(), [mass] + self.contents)
 
     def return_appearance(self, viewer):
         """This formats a description. It is the hook a 'look' command
@@ -303,8 +306,7 @@ class Object(DefaultObject):
         if not viewer:
             return
         # get and identify all objects
-        visible = (con for con in self.contents if con != viewer and
-                                                    con.access(viewer, "view"))
+        visible = (con for con in self.contents if con != viewer and con.access(viewer, "view"))
         exits, users, things = [], [], []
         for con in visible:
             if con.destination:
@@ -328,11 +330,11 @@ class Object(DefaultObject):
         else:
             string += 'A shimmering illusion shifts from form to form.'
         if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+            string += "\n|wExits: " + ", ".join("%s" % e.get_display_name(viewer) for e in exits)
         if users or things:
-            user_list = ", ".join(u.full_name(viewer) for u in users)
+            user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name(viewer) for t in things)
+            item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
         return string
 
@@ -387,7 +389,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
     def drink(self, caller):  # TODO: Make this use a more generic def consume
         """Response to drinking the object."""
         if not self.locks.check_lockstring(caller, 'holds()'):
-            msg = "You are not holding %s." % self.full_name(caller.sessions)
+            msg = "You are not holding %s." % self.get_display_name(caller.sessions)
             caller.msg(msg)
             return False
         finish = ''
@@ -399,14 +401,14 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         else:
             finish = ', finishing it'
             self.location = None
-        msg = "%s takes a drink of %s%s." % (caller.full_name(caller.sessions),
-                                             self.full_name(caller.sessions), finish)
+        msg = "%s takes a drink of %s%s." % (caller.get_display_name(caller.sessions),
+                                             self.get_display_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
 
         def drink_callback(caller, prompt, user_input):
             """"Response to input given after drink potion"""
-            msg = "%s begins to have an effect on %s, transforming into species %s." % (self.full_name(caller.sessions),
-                caller.full_name(caller.sessions), user_input)
+            msg = "%s begins to have an effect on %s, transforming into species %s." %\
+                  (self.get_display_name(caller.sessions), caller.get_display_name(caller.sessions), user_input)
             caller.location.msg_contents(msg)
             caller.db.species = user_input[0:20].strip()
 
@@ -415,7 +417,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
     def eat(self, caller):  # TODO: Make this use a more generic def consume
         """Response to eating the object."""
         if not self.locks.check_lockstring(caller,'holds()'):
-            msg = "You are not holding %s." % self.full_name(caller.sessions)
+            msg = "You are not holding %s." % self.get_display_name(caller.sessions)
             caller.msg(msg)
             return False
         finish = ''
@@ -427,8 +429,8 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         else:
             finish = ', finishing it'
             self.location = None
-        msg = "%s takes a bite of %s%s." % (caller.full_name(caller.sessions),
-            self.full_name(caller.sessions), finish)
+        msg = "%s takes a bite of %s%s." % (caller.get_display_name(caller.sessions),
+            self.get_display_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
 
 

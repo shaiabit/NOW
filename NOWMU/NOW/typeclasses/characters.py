@@ -81,9 +81,6 @@ class Character(DefaultCharacter):
         if self.location.access(self, "view"):
             self.msg(text=((self.at_look(self.location),), {"window": "room"}))
             # TODO: Display name for objects in message.
-            # self.full_name(viewer) if hasattr(self, "full_name") else self, self.location, \
-            # self.location.get_display_name(viewer) if hasattr(self.location, "full_name") else self.location, \
-            # source_location.get_display_name(viewer) if hasattr(source_location, "full_name") else source_location)
 
     def at_post_puppet(self):
         """
@@ -100,7 +97,7 @@ class Character(DefaultCharacter):
 # I think it may have originally been defined at a time when an object only ever had one session, so once you were
         # puppeted you could easily retrieve it.
 
-        self.msg("\nYou assume the role of %s.\n" % self.full_name(self))
+        self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
 
         def message(obj, from_obj):
@@ -108,7 +105,7 @@ class Character(DefaultCharacter):
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
         def message(obj, from_obj):
-            obj.msg("|c%s|n awakens." % self.get_display_name(obj), from_obj=from_obj)
+            obj.msg("|g%s|n awakens." % self.key, from_obj=from_obj)
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
@@ -128,22 +125,25 @@ class Character(DefaultCharacter):
             if self.location:
 
                 def message(obj, from_obj):
-                    obj.msg("|c%s|n sleeps." % self.get_display_name(obj), from_obj=from_obj)
+                    obj.msg("|r%s|n sleeps." % self.key, from_obj=from_obj)
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
                 self.location = None
 
                 def message(obj, from_obj):
-                    obj.msg("|r%s|n fades from view." % self.get_display_name(obj), from_obj=from_obj)
+                    obj.msg("%s fades from view." % self.get_display_name(obj), from_obj=from_obj)
                 self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
 
-    def full_name(self, viewer):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "%s%s|n" % (self.STYLE, self.get_display_name(viewer)) if viewer and self.access(viewer, 'view') else ''
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
+        else:
+            return "%s%s|n" % (self.STYLE, self.name)
 
     def mxp_name(self, viewer, command):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer)) if viewer and \
+        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
             self.access(viewer, 'view') else ''
 
     def get_pronoun(self, regex_match):
@@ -159,24 +159,15 @@ class Character(DefaultCharacter):
             - `|a`, `|A`: Absolute Possessive form: his, hers, its, His, Hers, Its
         """
 
-        _GENDER_PRONOUN_MAP = {"male": {"s": "he",
-                                        "o": "him",
-                                        "p": "his",
-                                        "a": "his"},
-                             "female": {"s": "she",
-                                        "o": "her",
-                                        "p": "her",
-                                        "a": "hers"},
-                            "neutral": {"s": "it",
-                                        "o": "it",
-                                        "p": "its",
-                                        "a": "its"}}
+        _GENDER_PRONOUN_MAP = {'male': {'s': 'he', 'o': 'him', 'p': 'his', 'a': 'his'},
+                               'female': {'s': 'she', 'o': 'her', 'p': 'her', 'a': 'hers'},
+                               'neutral': {'s': 'it',  'o': 'it', 'p': 'its', 'a': 'its'}}
 
         _RE_GENDER_PRONOUN = re.compile(r'[^\|]+(\|s|S|o|O|p|P|a|A)')
 
         typ = regex_match.group()[2]  # "s", "O" etc
-        gender = self.attributes.get("gender", default='neutral')
-        gender = gender if gender in ("male", "female", 'neutral') else 'neutral'
+        gender = self.attributes.get('gender', default='neutral')
+        gender = gender if gender in ('male', 'female', 'neutral') else 'neutral'
         pronoun = _GENDER_PRONOUN_MAP[gender][typ.lower()]
         return pronoun.capitalize() if typ.isupper() else pronoun
 
@@ -209,7 +200,7 @@ class Character(DefaultCharacter):
         # get description, build string
 
         string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)
-        string += " (%s) " % mass_unit(self.get_mass())
+        string += " |y(%s)|n " % mass_unit(self.get_mass())
         if self.attributes.has('health') and self.attributes.has('health_max'):  # Add character health bar.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
             health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
@@ -225,11 +216,11 @@ class Character(DefaultCharacter):
         else:
             string += 'A shimmering illusion shifts from form to form.'
         if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+            string += "\n|wExits: " + ", ".join("%s" % e.get_display_name(viewer) for e in exits)
         if users or things:
-            user_list = ", ".join(u.full_name(viewer) for u in users)
+            user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name(viewer) if hasattr(t, 'full_name') else t.name for t in things)
+            item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         return string
 
@@ -272,7 +263,7 @@ class NPC(Character):
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
-        self.msg("\nYou assume the role of %s.\n" % self.full_name(self))
+        self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
 
 #    Testing Trait system

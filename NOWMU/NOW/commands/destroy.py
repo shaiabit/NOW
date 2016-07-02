@@ -1,5 +1,6 @@
 from evennia import default_cmds
-# May need other imports. See: https://github.com/evennia/evennia/blob/d42e971be63047f4f33414e88488077c15120afe/evennia/commands/default/building.py
+# May need other imports to work.
+# https://github.com/evennia/evennia/blob/d42e971be63047f4f33414e88488077c15120afe/evennia/commands/default/building.py
 
 
 class CmdDestroy(default_cmds.MuxCommand):
@@ -41,7 +42,7 @@ class CmdDestroy(default_cmds.MuxCommand):
             objname = obj.name
             if not obj.access(caller, 'delete'):
                 return "\nYou don't have permission to delete %s." % objname
-            if obj.player and not 'override' in self.switches:
+            if obj.player and 'override' not in self.switches:
                 return "\nObject %s is controlled by an active player. Use /override to delete anyway." % objname
             if obj.dbid == int(settings.DEFAULT_HOME.lstrip("#")):
                 return "\nYou are trying to delete {c%s{n, which is set as DEFAULT_HOME. " \
@@ -53,9 +54,7 @@ class CmdDestroy(default_cmds.MuxCommand):
                                                         if not (hasattr(obj, "exits") and obj not in obj.exits))
             # do the deletion or removal
             obj.location = None
-            # okay = obj.delete()
-            succ = True if obj.location == None else False
-            if not succ:
+            if obj.location:
                 string += "\nERROR: %s not deleted, probably because delete() returned False." % objname
             else:
                 string += "\n%s vanishes." % objname  # Trigger effects

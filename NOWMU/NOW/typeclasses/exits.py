@@ -70,28 +70,17 @@ class Exit(DefaultExit):
         if not looker.location == self:
             looker.msg("You gaze into the distance.")
 
-    def full_name(self, viewer):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-
-        if viewer and (self != viewer) and self.access(viewer, "view"):
-            style = self.STYLE_PATH if self.db.is_path or False else self.STYLE
-            return "%s%s|n" % (style, self.get_display_name(viewer))
+    def get_display_name(self, looker, **kwargs):
+        """Displays the name of the object in a viewer-aware manner."""
+        if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
-            return ''
+            return "%s%s|n" % (self.STYLE, self.name)
 
     def mxp_name(self, viewer, command):
-        """
-        Returns the full styled and clickable-look name
-        for the viewer's perspective as a string.
-        """
-
-        if viewer and self.access(viewer, "view"):
-            return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.full_name(viewer))
-        else:
-            return ''
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
+            self.access(viewer, 'view') else ''
 
     def return_appearance(self, viewer):
         """
@@ -126,11 +115,11 @@ class Exit(DefaultExit):
             string += "leads to %s" % self.destination.mxp_name(viewer, '@verb #%s' % self.destination.id)\
                 if hasattr(self.destination, "mxp_name") else self.destination.get_display_name(viewer)
         if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.full_name(viewer) for e in exits)
+            string += "\n|wExits: " + ", ".join("%s" % e.get_display_name(viewer) for e in exits)
         if users or things:
-            user_list = ", ".join(u.full_name(viewer) for u in users)
+            user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.full_name(viewer) for t in things)
+            item_list = ", ".join(t.get_display_name(viewer) for t in things)
             path_view = 'Y' if viewer.location == self else 'Along the way y'
             string += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
         return string
@@ -190,7 +179,7 @@ class Exit(DefaultExit):
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
 
 
-class CmdSetSpeed(Command):
+class CmdSpeed(Command):
     """
     Set your character's default movement speed
     Usage:
@@ -265,10 +254,10 @@ class CmdContinue(Command):
             caller.msg("You are already moving.")
         else:
             caller.location.msg_contents("%s is going to %s." %
-                                         (caller.full_name(caller.sessions),
-                                          destination.full_name(caller.sessions)), exclude=caller)
+                                         (caller.get_display_name(caller.sessions),
+                                          destination.get_display_name(caller.sessions)), exclude=caller)
             caller.msg("You begin %s toward %s." % (SPEED_DESCS[caller.db.move_speed],
-                                                    destination.full_name(caller.sessions)))
+                                                    destination.get_display_name(caller.sessions)))
             if caller.move_to(destination, quiet=False):
                 start.at_after_traverse(caller, start)
 
@@ -311,10 +300,10 @@ class CmdBack(Command):
                         caller.move_to(last_room)
             else:  # No way back, try out.
                 if start:
-                    caller.msg("You leave %s." % caller.location.full_name(caller.sessions))
+                    caller.msg("You leave %s." % caller.location.get_display_name(caller.sessions))
                     caller.move_to(start)
                 else:
-                    caller.msg("You can not leave %s." % caller.location.full_name(caller.sessions))
+                    caller.msg("You can not leave %s." % caller.location.get_display_name(caller.sessions))
             return
         elif caller.ndb.currently_moving:  # If you are inside an exit,
             caller.execute_cmd('stop')  # traveling, then stop, go back.
