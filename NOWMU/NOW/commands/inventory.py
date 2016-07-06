@@ -31,8 +31,8 @@ class CmdInventory(default_cmds.MuxCommand):
                 table.add_row('%s' % item.mxp_name(you.sessions, 'sense #%s' % item.id)
                               if hasattr(item, 'mxp_name')
                               else item.get_display_name(you.sessions), second or '')
-            my_mass = you.get_mass() if hasattr(you, 'get_mass') else '- unknown -'
-            string = "|wYou (%s) and what you carry (%s) total |y%s|n:\n%s" % (mass_unit(you.db.mass),
-                                                                               mass_unit(my_mass - you.db.mass),
-                                                                               mass_unit(my_mass), table)
+            my_mass, my_total_mass = [you.db.mass or 10, you.get_mass() if hasattr(you, 'get_mass') else '- unknown -']
+            string = "|wYou (%s) and what you carry (%s) total |y%s|n:\n%s" % (mass_unit(my_mass),
+                                                                               mass_unit(my_total_mass - my_mass),
+                                                                               mass_unit(my_total_mass), table)
         you.msg(string)
