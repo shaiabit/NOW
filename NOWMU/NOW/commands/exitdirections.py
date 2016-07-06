@@ -6,6 +6,7 @@ from django.db.models import Q
 from evennia.objects.models import ObjectDB
 from evennia.utils.utils import inherits_from, class_from_module
 
+
 class CmdExit(default_cmds.MuxCommand):
     """
     Simple destinations are stored on the room in its 'exits' attribute in a dictionary.
@@ -13,14 +14,16 @@ class CmdExit(default_cmds.MuxCommand):
     which create a new database object.  Simple exits use much less database space.
     Actual exit objects superceed simple exits in every way.
     Usage:
-    <direction>
+    |w<|ydirection|w><|glist of switches|w> <|ydestination|w>|n
     Switches:
-    /add [name]  adds simple exit to destination in the given direction.
-    /del         removes simple exit in given direction.
-    /tun <name>  adds simple exit from destination in opposite direction.
-    /new [name]  creates a new room of given name as destination.
-    /go          after any above operations, move to destination.
-    /show        shows room exit information and back exit from <direction>.
+    |g/add|n [name starts with or alias]  adds simple exit to destination in the given direction.
+    |g/del|n  removes simple exit in given direction.
+    |g/tun|n <name>   adds simple exit from destination in opposite direction.
+    |g/both|n <name>  adds simple exit to destination and back in opposite direction.
+    |g/none|n <name>  removes simple exit to destination and back in opposite direction.
+    |g/new|n [name;alias;...]  creates a new room of given name as destination.
+    |g/go|n  after any above operations, move to destination.
+    |g/show|n  shows room exit information and back exit from <direction>.
 
     Switches combine in some combinations e.g. west/del/tun/go would remove the exits
     into and out of the room in the given direction, then take you to the destination room.
@@ -28,7 +31,7 @@ class CmdExit(default_cmds.MuxCommand):
     This command never deletes rooms, but can create them in a simple fashion when needed.
     """
     locks = 'cmd:all()'
-    arg_regex = r"^/|\s|$"
+    arg_regex = r'^/|\s|$'
     help_category = 'Travel'
     auto_help = True
     player_caller = True
@@ -38,6 +41,11 @@ class CmdExit(default_cmds.MuxCommand):
         you = self.character
         loc = you.location
         player = self.player
+        cmd = self.cmdstring
+        switches = self.switches
+        args = self.args.strip()
+        direction = self.aliases[0]
+        dest = None  # Hopeful destination for exits and moving to.
 
         def new_room(room_name):
             """
@@ -53,21 +61,28 @@ class CmdExit(default_cmds.MuxCommand):
                 you.msg("You must have |wBuilders|n or higher access to create a new room.")
                 return None
 
+            name, aliases = '', []
+            if ';' in room_name:  # Parse aliases out of room_name.
+                name, aliases = room_name.strip().split(';', 1)
+                aliases = aliases.split(';')
+            else:  # No aliases provided; aliases remain empty.
+                name = room_name.strip()
+
             typeclass = settings.BASE_ROOM_TYPECLASS
-            room = {'name': room_name.strip(), 'aliases': ''}  # No alias parsing. TODO?
+            room = {'name': name, 'aliases': aliases}
             lockstring = "control:id(%s) or perm(Immortals); delete:id(%s)" \
                          " or perm(Wizards); edit:id(%s) or perm(Wizards)"
             lockstring = lockstring % (self.caller.dbref, self.caller.dbref, self.caller.dbref)
             r = create.create_object(typeclass, room['name'], aliases=room['aliases'], report_to=you)
             r.locks.add(lockstring)
-            alias_string = ''  # No parsing for aliases here yet, so new rooms never have aliases.
+            alias_string = room['aliases']
             if r.aliases.all():
-                alias_string = " (%s)" % ", ".join(r.aliases.all())
-            self.caller.msg("Created room %s(%s)%s of type %s." % (r, r.dbref, alias_string, typeclass))
+                alias_string = " |w(|c%s|w)|n" % "|n, |c".join(r.aliases.all())
+            player.msg("|gCreated room %s%s of type |m%s." % (r.get_display_name(player), alias_string, typeclass))
             return r or None
 
         def find_by_name(search):
-            search = search.strip()
+            search = search.strip().split(';', 1)[0]
             keyquery = Q(db_key__istartswith=search)
             aliasquery = Q(db_tags__db_key__istartswith=search,
                            db_tags__db_tagtype__iexact='alias')
@@ -77,109 +92,138 @@ class CmdExit(default_cmds.MuxCommand):
 
             if nresults:  # convert multiple results to typeclasses.
                 results = [result for result in results]
-                ROOM_TYPECLASS = settings.BASE_ROOM_TYPECLASS # Narrow results to only rooms.
-                results = [obj for obj in results if inherits_from(obj, ROOM_TYPECLASS)]
+                room_typeclass = settings.BASE_ROOM_TYPECLASS  # Narrow results to only room types.
+                results = [obj for obj in results if inherits_from(obj, room_typeclass)]
             return results
 
-        def add(you, loc, ways):
+        def add(you_add, loc_add, ways_add):
             """"Command for adding an exit - checks location and permissions."""
             results = find_by_name(self.args)
             if not results:
+                player.msg('Destination "|r%s|n" was not valid.' % args)
                 result = None
             else:
                 result = results[0]  # Arbitrarily select the first result of usually only one.
-            ways[self.aliases[0]] = result
-            you.msg("|ySearch found|n (%s)" % result.get_display_name(you) if result else None)
+            ways_add[direction] = result
+            you_add.msg("|ySearch found|n (%s)" % result.get_display_name(you) if result else None)
             if not result:
+                player.msg('Destination "|r%s|n" was not valid.' % args)
                 return None
-            if ways[self.aliases[0]]:
-                if loc.access(you, 'edit'):
-                    if ways[self.aliases[0]].access(you, 'control'):
-                        loc.db.exits = ways
-                        you.msg("|gAdded|n exit: %s from %s to %s." % (self.key, loc, ways[self.aliases[0]]))
+            if ways_add[direction]:
+                if loc_add.access(you_add, 'edit'):
+                    if ways_add[direction].access(you_add, 'control'):
+                        loc_add.db.exits = ways_add
+                        you_add.msg("|gAdded|n exit |530%s|n from %s to %s." %
+                                    (self.key, loc_add.get_display_name(player),
+                                     ways_add[direction].get_display_name(player)))
                     else:
-                        you.msg("You do not control the destination, so can not connect an exit to it.")
+                        you_add.msg("You do not control the destination, so can not connect an exit to it.")
                 else:
-                    you.msg("You have no permission to edit here.")
-                return ways[self.aliases[0]]
+                    you_add.msg("You have no permission to edit here.")
+                return ways_add[direction]
+            player.msg("You typed command (|y%s|n), switches (|%s|n), with no valid destination." %
+                       (cmd, switches))
+            player.msg('Destination "|r%s|n" was not valid.' % args)
             return None 
 
-        def back_dir(dir):
-            return {'n': 's', 's': 'n', 'e': 'w', 'w': 'e', 'nw': 'se', 'se': 'nw', 'ne': 'sw', 'sw': 'ne'}[dir]
+        def back_dir(x):
+            return {'n': 's', 's': 'n', 'e': 'w', 'w': 'e', 'nw': 'se', 'se': 'nw', 'ne': 'sw', 'sw': 'ne'}[x]
 
-        def long_dir(dir):
+        def long_dir(x):
             return {'n': 'north', 's': 'south', 'e': 'east', 'w': 'west', 'nw': 'northwest', 'se': 'southeast',
-                    'ne': 'northeast', 'sw': 'southwest'}[dir]
+                    'ne': 'northeast', 'sw': 'southwest'}[x]
 
-        def tun(you, loc, dest, dir):
+        def tun(you_tun, loc_tun, dest_tun, dir_tun):
             """Command for tunneling an exit back - checks existing exits, location and permissions."""
-            # Check dest for dict with entry back_dir(dir), 
-            tways = dest.db.exits if dest.db.exits else {}
-            tway = tways.get(back_dir(self.aliases[0]))
-            if tway:  # Is the direction in the room's exit dictionary?
+            tun_ways = dest.db.exits or {}
+            tun_way = tun_ways.get(back_dir(dir_tun))
+            if tun_way:  # Is the direction in the room's exit dictionary?
                 return None
             else:
-                tways[back_dir(self.aliases[0])] = loc
-                if dest.access(you, 'control'):
-                    dest.db.exits = tways
-                    you.msg("|gAdded|n exit: %s from %s to %s." % (long_dir(back_dir(self.aliases[0])), dest, loc))
+                tun_ways[back_dir(dir_tun)] = loc_tun
+                if dest_tun.access(you_tun, 'control'):
+                    dest_tun.db.exits = tun_ways
+                    you_tun.msg("|gAdded|n exit |530%s|n from %s to %s." %
+                                (long_dir(back_dir(dir_tun)), dest_tun.get_display_name(player),
+                                 loc_tun.get_display_name(player)))
                 else:
-                    you.msg("You do not control the destination, so can not connect an exit to it.")
-        dest = None  # Hopeful destination for exits and moving to.
-        if 'add' in self.switches and 'del' in self.switches:  # Can't do both!
-            you.msg("|g%s|r/add/del|n: Switches are mutually exclusive - Can't do both!" % self.cmdstring)
-            return  # No further action, not even check for /go.
+                    you_tun.msg("You do not control the destination, so can not connect an exit to it.")
+
+        if switches:  # Provide messages giving feedback for Tria
+            switch_list = '/' + '/'.join(switches)
+            if args:
+                player.msg("Showing direction, switches, destination: |y%s|g%s |y%s" %
+                           (cmd, switch_list, args))
+            else:
+                player.msg("Showing direction and switches: |y%s|g%s|n, but no destination was given." %
+                           (cmd, switch_list))
+                if 'add' in switches or 'new' in switches or 'both' in switches:
+                    player.msg("Without a destination, |g/add|n or |g/new|n can not be done.")
+        else:
+            if args:
+                player.msg("Showing direction and destination: |y%s %s|n (No switches were provided - nothing to do.)"
+                           % (cmd, args))
+        if 'new' in switches and not args:
+            you.msg("|g%s|r/new|n requires a destination room to be given, e.g. |g%s/new |yWilderness" % (cmd, cmd))
+            return
+        if 'add' in switches or 'both' in switches:
+                if not args:
+                    you.msg("|g%s|r/add|n requires a destination room to be given, e.g. |g%s/add |yWilderness" %
+                            (cmd, cmd))
+                    return  # No further action, not even check for /go.
+                if 'del' in switches or 'none' in switches:  # Can't do both!
+                    you.msg("|rThose switches are mutually exclusive; do not do both!")
+                    return  # No further action, not even check for /go.
         if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
             ways = loc.db.exits
-            # Reference direction by short version of the direction name: self.aliases[0]
-            way = ways.get(self.aliases[0])
+            way = ways.get(direction)
             if way:  # Direction in the room's exit dictionary should know room.
                 dest = way
-                if 'del' in self.switches:
+                if 'del' in switches or 'none' in switches:
                     dest = way
-                    tway = back_dir(self.aliases[0])
-                    tways = dest.db.exits
+                    tunnel_way = back_dir(direction)
+                    tunnel_ways = dest.db.exits
                     if loc.access(you, 'edit'):
-                        del(ways[self.aliases[0]])
+                        del(ways[direction])
                         loc.db.exits = ways
-                        you.msg("|rRemoved|n exit %s from %s." % (self.key, loc))
-                    if 'tun' in self.switches and tways:
+                        you.msg("|rRemoved|n exit |530%s|n from %s." % (self.key, loc.get_display_name(player)))
+                    if ('tun' in switches or 'none' in switches) and tunnel_ways:
                         if dest.access(you, 'edit'):
-                            del(tways[tway])
-                            dest.db.exits = tways
-                            you.msg("|rRemoved|n exit %s from %s." % (long_dir(tway), dest))
+                            del(tunnel_ways[tunnel_way])
+                            dest.db.exits = tunnel_ways
+                            you.msg("|rRemoved|n exit |530%s|n from %s." %
+                                    (long_dir(tunnel_way), dest.get_display_name(player)))
                         else:
                             you.msg("You have no permission to edit here.")
-                elif 'add' in self.switches:
+                elif 'add' in switches or 'both' in switches:
                     if loc.access(you, 'edit'):
-                        you.msg("Exit %s to %s leading to %s already exists here." % (self.key, loc, dest))
+                        you.msg("Exit |530%s|n to %s leading to %s already exists here." %
+                                (self.key, loc.get_display_name(player), dest.get_display_name(player)))
                     else:
                         you.msg("You have no permission to edit here.")
-                if 'tun' in self.switches and 'del' not in self.switches:
-                    dir = self.aliases[0]
-                    tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
-                if 'new' in self.switches:
+                if ('tun' in switches or 'both' in switches) and not ('del' in switches or 'none' in switches):
+                    tun(you, loc, dest, direction)  # Add is done, now see if tun can be done.
+                if 'new' in switches:
                     you.msg("Can't make a new room, already going to %s." % dest)
-                if 'go' in self.switches:
-                    you.move_to(dest)
-                if not self.switches:
+                if 'go' in switches or not switches:
+                    if 'show' in switches:
+                        you.msg("Ignoring |g/show|n switch; you must use it separately.")
                     you.move_to(dest)
             else:  # No direction in the room's exit dictionary goes that way. Or direction goes to None.
-                if 'new' in self.switches:
+                if 'new' in switches:
                     dest = new_room(self.args)
-                if 'add' in self.switches:
+                if 'add' in switches or 'both' in switches:
                     add(you, loc, ways)
-                elif 'del' in self.switches:
-                    if ways.has_key(self.aliases[0]):
-                        del(ways[self.aliases[0]])
-                        you.msg("Exit %s was not valid. (|rremoved|n)" % self.key)
+                elif 'del' in switches or 'none' in switches:
+                    if direction in ways:
+                        del(ways[direction])
+                        you.msg("Exit |530%s|n was not valid. (|rremoved|n)" % self.key)
                     else:
-                        you.msg("Exit %s does not exist here." % self.key)
-                if 'tun' in self.switches:
-                    dir = self.aliases[0]
-                    dest = ways.get(dir)
+                        you.msg("Exit |530%s|n does not exist here." % self.key)
+                if 'tun' in switches or 'both' in switches:
+                    dest = ways.get(direction)
                     if dest:
-                        tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
+                        tun(you, loc, dest, direction)  # Add is done, now see if tun can be done.
                     else:
                         if self.args:
                             you.msg("|ySearching|n for \"%s\" to the %s." % (self.args, self.key))
@@ -187,67 +231,74 @@ class CmdExit(default_cmds.MuxCommand):
                             if dest:
                                 dest = dest[0]
                                 you.msg("|gFound|n \"%s\" to the %s." % (dest, self.key))
-                                tun(you, loc, dest, dir)  # Add not done, but see if tun can be done.
+                                tun(you, loc, dest, direction)  # Add not done, but see if tun can be done.
                             else:
                                 you.msg(
                                     "|rDestination room not found|n \"{0:s}\" to the {1:s} when searching by: {2:s}."
                                     .format(dest, self.key, self.args))
                         else:
                             you.msg("|yYou must supply a name or alias of the target room.|n")
-                if 'go' in self.switches:
-                    if 'add' in self.switches: 
-                        you.move_to(ways[dir])
+                if 'go' in switches:
+                    if 'show' in switches:
+                        you.msg("Ignoring |g/show|n switch; you must use it separately.")
+                    if 'add' in switches or 'both' in switches:
+                        you.move_to(ways[direction])
                     else:
-                        if 'tun' in self.switches and dest:
+                        if ('tun' in switches or 'both' in switches) and dest:
+                            if 'show' in switches:
+                                you.msg("Ignoring |g/show|n switch; you must use it separately.")
                             you.move_to(dest)
-                if not self.switches:
-                    if ways.has_key(self.aliases[0]):
-                        del(ways[self.aliases[0]])
-                        you.msg("Exit %s was not valid. (|rremoved|n)" % self.key)
+                if not switches:
+                    if direction in ways:
+                        del(ways[direction])
+                        you.msg("Exit |530%s|n was not valid. (|rremoved|n)" % self.key)
                     else:
                         you.msg("You cannot travel %s." % self.key)
         else:  # No simple exits from this location.
             ways = {}
             way = None
             dest = way
-            if 'new' in self.switches:
+            if 'new' in switches:
                 dest = new_room(self.args)
-            if 'add' in self.switches:
+            if 'add' in switches or 'both' in switches:
                 dest = add(you, loc, ways)
-            elif 'del' in self.switches:
-                if 'tun' in self.switches:
+            elif 'del' in switches or 'none' in switches:
+                if 'tun' in switches or 'both' in switches:
                     # TODO: If 'tun' option is also used - 
                     # there is no easy way to find it to delete it.
                     pass
                 else:
-                    you.msg("No simple exit %s to delete." % self.key)
-            if 'tun' in self.switches and 'del' not in self.switches:
-                if 'add' in self.switches:
-                    dir = self.aliases[0]
-                    dest = ways[dir]
-                    tun(you, loc, dest, dir)  # Add is done, now see if tun can be done.
+                    you.msg("No simple exit |530%s|n to delete." % self.key)
+            if ('tun' in switches and 'both' in switches) and ('del' not in switches and 'none' not in switches):
+                if 'add' in switches or 'both' in switches:
+                    dest = ways[direction]
+                    tun(you, loc, dest, direction)  # Add is done, now see if tun can be done.
                 else:
                     # TODO: Test - does this only work with 'add' option?
                     # It requires a destination, if not.
                     pass
-            if 'go' in self.switches and way:
+            if 'go' in switches and way:
+                if 'show' in switches:
+                    you.msg("No simple exits to |g/show|n in this room.")
                 you.move_to(dest)
-            if not self.switches:
+            if not switches:
                 you.msg("You cannot travel %s." % self.key)
-        if 'show' in self.switches:
+        if 'show' in switches and 'go' not in switches:
             if not player.check_permstring('Helpstaff'):
-                self.caller.msg("You must have |gHelpstaff|n or higher access to use this.")
+                you.msg("You must have |gHelpstaff|n or higher access to use this.")
                 return None
             if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
                 ways = loc.db.exits
-                dir = self.aliases[0]
-                dest = ways[dir]
-                you.msg("Simple exits exist in %s: %s" % (you.location.get_display_name(you), ways))
-                tways = dest.db.exits
-                if tways:
-                    tway = tways.get(back_dir(self.aliases[0]))
-                    you.msg("Simple exit exists in %s going %s back to %s." %
-                            (dest.get_display_name(you), long_dir(back_dir(self.aliases[0])),
+                if direction in ways:
+                    dest = ways[direction] if ways else None
+                you.msg("|wSimple exits report: %s exist in %s: %s" %
+                        (len(ways), you.location.get_display_name(you), ways))
+                tunnel_ways = None
+                if dest:
+                    tunnel_ways = dest.db.exits
+                if tunnel_ways:
+                    you.msg("|wSimple exit report|n: exists in %s going |530%s|n back to %s." %
+                            (dest.get_display_name(you), long_dir(back_dir(direction)),
                              you.location.get_display_name(you)))
             else:
                 you.msg("No simple exits exist in %s." % you.location.get_display_name(you))
