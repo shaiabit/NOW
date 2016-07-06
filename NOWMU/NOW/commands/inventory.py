@@ -25,14 +25,14 @@ class CmdInventory(default_cmds.MuxCommand):
         else:
             table = evtable.EvTable(border='header')
             for item in items:
-                imass = mass_unit(item.get_mass()) if hasattr(item, 'get_mass') else '- unknown -'
-                second = '(|y%s|n) ' % imass if 'weight' in self.switches else ''
-                second += item.db.desc_brief or item.db.desc
-                table.add_row('%s' % item.mxp_name(you.sessions, '@verb #%s' % item.id)
+                i_mass = mass_unit(item.get_mass()) if hasattr(item, 'get_mass') else '- unknown -'
+                second = '(|y%s|n) ' % i_mass if 'weight' in self.switches else ''
+                second += item.db.desc_brief or item.db.desc or ''
+                table.add_row('%s' % item.mxp_name(you.sessions, 'sense #%s' % item.id)
                               if hasattr(item, 'mxp_name')
-                              else item.get_display_name(you.sessions), second and second or '')
-            imass = you.get_mass() if hasattr(item, 'get_mass') else '- unknown -'
+                              else item.get_display_name(you.sessions), second or '')
+            my_mass = you.get_mass() if hasattr(you, 'get_mass') else '- unknown -'
             string = "|wYou (%s) and what you carry (%s) total |y%s|n:\n%s" % (mass_unit(you.db.mass),
-                                                                               mass_unit(imass - you.db.mass),
-                                                                               mass_unit(imass), table)
+                                                                               mass_unit(my_mass - you.db.mass),
+                                                                               mass_unit(my_mass), table)
         you.msg(string)
