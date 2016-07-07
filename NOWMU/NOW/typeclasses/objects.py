@@ -22,6 +22,7 @@ from evennia.utils import lazy_property
 from traits import TraitHandler
 from effects import EffectHandler
 
+
 class Object(DefaultObject):
     """
     This is the root typeclass object, implementing an in-game Evennia
@@ -224,7 +225,46 @@ class Object(DefaultObject):
 
     def at_get(self, caller):
         """Called after getting an object in the room."""
-        caller.msg("%s is now in your posession." % self.mxp_name(caller, '@verb #%s' % self.id))
+        caller.msg("%s is now in your posession." % self.mxp_name(caller, 'sense #%s' % self.id))
+
+    def announce_move_from(self, destination):
+        """
+        Called if the move is to be announced. This is
+        called while we are still standing in the old
+        location.
+        Args:
+            destination (Object): The place we are going to.
+        """
+        if not self.location:
+            return
+        name = self.name
+        loc_name = self.location.name
+        dest_name = destination.name
+        string = "%s%s|n is leaving %s%s|n, heading for %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+                                                                    destination.STYLE, dest_name)
+        self.location.msg_contents(string, exclude=self)
+
+    def announce_move_to(self, source_location):
+        """
+        Called after the move if the move was not quiet. At this point
+        we are standing in the new location.
+        Args:
+            source_location (Object): The place we came from
+        """
+        name = self.name
+        if not source_location and self.location.has_player:
+            # This was created from nowhere and added to a player's
+            # inventory; it's probably the result of a create command.
+            string = "You now have %s%s|n in your possession." % (self.STYLE, name)
+            self.location.msg(string)
+            return
+        src_name = "nowhere"
+        loc_name = self.location.name
+        if source_location:
+            src_name = source_location.name
+        string = "%s%s|n arrives to %s%s|n from %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+                                                            source_location.STYLE, src_name)
+        self.location.msg_contents(string, exclude=self)
 
     def at_object_creation(self):
             """Called after object is created."""
@@ -233,12 +273,12 @@ class Object(DefaultObject):
 
     def drop(self, pose, caller):
         """Implements the attempt to drop this object."""
-        if self.location != caller: # If caller is not holding object,
+        if self.location != caller:  # If caller is not holding object,
             caller.msg("You do not have %s." % self.get_display_name(caller))
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
         caller.location.msg_contents("%s |g%s|n drops %s." %
-            (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
+                                     (pose, caller.key, self.mxp_name(caller, 'sense #%s' % self.id)))
         self.at_drop(caller)  # Call at_drop() method.
 
     def get(self, pose, caller):
@@ -249,7 +289,7 @@ class Object(DefaultObject):
             caller.msg("You already have %s." % self.get_display_name(caller))
         elif self.move_to(caller, quiet=True):
             caller.location.msg_contents("%s |g%s|n takes %s." %
-                (pose, caller.key, self.get_display_name(caller)))
+                                         (pose, caller.key, self.get_display_name(caller)))
             self.at_get(caller)  # calling hook method
 
     def surface_put(self, pose, caller, connection):
@@ -276,7 +316,7 @@ class Object(DefaultObject):
                 self.attributes.remove('locked')
             caller.attributes.remove('locked')
             caller.location.msg_contents("%s |r%s|n leaves %s." %
-                                         (pose, caller.key, self.mxp_name(caller, '@verb #%s' % self.id)))
+                                         (pose, caller.key, self.mxp_name(caller, 'sense #%s' % self.id)))
             return True
         return False
 
@@ -316,7 +356,7 @@ class Object(DefaultObject):
             else:
                 things.append(con)
         # get description, build string
-        string = self.mxp_name(viewer, '@verb #%s' % self.id)
+        string = self.mxp_name(viewer, 'sense #%s' % self.id)
         string += " (%s)" % mass_unit(self.get_mass())
         if self.db.surface:
             string += " -- %s" % self.db.surface
@@ -416,7 +456,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
 
     def eat(self, caller):  # TODO: Make this use a more generic def consume
         """Response to eating the object."""
-        if not self.locks.check_lockstring(caller,'holds()'):
+        if not self.locks.check_lockstring(caller, 'holds()'):
             msg = "You are not holding %s." % self.get_display_name(caller.sessions)
             caller.msg(msg)
             return False
@@ -430,7 +470,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
             finish = ', finishing it'
             self.location = None
         msg = "%s takes a bite of %s%s." % (caller.get_display_name(caller.sessions),
-            self.get_display_name(caller.sessions), finish)
+                                            self.get_display_name(caller.sessions), finish)
         caller.location.msg_contents(msg)
 
 
@@ -442,6 +482,30 @@ class Tool(Consumable):
     STYLE = '|511'
 
     # Currently there is nothing special about a tool compared to a Consumable.
+
+
+class Vehicle(Tool):
+    """
+    This is the Vehicle typeclass object, implementing an in-game
+    object, to be used to travel at high speeds and, alter, or
+    destroy other objects.
+    """
+    STYLE = '|y|[004'
+
+    def at_object_creation(self):
+        """Called after object is created."""
+        super(Object, self).at_object_creation()
+        self.cmdset.add('commands.vehicle.VehicleCmdSet', permanent=True)
+
+    # Vehicle needs command set that may include speed and direction control,
+    # with a way to limit both speed and direction, and only allow movement
+    # into specially tagged areas, such as outside, air, cloud, road or offroad.
+    # Water or underwater vehicles might be limited to only those tagged rooms.
+    # Some public vehicles might even be limited to public places.
+
+    # Also important is the entry/exit of both the contain-type vehicle and
+    # the surface-passenger type.  The contain type will require additional
+    # mechanisms for viewing the room and also posing, broadcasting, and listening.
 
 
 class Dispenser(Consumable):
@@ -464,10 +528,10 @@ class Dispenser(Consumable):
         if True:
             caller.msg(self.db.no_more_weapons_msg)
         else:
-            prototype = random.choice(self.db.available_weapons)
+            # prototype = random.choice(self.db.available_weapons)
             # use the spawner to create a new Weapon from the
             # spawner dictionary, tag the caller
-            wpn = spawn(WEAPON_PROTOTYPES[prototype], prototype_parents=WEAPON_PROTOTYPES)[0]
+            # wpn = spawn(WEAPON_PROTOTYPES[prototype], prototype_parents=WEAPON_PROTOTYPES)[0]
             caller.tags.add(rack_id, category='tutorial_world')
-            wpn.location = caller
-            caller.msg(self.db.get_weapon_msg % wpn.key)
+            # wpn.location = caller
+            # caller.msg(self.db.get_weapon_msg % wpn.key)
