@@ -39,7 +39,7 @@ class CmdTeleport(default_cmds.MuxCommand):
             return
 
         # setting switches
-        tel_quietly = 'quiet' in switches
+        tel_quietly = 'quiet' in switches or 'silent' in switches
         to_none = 'tonone' in switches
 
         if to_none:  # teleporting to None
@@ -76,7 +76,11 @@ class CmdTeleport(default_cmds.MuxCommand):
             caller.msg("Destination not found.")
             return
         if obj_to_teleport == destination:
-            caller.msg("You can't teleport an object inside of itself!")
+            caller.msg("You can not teleport an object inside of itself!")
+            return
+        print("%s is trying to go to %s" % (obj_to_teleport.key, destination.location))
+        if obj_to_teleport == destination.location:
+            caller.msg("You can not teleport an object inside something it holds!")
             return
         if obj_to_teleport.location and obj_to_teleport.location == destination:
             caller.msg("%s is already at %s." % (obj_to_teleport, destination))
