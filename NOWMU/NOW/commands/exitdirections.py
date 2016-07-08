@@ -46,6 +46,13 @@ class CmdExit(default_cmds.MuxCommand):
         args = self.args.strip()
         direction = self.aliases[0]
         dest = None  # Hopeful destination for exits and moving to.
+        switches = self.switches
+        switches_list = [u'add', u'del', u'tun', u'both', u'none', u'new', u'go', u'show']
+
+        if switches and not all(x in switches_list for x in switches):
+            player.msg("You used an unknown switch for |530%s|n. Use only these: |g/%s" %
+                       (self.key, "|n, |g/".join(switches_list)))
+            return
 
         def new_room(room_name):
             """
