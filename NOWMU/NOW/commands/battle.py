@@ -764,7 +764,7 @@ class CmdFight(default_cmds.MuxCommand):
         here = char.location
         fighters = []
         if not here.db.CombatAllowed:
-            self.caller.msg("%s%s is not a place for battles!" % (here.STYLE, here.key))
+            self.caller.msg("%s%s|n is no place for battles!" % (here.STYLE, here.key))
             return
         for thing in here.contents:
             if thing.db.HP:
