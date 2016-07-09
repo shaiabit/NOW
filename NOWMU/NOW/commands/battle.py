@@ -4,8 +4,9 @@ Commands
 Commands describe the input the player can do to the game.
 
 """
-from evennia import Command as BaseCommand
+from evennia import CmdSet
 from evennia import default_cmds
+from evennia import Command as BaseCommand
 from evennia import utils
 from evennia.utils import evmenu
 from world import rules
@@ -13,126 +14,15 @@ from random import randint
 import math
 
 
-class Command(BaseCommand):
-    """
-    Inherit from this if you want to create your own
-    command styles. Note that Evennia's default commands
-    use MuxCommand instead (next in this module).
+class BattleCmdSet(CmdSet):
+    key = 'battle'
 
-    Note that the class's `__doc__` string (this text) is
-    used by Evennia to create the automatic help entry for
-    the command, so make sure to document consistently here.
-
-    Each Command implements the following methods, called
-    in this order:
-        - at_pre_command(): If this returns True, execution is aborted.
-        - parse(): Should perform any extra parsing needed on self.args
-            and store the result on self.
-        - func(): Performs the actual work.
-        - at_post_command(): Extra actions, often things done after
-            every command, like prompts.
-
-    """
-    key = "MyCommand"
-    aliases = []
-    locks = "cmd:all()"
-    help_category = "General"
-
-    def at_pre_cmd(self):
-        """
-        This hook is called before `self.parse()` on all commands.
-        """
-        pass
-
-    def parse(self):
-        """
-        This method is called by the `cmdhandler` once the command name
-        has been identified. It creates a new set of member variables
-        that can be later accessed from `self.func()` (see below).
-
-        The following variables are available to us:
-           # class variables:
-
-           self.key - the name of this command ('mycommand')
-           self.aliases - the aliases of this cmd ('mycmd','myc')
-           self.locks - lock string for this command ("cmd:all()")
-           self.help_category - overall category of command ("General")
-
-           # added at run-time by `cmdhandler`:
-
-           self.caller - the object calling this command
-           self.cmdstring - the actual command name used to call this
-                            (this allows you to know which alias was used,
-                             for example)
-           self.args - the raw input; everything following `self.cmdstring`.
-           self.cmdset - the `cmdset` from which this command was picked. Not
-                         often used (useful for commands like `help` or to
-                         list all available commands etc).
-           self.obj - the object on which this command was defined. It is often
-                         the same as `self.caller`.
-        """
-        pass
-
-    def func(self):
-        """
-        This is the hook function that actually does all the work. It is called
-        by the `cmdhandler` right after `self.parser()` finishes, and so has access
-        to all the variables defined therein.
-        """
-        self.caller.msg("Command called!")
-
-    def at_post_cmd(self):
-        """This hook is called after `self.func()`."""
-        pass
+    def at_cmdset_creation(self):
+        """Add command to the set - this set will be attached to the vehicle object (item or room)."""
+        self.add(CmdStat())
 
 
-class MuxCommand(default_cmds.MuxCommand):
-    """
-    This sets up the basis for Evennia's 'MUX-like' command style.
-    The idea is that most other Mux-related commands should
-    just inherit from this and don't have to implement parsing of
-    their own unless they do something particularly advanced.
-
-    A MUXCommand command understands the following possible syntax:
-
-        name[ with several words][/switch[/switch..]] arg1[,arg2,...] [[=|,] arg[,..]]
-
-    The `name[ with several words]` part is already dealt with by the
-    `cmdhandler` at this point, and stored in `self.cmdname`. The rest is stored
-    in `self.args`.
-
-    The MuxCommand parser breaks `self.args` into its constituents and stores them
-    in the following variables:
-        self.switches = optional list of /switches (without the /).
-        self.raw = This is the raw argument input, including switches.
-        self.args = This is re-defined to be everything *except* the switches.
-        self.lhs = Everything to the left of `=` (lhs:'left-hand side'). If
-                     no `=` is found, this is identical to `self.args`.
-        self.rhs: Everything to the right of `=` (rhs:'right-hand side').
-                    If no `=` is found, this is `None`.
-        self.lhslist - `self.lhs` split into a list by comma.
-        self.rhslist - list of `self.rhs` split into a list by comma.
-        self.arglist = list of space-separated args (including `=` if it exists).
-
-    All args and list members are stripped of excess whitespace around the
-    strings, but case is preserved.
-    """
-
-    def func(self):
-        """
-        This is the hook function that actually does all the work. It is called
-        by the `cmdhandler` right after `self.parser()` finishes, and so has access
-        to all the variables defined therein.
-        """
-        # this can be removed in your child class, it's just
-        # printing the ingoing variables as a demo.
-        super(MuxCommand, self).func()
-
-    def at_post_cmd(self):
-        """Called after self.func()"""
-        rules.prompt_update(self.caller)
-
-class CmdSetStat(MuxCommand):
+class CmdStat(default_cmds.MuxCommand):
     """
     Set the stat of a character
 
@@ -142,13 +32,24 @@ class CmdSetStat(MuxCommand):
     This sets the stat of the current character.
     This can only be used during character generation.
     """
-    key = 'setstat'
+    key = 'stat'
     help_category = 'battle'
 
     def func(self):
-        """This performs the actual command"""
-        errmsg = "You must supply a valid stat name and a number between 0 and 10.|/Syntax: |555setstat [stat]" \
-                 " = [1-10]|n"
+        """
+        'reset' option sets a character's stats all back to 6.
+        """
+        cmd = self.cmdstring
+        switches = self.switches
+        if 'reset' in switches:
+            self.caller.msg("All stats reset to 6.")
+            for stat in ('ATM', 'DEF', 'VIT', 'ATR', 'MOB', 'SPE'):
+                self.caller.attributes.add(stat, 6)
+            self.caller.db.HP = 18
+            self.caller.db.SP = 12
+            return
+        errmsg = "You must supply a valid stat name and a number" \
+                 " between 0 and 10.|/Syntax: |555%s [stat] = [1-10]|n" % cmd
         if not self.args:
             self.caller.msg(errmsg)
             return
@@ -218,31 +119,7 @@ class CmdSetStat(MuxCommand):
                             (remain, point))
 
 
-class CmdResetStats(MuxCommand):
-    """
-    Set the stat of a character
-
-    Usage:
-      resetstats
-
-    This sets a character's stats all back to 6.
-    This can only be used during character generation.
-    """
-    key = 'resetstats'
-    help_category = 'battle'
-
-    def func(self):
-        """
-        This performs the actual command.
-        """
-        self.caller.msg("All stats reset to 6.")
-        for stat in ('ATM', 'DEF', 'VIT', 'ATR', 'MOB', 'SPE'):
-            self.caller.attributes.add(stat, 6)
-        self.caller.db.HP = 18
-        self.caller.db.SP = 12
-
-
-class CmdRangeMessage(MuxCommand):
+class CmdRangeMessage(default_cmds.MuxCommand):
     """
     Lets you set pre-defined messages for your attacks.
 
@@ -330,7 +207,7 @@ class CmdRangeMessage(MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdMeleeMessage(MuxCommand):
+class CmdMeleeMessage(default_cmds.MuxCommand):
     """
     Lets you set pre-defined messages for your close range attacks.
 
@@ -403,7 +280,7 @@ class CmdMeleeMessage(MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdSpecialMessage(MuxCommand):
+class CmdSpecialMessage(default_cmds.MuxCommand):
     """Lets you set pre-defined messages for your special moves."""
     key = 'specialmessage'
     help_category = 'battle'
@@ -465,7 +342,7 @@ class CmdSpecialMessage(MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdAttack(MuxCommand):
+class CmdAttack(default_cmds.MuxCommand):
     """
     Attack another character in combat.
     Usage:
@@ -480,7 +357,6 @@ class CmdAttack(MuxCommand):
 
     > attack Antagonist A kick from <self> heads for <target>!
     A kick from Protagonist heads for Antagonist! |522[Melee attack roll vs. Antagonist: |5442|522]|n
-
 
     The 'attack' command can only be used once a fight has started (see 'help
     fight'). When used, it makes a random attack roll against your given target. The
@@ -512,15 +388,16 @@ class CmdAttack(MuxCommand):
         cmd_check = rules.cmd_check(self.caller, self.args, "attack",
                                     ['InCombat', 'IsTurn', 'HasHP', 'HasAction', 'AttacksResolved',
                                      'NeedsTarget', 'TargetNotSelf', 'TargetInFight', 'TargetHasHP'])
+        attack_message = ''
         if cmd_check:
             self.caller.msg(cmd_check)
             return
         # Since the input was tested as valid, set the target here.
         target = self.caller.search(self.arglist[0])
         # Attack type is ranged if target is farther than range 0, or melee if target is at range 0
-        attack_type = "ranged"
+        attack_type = 'ranged'
         if self.caller.db.Combat_Range[target] == 0:
-            attack_type = "melee"
+            attack_type = 'melee'
         # Check the attack type versus the target and give an error message if needed.
         type_check = rules.attack_type_check(self.caller, target, attack_type, [])
         if type_check:
@@ -528,17 +405,17 @@ class CmdAttack(MuxCommand):
             return
         if len(self.arglist) > 0:
             target = self.arglist[0]
-            attack_message = "default"
+            attack_message = 'default'
         if len(self.arglist) > 1:
             target = self.arglist[0]
             attack_message = self.args.split(None, 1)[1]
         # If everything checks out, queue the attack and spend the action.
         rules.queue_attack(self.caller, target, attack_message, [], attack_type)
-        self.caller.db.Combat_LastAction = "attack"
+        self.caller.db.Combat_LastAction = 'attack'
         self.caller.db.Combat_Actions -= 1
 
 
-class CmdSecond(MuxCommand):
+class CmdSecond(default_cmds.MuxCommand):
     """
     Use your second attack as part of a special move with the
     'Double Attack' effect. It must be of the same type as the
@@ -583,7 +460,7 @@ class CmdSecond(MuxCommand):
         del self.caller.db.Combat_Second
 
 
-class CmdDefend(MuxCommand):
+class CmdDefend(default_cmds.MuxCommand):
     """
     Defend from an attack in combat.
 
@@ -625,7 +502,7 @@ class CmdDefend(MuxCommand):
             rules.defend_queue(self.caller, 'defend', [])
 
 
-class CmdEndure(MuxCommand):
+class CmdEndure(default_cmds.MuxCommand):
     """
     Defend from an attack in combat.
 
@@ -656,7 +533,7 @@ class CmdEndure(MuxCommand):
             rules.defend_queue(self.caller, "endure", [])
 
 
-class CmdRest(MuxCommand):
+class CmdRest(default_cmds.MuxCommand):
     """
     Restores all HP and SP. You must be in the recovery bay
     in order to use this command - use the 'return' command
@@ -682,7 +559,7 @@ class CmdRest(MuxCommand):
         rules.recover(self.caller)
 
 
-class CmdReturn(MuxCommand):
+class CmdReturn(default_cmds.MuxCommand):
     """
     Returns you to the Institute of Battle's recovery bay.
     """
@@ -711,7 +588,7 @@ class CmdReturn(MuxCommand):
         self.caller.location.msg_contents("%s appears in a flash of glowing green light." % self.caller)
 
 
-class CmdAlly(MuxCommand):
+class CmdAlly(default_cmds.MuxCommand):
     """
     View, add, or remove allies.
 
@@ -793,7 +670,7 @@ class CmdAlly(MuxCommand):
             self.caller.msg("You no longer consider %s an ally." % target)
 
 
-class CmdStats(MuxCommand):
+class CmdStats(default_cmds.MuxCommand):
     """
     Displays your stats as well as your current HP and SP.
 
@@ -853,25 +730,26 @@ class CmdStats(MuxCommand):
     def func(self):
         """This performs the actual command."""
         name = self.caller
-        attackmelee = self.caller.db.ATM
+        attack_melee = self.caller.db.ATM
         defense = self.caller.db.DEF
         vitality = self.caller.db.VIT
-        attackrange = self.caller.db.ATR
+        attack_range = self.caller.db.ATR
         mobility = self.caller.db.MOB
         special = self.caller.db.SPE
-        HP = self.caller.db.HP
-        SP = self.caller.db.SP
-        MaxHP = max(self.caller.db.VIT * 3, 1)
-        MaxSP = self.caller.db.SPE * 2
-        CurrentHP = ("%i/%i" % (HP, MaxHP))
-        CurrentSP = ("%i/%i" % (SP, MaxSP))
+        hp = self.caller.db.HP
+        sp = self.caller.db.SP
+        max_hp = max(self.caller.db.VIT * 3, 1)
+        max_sp = self.caller.db.SPE * 2
+        current_hp = ("%i/%i" % (hp, max_hp))
+        current_sp = ("%i/%i" % (sp, max_sp))
         self.caller.msg("%s's Stats:|/-------------------------|/   |522ATM: |544%i|n     |525ATR: |545%i|n|/"
                         "   |225DEF: |445%i|n     |552MOB: |554%i|n|/   |252VIT: |454%i|n     |255SPE:"
                         " |455%i|n|/-------------------------|/  |252HP:|n %s   |255SP|n: %s" %
-                        (name, attackmelee, attackrange, defense, mobility, vitality, special, CurrentHP, CurrentSP))
+                        (name, attack_melee, attack_range, defense, mobility, vitality, special,
+                         current_hp, current_sp))
 
 
-class CmdFight(MuxCommand):
+class CmdFight(default_cmds.MuxCommand):
     """
     Starts a fight with everyone in the current room.
     """
@@ -882,10 +760,11 @@ class CmdFight(MuxCommand):
         """
         This performs the actual command.
         """
-        here = self.caller.location
+        char = self.character
+        here = char.location
         fighters = []
         if not here.db.CombatAllowed:
-            self.caller.msg("You're not allowed to fight here!")
+            self.caller.msg("%s%s is not a place for battles!" % (here.STYLE, here.key))
             return
         for thing in here.contents:
             if thing.db.HP:
@@ -901,7 +780,7 @@ class CmdFight(MuxCommand):
         here.scripts.add("scripts.TurnHandler")
 
 
-class CmdPass(MuxCommand):
+class CmdPass(default_cmds.MuxCommand):
     """Passes on your turn."""
     key = 'pass'
     aliases = ["wait", "hold"]
@@ -929,7 +808,7 @@ class CmdPass(MuxCommand):
             del self.caller.db.Combat_Second
 
 
-class CmdDisengage(MuxCommand):
+class CmdDisengage(default_cmds.MuxCommand):
     """Like 'pass', but can end combat."""
     key = "disengage"
     aliases = ["spare"]
@@ -957,7 +836,7 @@ class CmdDisengage(MuxCommand):
             del self.caller.db.Combat_Second
 
 
-class CmdWithdraw(MuxCommand):
+class CmdWithdraw(default_cmds.MuxCommand):
     """
     Moves away another character.
 
@@ -995,6 +874,7 @@ class CmdWithdraw(MuxCommand):
         cmd_check = rules.cmd_check(self.caller, self.args, "withdraw",
                                     ['InCombat', 'IsTurn', 'HasHP', 'HasMove', 'AttacksResolved',
                                      'NeedsTarget', 'TargetNotSelf', 'TargetInFight'])
+        who = ''
         if cmd_check:
             self.caller.msg(cmd_check)
             return
@@ -1021,7 +901,7 @@ class CmdWithdraw(MuxCommand):
         rules.ms_withdraw(self.caller, target, distance, "normal")
 
 
-class CmdApproach(MuxCommand):
+class CmdApproach(default_cmds.MuxCommand):
     """
     Moves toward another character.
 
@@ -1060,6 +940,7 @@ class CmdApproach(MuxCommand):
         cmd_check = rules.cmd_check(self.caller, self.args, "approach",
                                     ['InCombat', 'IsTurn', 'HasHP', 'HasMove', 'AttacksResolved',
                                      'NeedsTarget', 'TargetInFight', 'TargetNotSelf', 'TargetNotEngaged'])
+        who = ''
         if cmd_check:
             self.caller.msg(cmd_check)
             return
@@ -1082,7 +963,7 @@ class CmdApproach(MuxCommand):
         rules.ms_approach(self.caller, target, distance, "normal")
 
 
-class CmdDash(MuxCommand):
+class CmdDash(default_cmds.MuxCommand):
     """
     Spend your action to get more movement.
 
@@ -1130,7 +1011,7 @@ class CmdDash(MuxCommand):
             "%s |552[|554+%i|552 Movement]|n" % (message, int(math.ceil(float(self.caller.db.MOB) / 2))))
 
 
-class CmdCharge(MuxCommand):
+class CmdCharge(default_cmds.MuxCommand):
     """Prepare a special move."""
     key = "charge"
     aliases = ["ready", "prepare"]
@@ -1178,7 +1059,7 @@ class CmdCharge(MuxCommand):
         self.caller.location.msg_contents("%s |255[Charge: |455%s|255]|n" % (message, matchedspecial))
 
 
-class CmdRange(MuxCommand):
+class CmdRange(default_cmds.MuxCommand):
     """
     Displays your distance to other fighters in combat.
 
@@ -1255,7 +1136,7 @@ class CmdRange(MuxCommand):
             return
 
 
-class CmdSetSpecial(MuxCommand):
+class CmdSetSpecial(default_cmds.MuxCommand):
     """
     Launches the special move creation menu.
     """
@@ -1268,7 +1149,7 @@ class CmdSetSpecial(MuxCommand):
         evmenu.EvMenu(self.caller, 'typeclasses.special_menu', startnode='menunode_specialtype')
 
 
-class CmdSpecial(MuxCommand):
+class CmdSpecial(default_cmds.MuxCommand):
     """
     Use one of your special moves.
 
@@ -1325,92 +1206,90 @@ class CmdSpecial(MuxCommand):
             self.caller.msg("You already used a special move this turn!")
             return
         # First, let's try to match the first argument to a special move name.
-        matched = False
-        for specialname in self.caller.db.Special_Moves:
-            specialstring = specialname.lower()
-            argstring = self.arglist[0].lower()
-            if argstring in specialstring:
-                matched = specialname
-                if rules.special_cost(self.caller.db.Special_Moves[specialname][1]) > self.caller.db.SP:
+        # matched = False
+        for special_name in self.caller.db.Special_Moves:
+            if self.arglist[0].lower() in special_name.lower():
+                matched = special_name
+                if rules.special_cost(self.caller.db.Special_Moves[special_name][1]) > self.caller.db.SP:
                     self.caller.msg("|413You don't have enough SP to use %s!" % matched)
                     return
                 special_message = "default"
                 # If there's a 'Desperation Move' or 'Vital Move' effect, check the user's HP first.
-                if "Desperation Move" in self.caller.db.Special_Moves[specialname][1]:
+                if "Desperation Move" in self.caller.db.Special_Moves[special_name][1]:
                     if self.caller.db.HP > self.caller.db.VIT:
-                        self.caller.msg("|413You have too much HP to use %s!" % specialname)
+                        self.caller.msg("|413You have too much HP to use %s!" % special_name)
                         return
-                if "Vital Move" in self.caller.db.Special_Moves[specialname][1]:
+                if "Vital Move" in self.caller.db.Special_Moves[special_name][1]:
                     if self.caller.db.HP < self.caller.db.VIT * 2:
-                        self.caller.msg("|413You don't have enough HP to use %s!" % specialname)
+                        self.caller.msg("|413You don't have enough HP to use %s!" % special_name)
                         return
                 # If there's a 'Charge Move' effect, check to see if it's charged.
-                if "Charge Move" in self.caller.db.Special_Moves[specialname][1]:
-                    if not self.caller.db.Combat_Charged or specialname not in self.caller.db.Combat_Charged:
+                if "Charge Move" in self.caller.db.Special_Moves[special_name][1]:
+                    if not self.caller.db.Combat_Charged or special_name not in self.caller.db.Combat_Charged:
                         self.caller.msg(
                             "|413You need to spend an action to charge this move first! Use the 'charge' command!|n")
                         return
                     # Remove the special from the charged list.
-                    if specialname in self.caller.db.Combat_Charged:
-                        self.caller.db.Combat_Charged.remove(specialname)
+                    if special_name in self.caller.db.Combat_Charged:
+                        self.caller.db.Combat_Charged.remove(special_name)
                 # If there's an 'Opening Gambit' effect, check to see if the last action was null.
-                if "Opening Gambit" in self.caller.db.Special_Moves[specialname][1]\
+                if "Opening Gambit" in self.caller.db.Special_Moves[special_name][1]\
                         and self.caller.db.Combat_LastAction != "null":
-                    self.caller.msg("|413You can only use %s on your first turn in combat!|n" % specialname)
+                    self.caller.msg("|413You can only use %s on your first turn in combat!|n" % special_name)
                     return
                 # If the special type is a Special Melee Attack:
-                if self.caller.db.Special_Moves[specialname][0] == "Special Melee Attack":
+                if self.caller.db.Special_Moves[special_name][0] == "Special Melee Attack":
                     if len(self.arglist) < 2:
                         self.caller.msg("|413You need to specify a target!")
                         return
                     if len(self.arglist) > 2:
                         special_message = self.args.split(None, 2)[2]
                     # If everything checks out, move to the special_attack function as melee!
-                    self.special_attack(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.special_attack(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                         self.arglist[1], special_message, "melee")
                 # If the special type is a Special Ranged Attack:
-                if self.caller.db.Special_Moves[specialname][0] == "Special Ranged Attack":
+                if self.caller.db.Special_Moves[special_name][0] == "Special Ranged Attack":
                     if len(self.arglist) < 2:
                         self.caller.msg("|413You need to specify a target!")
                         return
                     if len(self.arglist) > 2:
                         special_message = self.args.split(None, 2)[2]
                     # If everything checks out, move to the special_attack function as ranged!
-                    self.special_attack(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.special_attack(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                         self.arglist[1], special_message, "ranged")
                 # If the special type is Support Self:
-                if self.caller.db.Special_Moves[specialname][0] == "Support Self":
+                if self.caller.db.Special_Moves[special_name][0] == "Support Self":
                     if len(self.arglist) > 1:
                         special_message = self.args.split(None, 1)[1]
                     # If everything checks out move to the support_self function!
-                    self.support_self(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.support_self(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                       special_message)
                 # If the special type is Support Other:
-                if self.caller.db.Special_Moves[specialname][0] == "Support Other":
+                if self.caller.db.Special_Moves[special_name][0] == "Support Other":
                     if len(self.arglist) < 2:
                         self.caller.msg("|413You need to specify a target!")
                         return
                     if len(self.arglist) > 2:
                         special_message = self.args.split(None, 2)[2]
                     # If everything checks out, move to the support other function!
-                    self.support_other(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.support_other(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                        self.arglist[1], special_message)
                 # If the special type is Hinder Other:
-                if self.caller.db.Special_Moves[specialname][0] == "Hinder Other":
+                if self.caller.db.Special_Moves[special_name][0] == "Hinder Other":
                     if len(self.arglist) < 2:
                         self.caller.msg("|413You need to specify a target!")
                         return
                     if len(self.arglist) > 2:
                         special_message = self.args.split(None, 2)[2]
                     # If everything checks out, move to the hinder other function!
-                    self.hinder_other(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.hinder_other(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                       self.arglist[1], special_message)
                 # If the special type is Special Defense:
-                if self.caller.db.Special_Moves[specialname][0] == "Special Defense":
+                if self.caller.db.Special_Moves[special_name][0] == "Special Defense":
                     if len(self.arglist) > 1:
                         special_message = self.args.split(None, 1)[1]
                     # If everything checks out move to the special_defense function!
-                    self.special_defense(self.caller, matched, self.caller.db.Special_Moves[specialname][1],
+                    self.special_defense(self.caller, matched, self.caller.db.Special_Moves[special_name][1],
                                          special_message)
                 return
         self.caller.msg("|413You don't have that special move!")
@@ -1485,11 +1364,11 @@ class CmdSpecial(MuxCommand):
         # If everything checks out, spend the SP, queue the special move and spend the action.
         user.db.SP -= rules.special_cost(effects)
         special_message = special_message.replace("<self>", str(user))
-        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" % (
-        name, rules.special_cost(effects), special_message)
+        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" %\
+                  (name, rules.special_cost(effects), special_message)
         if effects:
-            effectstring = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
-            message += " |255[|455%s|255]|n" % effectstring
+            effect_string = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
+            message += " |255[|455%s|255]|n" % effect_string
         self.caller.location.msg_contents(message)
         rules.special_support(user, user, effects)
         self.caller.db.Combat_LastAction = "special"
@@ -1533,11 +1412,11 @@ class CmdSpecial(MuxCommand):
 
         special_message = special_message.replace("<self>", str(user))
         special_message = special_message.replace("<target>", str(target))
-        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" % (
-        name, rules.special_cost(effects), special_message)
+        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" %\
+                  (name, rules.special_cost(effects), special_message)
         if effects:
-            effectstring = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
-            message += " |255[|455%s|255]|n" % effectstring
+            effect_string = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
+            message += " |255[|455%s|255]|n" % effect_string
         self.caller.location.msg_contents(message)
         rules.special_support(target, self.caller, effects)
         self.caller.db.Combat_LastAction = "special"
@@ -1580,8 +1459,8 @@ class CmdSpecial(MuxCommand):
         user.db.SP -= rules.special_cost(effects)
         special_message = special_message.replace("<self>", str(user))
         special_message = special_message.replace("<target>", str(target))
-        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" % (
-        name, rules.special_cost(effects), special_message)
+        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" %\
+                  (name, rules.special_cost(effects), special_message)
         if effects:
             effectstring = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
             message += " |255[|455%s|255]|n" % effectstring
@@ -1637,10 +1516,10 @@ class CmdSpecial(MuxCommand):
         # If everything checks out, spend the SP and execute the special defense.
         user.db.SP -= rules.special_cost(effects)
         special_message = special_message.replace("<self>", str(user))
-        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" % (
-        name, rules.special_cost(effects), special_message)
-        effectstring = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
-        message += " |255[|455%s|255]|n" % effectstring
+        message = "|255[Special: |455%s|255 (|455%i|255 SP)]|n %s" %\
+                  (name, rules.special_cost(effects), special_message)
+        effect_string = utils.list_to_string(effects, endsep="|255and|455", addquote=False)
+        message += " |255[|455%s|255]|n" % effect_string
         self.caller.location.msg_contents(message)
         rules.defend_queue(user, "defend", effects)
         # Handle drawback conditions here. Target is given as the character whose turn it is in combat.
@@ -1648,7 +1527,7 @@ class CmdSpecial(MuxCommand):
                                effects)
 
 
-class CmdRemoveSpecial(MuxCommand):
+class CmdRemoveSpecial(default_cmds.MuxCommand):
     """
     Removes a special move.
 
@@ -1663,7 +1542,7 @@ class CmdRemoveSpecial(MuxCommand):
     key = "removespecial"
 
     def func(self):
-        "This performs the actual command."
+        """This performs the actual command."""
         if not self.args or self.args == "" or self.args == " ":
             self.caller.msg("Please specify a special move name.")
             return
@@ -1675,7 +1554,7 @@ class CmdRemoveSpecial(MuxCommand):
         self.caller.msg("You don't have a special move named %s." % self.args)
 
 
-class CmdEnterGame(MuxCommand):
+class CmdEnterGame(default_cmds.MuxCommand):
     """
     enters the game
 
@@ -1693,36 +1572,37 @@ class CmdEnterGame(MuxCommand):
     def func(self):
         """Checks everything first!"""
         char = self.caller
-        statstotal = char.db.ATM + char.db.DEF + char.db.VIT + char.db.ATR + char.db.MOB + char.db.SPE
+        stats_total = char.db.ATM + char.db.DEF + char.db.VIT + char.db.ATR + char.db.MOB + char.db.SPE
         # Check for stats are too high.
-        if statstotal > 36:
+        if stats_total > 36:
             char.msg("Your stats are %i points too high. You need to set some of your stats lower to enter the game." %
-                     (statstotal - 36))
+                     (stats_total - 36))
             return
         # Verify each special move and check for if too many special moves are set.
-        specialcount = 0
+        special_count = 0
         for special in char.db.Special_Moves:
-            specialcount += 1
+            special_count += 1
             # Check the special move for stat requirements, etc. - if it returns a message, print it and return.
             if rules.verify_special_move(self.caller, special):
                 char.msg(rules.verify_special_move(self.caller, special))
                 return
-            if specialcount > 5:
+            if special_count > 5:
                 char.msg("You have more than 5 special moves. You can only have 5! Remove some before continuing.")
                 return
         # From here, the checks won't stop the player from entering the game, but will warn them first.
         if not self.args or self.args != "anyway":
             anyway = False
-            specialcount = 0
+            special_count = 0
             # Stats are lower than the cap.
-            if statstotal < 36:
+            if stats_total < 36:
                 char.msg("Your stats total is less than 36! You can add %i more points of stats - try sticking them in "
-                         "Vitality to get more HP if you don't know what else to do with them." % (36 - statstotal))
+                         "Vitality to get more HP if you don't know what else to do with them." % (36 - stats_total))
                 anyway = True
             # Less than the capped number of special moves are defined.
             for special in char.db.Special_Moves:
-                specialcount += 1
-            if specialcount < 5:
+                print(special)
+                special_count += 1
+            if special_count < 5:
                 char.msg("You have less than five special moves set - you can set up to five. Even if you have 0 SP,"
                          " you can still use special moves with no SP cost by setting limits or drawbacks on them -"
                          " there's really no reason not to at least have the option!")
