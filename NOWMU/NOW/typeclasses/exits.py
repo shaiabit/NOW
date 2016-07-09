@@ -129,7 +129,9 @@ class Exit(DefaultExit):
 
         # if the exit has an attribute is_path and and traverser has move_speed,
         # use that, otherwise default to normal exit behavior and "walk" speed.
-
+        if traversing_object.ndb.currently_moving:
+            traversing_object.msg("You are already moving.")
+            return
         is_path = self.db.is_path or False
         source_location = traversing_object.location
         move_speed = traversing_object.db.move_speed or 'walk'
@@ -291,10 +293,10 @@ class CmdBack(Command):
                     # We came from another room. How do we go back?
                     exits = caller.location.exits  # All the ways we can go.
                     if exits:
-                        for exit in exits:  # Iterate through all the exits...
+                        for e in exits:  # Iterate through all the exits...
                             # Is this exit the one that takes us back?
-                            if exit.destination == last_room:  # It's the way back!
-                                caller.execute_cmd(exit.name)  # Try! It might fail.
+                            if e.destination == last_room:  # It's the way back!
+                                caller.execute_cmd(e.name)  # Try! It might fail.
                     else:  # The room has no way out of it.
                         caller.msg("You go back the way you came.")
                         caller.move_to(last_room)
