@@ -260,6 +260,7 @@ class Character(DefaultCharacter):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+        self.msg("|g%s|n just looked at you." % viewer.key)
         return string
 
     def return_detail(self, detailkey):
