@@ -12,14 +12,12 @@ class CmdAbout(default_cmds.MuxCommand):
     Usage:
       about
     """
-
     key = 'about'
     locks = 'cmd:all()'
     help_category = 'System'
 
     def func(self):
         """Show the version"""
-
         string = """
          |cEvennia|n %s|n
          MUD/MUX/MU* development system
