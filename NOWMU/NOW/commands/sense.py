@@ -31,26 +31,51 @@ class CmdSense(default_cmds.MuxCommand):
         player = self.player
         args = self.args.strip()
         cmd = self.cmdstring
+        lhs = self.lhs.strip()
+        rhs = self.rhs
+        obj, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
+
+        if char and char.location:
+            obj = char.search(obj, candidates=[char.location] + char.location.contents +
+                                              char.contents) if args else char
 
         if self.rhs is not None:  # Equals sign exists.
+            style = obj.STYLE if type(obj) != 'string' else '|c'
+            obj_string = obj.key if type(obj) != 'string' else obj
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
-                player.msg("(object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
-                           ('|c', self.lhs, 'parse'))
+                if aspect:
+                    player.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
+                               (cmd, style, obj_string, aspect))
+                else:
+                    player.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
+                               (cmd, style, obj_string))
             else:
                 # TODO: Add and verify intent with switches. Mock-up command without switches.
                 player.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
-                player.msg("(object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
-                           ('|c', self.lhs, 'parse', self.rhs))
+                if aspect:
+                    player.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
+                               (cmd, style, obj_string, aspect, rhs))
+                else:
+                    player.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
+                               (cmd, style, obj_string, rhs))
             return
+        if player.check_permstring('Helpstaff'):  # Sense if player of target is @quelled if senser has permission.
+            # you.msg("You must have |gHelpstaff|n or higher access to use this.")
+            # db._quell = True
+            # if player.attributes.get('_quell'):
+            # obj, aspect = [args, None] if "'s " not in args else args.rsplit("'s ", 1)
+            pass
         if cmd != 'l' and 'look' not in cmd:
             if 'sense' in cmd:
-                if char and char.location:
-                    obj = char.search(args.strip(), candidates=[char.location] + char.location.contents +
-                                      char.contents) if args else char
+                char.msg(obj)
+                if True:
+                    # if char and char.location:
+                    #    obj = char.search(args.strip(), candidates=[char.location] + char.location.contents +
+                    #                      char.contents) if args else char
                     verb_msg = ''
-                    if obj and obj.db.senses:
+                    if type(obj) != 'string' and obj.db.senses:  # Object must be database object, not string.
                         string = '%s can be sensed in the following ways: ' % obj.get_display_name(player)
                         string += ", ".join('|lc%s #%s|lt|g%s|n|le' % (element, obj.id, element)
                                             for element in obj.db.senses.keys())
