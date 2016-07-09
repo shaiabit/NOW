@@ -125,12 +125,14 @@ class Exit(DefaultExit):
         return string
 
     def at_traverse(self, traversing_object, target_location):
-        """Implements the actual traversal, using utils.delay to delay the move_to."""
-
-        # if the exit has an attribute is_path and and traverser has move_speed,
-        # use that, otherwise default to normal exit behavior and "walk" speed.
+        """
+        Implements the actual traversal, using utils.delay to delay the move_to.
+        if the exit has an attribute is_path and and traverser has move_speed,
+        use that, otherwise default to normal exit behavior and "walk" speed.
+        """
         if traversing_object.ndb.currently_moving:
-            traversing_object.msg("You are already moving.")
+            traversing_object.msg("You are already moving toward %s%s|n." %
+                                  (target_location.STYLE, target_location.key))
             return
         is_path = self.db.is_path or False
         source_location = traversing_object.location
@@ -164,12 +166,9 @@ class Exit(DefaultExit):
             if not success:
                 return False
             self.at_after_traverse(traversing_object, source_location)
-
-        # create a delayed movement
+        # Create a delayed movement and Store the deferred on the moving object.
+        # ndb is used since deferrals cannot be pickled to store in the database.
         deferred = utils.delay(move_delay, callback=move_callback)
-
-        # Store the deferred on the character, this will allow movement
-        # to abort. Use an ndb here since deferrals cannot be pickled.
         traversing_object.ndb.currently_moving = deferred
 
     def at_after_traverse(self, traveller, source_loc):
@@ -253,7 +252,7 @@ class CmdContinue(Command):
             caller.msg("You have not yet decided which way to go.")
             return
         if caller.ndb.currently_moving:
-            caller.msg("You are already moving.")
+            caller.msg("You are already moving toward %s%s|n." % (destination.STYLE, destination.key))
         else:
             caller.location.msg_contents("%s is going to %s." %
                                          (caller.get_display_name(caller.sessions),
