@@ -11,8 +11,7 @@ class CmdSense(default_cmds.MuxCommand):
     Handle sensing objects in different ways. WIP: Expanding to handle other senses.
     Sense yourself, your location or objects in your vicinity.
     Usage:
-      <sense verb>[/switch] <object>['s aspect[ = [detail]]
-      <sense verb>[/switch] *<player>['s aspect[ = [detail]]
+      <|ysense verb|n>[|g/switch|n] <|yobject|n>['s aspect[ = [detail]]
 
       Add detail following the equal sign after the object's aspect.
       Nothing following the equals sign (=) will remove the detail.
@@ -35,9 +34,15 @@ class CmdSense(default_cmds.MuxCommand):
 
         if self.rhs is not None:  # Equals sign exists.
             if not self.rhs:  # Nothing on the right side
-                char.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+                # TODO: Delete and verify intent with switches. Mock-up command without switches.
+                player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+                player.msg("(object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
+                           ('|c', self.lhs, 'parse'))
             else:
-                char.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
+                # TODO: Add and verify intent with switches. Mock-up command without switches.
+                player.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
+                player.msg("(object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
+                           ('|c', self.lhs, 'parse', self.rhs))
             return
         if cmd != 'l' and 'look' not in cmd:
             if 'sense' in cmd:
