@@ -23,7 +23,9 @@ from commands import prelogin
 from commands import exitdirections
 from commands import desc
 from commands.desc import CmdDesc
+from commands.flag import CmdFlag
 from commands.home import CmdHome
+from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.teleport import CmdTeleport
@@ -59,9 +61,11 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
 # [...]
         self.add(CmdSay)
         self.add(CmdOoc)
-        self.add(CmdHome)
         self.add(CmdDesc)
+        self.add(CmdFlag)
+        self.add(CmdHome)
         self.add(CmdPose)
+        self.add(CmdZone)
         self.add(CmdSense)
         self.add(CmdSpoof)
         self.add(CmdTeleport)
