@@ -799,10 +799,10 @@ class CmdWho(MuxPlayerCommand):
                     table.add_row([utils.crop(character.key if character else '- Unknown -', width=25),
                                    utils.time_format(delta_conn, 0),
                                    utils.time_format(delta_cmd, 1)])
-        isone = nplayers == 1
-        string = "%s\n%s " % (table, 'A' if isone else nplayers)
-        string += 'single' if isone else 'unique'
-        plural = '' if isone else 's'
+        is_one = nplayers == 1
+        string = "%s\n%s " % (table, 'A' if is_one else nplayers)
+        string += 'single' if is_one else 'unique'
+        plural = '' if is_one else 's'
         string += " account%s logged in." % plural
         self.msg(string)
 
