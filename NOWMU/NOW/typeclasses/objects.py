@@ -240,7 +240,7 @@ class Object(DefaultObject):
         name = self.name
         loc_name = self.location.name
         dest_name = destination.name
-        string = "%s%s|n is leaving %s%s|n, heading for %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+        string = "|r%s|n is leaving %s%s|n, heading for %s%s|n." % (name, self.location.STYLE, loc_name,
                                                                     destination.STYLE, dest_name)
         self.location.msg_contents(string, exclude=self)
 
@@ -262,7 +262,7 @@ class Object(DefaultObject):
         loc_name = self.location.name
         if source_location:
             src_name = source_location.name
-        string = "%s%s|n arrives to %s%s|n from %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+        string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
                                                             source_location.STYLE, src_name)
         self.location.msg_contents(string, exclude=self)
 
@@ -277,8 +277,7 @@ class Object(DefaultObject):
             caller.msg("You do not have %s." % self.get_display_name(caller))
             return False
         self.move_to(caller.location, quiet=True, use_destination=False)
-        caller.location.msg_contents("%s |g%s|n drops %s." %
-                                     (pose, caller.key, self.mxp_name(caller, 'sense #%s' % self.id)))
+        caller.location.msg_contents("%s|g%s|n drops %s%s|n." % (pose, caller.key, self.STYLE, self.key))
         self.at_drop(caller)  # Call at_drop() method.
 
     def get(self, pose, caller):
@@ -288,8 +287,7 @@ class Object(DefaultObject):
         elif self.location == caller:
             caller.msg("You already have %s." % self.get_display_name(caller))
         elif self.move_to(caller, quiet=True):
-            caller.location.msg_contents("%s |g%s|n takes %s." %
-                                         (pose, caller.key, self.get_display_name(caller)))
+            caller.location.msg_contents("%s|g%s|n takes %s%s|n." % (pose, caller.key, self.STYLE, self.key))
             self.at_get(caller)  # calling hook method
 
     def surface_put(self, pose, caller, connection):
@@ -302,8 +300,7 @@ class Object(DefaultObject):
         surface[caller] = connection
         self.db.locked = True
         caller.db.locked = True
-        caller.location.msg_contents("%s |g%s|n sits %s %s." %
-                                     (pose, caller.key, connection, self.get_display_name(caller)))
+        caller.location.msg_contents("%s|g%s|n sits %s %s%s|n." % (pose, caller.key, connection, self.STYLE, self.key))
         return True
 
     def surface_off(self, pose, caller):
@@ -315,8 +312,7 @@ class Object(DefaultObject):
             if len(surface) < 1:
                 self.attributes.remove('locked')
             caller.attributes.remove('locked')
-            caller.location.msg_contents("%s |r%s|n leaves %s." %
-                                         (pose, caller.key, self.mxp_name(caller, 'sense #%s' % self.id)))
+            caller.location.msg_contents("%s|r%s|n leaves %s%s|n." % (pose, caller.key, self.STYLE, self.key))
             return True
         return False
 
@@ -332,7 +328,7 @@ class Object(DefaultObject):
         return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
             self.access(viewer, 'view') else ''
 
-    def get_mass(self):
+    def get_mass(self):  # TODO: Add mass of objects on surface, also.
         mass = self.attributes.get('mass') or 1
         return reduce(lambda x, y: x+y.get_mass(), [mass] + self.contents)
 
@@ -441,8 +437,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         else:
             finish = ', finishing it'
             self.location = None
-        msg = "%s takes a drink of %s%s." % (caller.get_display_name(caller.sessions),
-                                             self.get_display_name(caller.sessions), finish)
+        msg = "%s%s|n takes a drink of %s%s|n%s." % (caller.STYLE, caller.key, self.STYLE, self.key, finish)
         caller.location.msg_contents(msg)
 
         def drink_callback(caller, prompt, user_input):
@@ -469,8 +464,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         else:
             finish = ', finishing it'
             self.location = None
-        msg = "%s takes a bite of %s%s." % (caller.get_display_name(caller.sessions),
-                                            self.get_display_name(caller.sessions), finish)
+        msg = "%s%s|n takes a bite of %s%s|n%s." % (caller.STYLE, caller.key, self.STYLE, self.key, finish)
         caller.location.msg_contents(msg)
 
 

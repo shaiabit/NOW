@@ -192,7 +192,7 @@ class Room(DefaultRoom):
 
         """
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
-            if self.tags.get('outdoor', category='flags'):
+            if self.tags.get('weather', category='flags'):
                 tickers = TICKER_HANDLER.all_display()
                 counter = 0
                 for tick in tickers:

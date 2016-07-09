@@ -80,7 +80,6 @@ class Character(DefaultCharacter):
         """Trigger look after a move."""
         if self.location.access(self, "view"):
             self.msg(text=((self.at_look(self.location),), {"window": "room"}))
-            # TODO: Display name for objects in message.
 
     def announce_move_from(self, destination):
         """
@@ -95,7 +94,7 @@ class Character(DefaultCharacter):
         name = self.name
         loc_name = self.location.name
         dest_name = destination.name
-        string = "%s%s|n is leaving %s%s|n, heading for %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+        string = "|r%s|n is leaving %s%s|n, heading for %s%s|n." % (name, self.location.STYLE, loc_name,
                                                                     destination.STYLE, dest_name)
         self.location.msg_contents(string, exclude=self)
 
@@ -117,7 +116,7 @@ class Character(DefaultCharacter):
         loc_name = self.location.name
         if source_location:
             src_name = source_location.name
-        string = "%s%s|n arrives to %s%s|n from %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
+        string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
                                                             source_location.STYLE, src_name)
         self.location.msg_contents(string, exclude=self)
 
@@ -202,7 +201,7 @@ class Character(DefaultCharacter):
                                'female': {'s': 'she', 'o': 'her', 'p': 'her', 'a': 'hers'},
                                'neutral': {'s': 'it',  'o': 'it', 'p': 'its', 'a': 'its'}}
 
-        _RE_GENDER_PRONOUN = re.compile(r'[^\|]+(\|s|S|o|O|p|P|a|A)')
+        # _RE_GENDER_PRONOUN = re.compile(r'[^\|]+(\|s|S|o|O|p|P|a|A)')
 
         typ = regex_match.group()[2]  # "s", "O" etc
         gender = self.attributes.get('gender', default='neutral')
