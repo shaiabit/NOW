@@ -33,15 +33,15 @@ class CmdSense(default_cmds.MuxCommand):
         cmd = self.cmdstring
         lhs = self.lhs.strip()
         rhs = self.rhs
-        obj, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
-
+        obj_string, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
+        obj = None
         if char and char.location:
-            obj = char.search(obj, candidates=[char.location] + char.location.contents +
-                                              char.contents) if args else char
-
+            obj = char.search(obj_string, candidates=[char.location] + char.location.contents + char.contents)\
+                if args else char
         if self.rhs is not None:  # Equals sign exists.
-            style = obj.STYLE if type(obj) != 'string' else '|c'
-            obj_string = obj.key if type(obj) != 'string' else obj
+            style = obj.STYLE if obj else '|c'
+            if obj:
+                obj_string = obj.key
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
