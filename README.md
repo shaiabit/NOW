@@ -1,33 +1,15 @@
 # Welcome to Novel Online World!
 
-This directory is the directory that contains all NOW assets,
-set up to mirror the operating NOW server.
+This directory is the directory that contains the NOW assets in
+development, and does not actually mirror the operating NOW server.
 
-If you are cloning NOW, you can delete this readme file, or just
-re-arrange things in this game-directory to suit your own sense of
-organisation (the only exception is the directory structure of the
-server/ directory, which Evennia expects). If you change the structure
-you must however also edit/add to your settings file to tell Evennia
-where to look for things.
+If you are cloning NOW, be aware that this is the customized code
+in development, and not the full code for the server.
 
-Your game's main configuration file is found in
-`server/conf/settings.py` (but you don't need to change it to get
-started). If you just created this directory, `cd` to this directory
-then initialize a new database using
+The prerequisite install of the latest Evennia is required. Be aware
+that NOW runs atop Evennia in a separate game folder named NOW.
 
-    evennia migrate
-
-To start the server, `cd` to this directory and run
-
-    evennia -i start
-
-This will start the server so that it logs output to the console. Make
-sure to create a superuser when asked. By default you can now connect
-to your new game using a MUD client on localhost:4000.  You can also
-log into the web client by pointing a browser to
-http://localhost:8000.
-
-# Getting started
+# Getting started with Evennia's install
 
 It's highly recommended that you look up Evennia's extensive
 documentation found here: https://github.com/evennia/evennia/wiki.
@@ -35,12 +17,30 @@ documentation found here: https://github.com/evennia/evennia/wiki.
 Plenty of beginner's tutorials can be found here:
 http://github.com/evennia/evennia/wiki/Tutorials.
 
-After installed, to start it, log in then:
+After the full install of Evennia, outside the evennia folder,
+while operating the pyenv as directed by Evennia's install
+and operation proceedure, before installing this game code,
 
-    source pyenv/bin/activate
-    cd NOW
-    evennia start
+    evennia --init NOW
 
-You will see console output, but can disconnect with Control-D or exit
+ If you have no existing database for your game, `cd NOW` then
+ initialize a new database using:
 
-evennia stays running in daemon mode.
+    evennia migrate
+
+To start the server, `cd` to this directory and run
+
+    evennia -i start
+
+You will see console output, but can disconnect with Control-D or exit.
+Evennia stays running in daemon mode and displays output to the console.
+
+Make sure to create a superuser when asked. By default you can now
+connect using a MUD client on localhost:4000.  You can also use 
+the web client by pointing a browser to
+
+    http://localhost:8000
+
+Within it is the game's main configuration file, Evennia will
+create a default configuration file; you don't need to change
+it to get started): `NOW/server/conf/settings.py`
