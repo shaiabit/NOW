@@ -630,29 +630,37 @@ class CmdSay(MuxCommand):
     key = 'say'
     aliases = ['"', "'"]
     locks = 'cmd:all()'
+    player_caller = True
 
     def func(self):
         """Run the say command"""
-        caller = self.caller
-        if not self.args:
-            caller.execute_cmd("help say")
+        char = self.character
+        here = char.location
+        player = self.player
+        args = self.args.strip()
+        switches = self.switches
+        if not here:
+            player.execute_cmd("pub %s" % args)
             return
-        if 'v' in self.switches or 'verb' in self.switches:
-            caller.attributes.add('say-verb', self.args)
-            emit_string = '%s warms up vocally with "%s|n"' % (caller.get_display_name(self.session), self.args)
-            caller.location.msg_contents(emit_string)
+        if not args:
+            char.execute_cmd("help say")
             return
-        if 'q' in self.switches or 'quote' in self.switches:
-            if len(self.args) > 2:
-                caller.quote = self.args  # Not yet implemented.
+        if 'v' in switches or 'verb' in switches:
+            char.attributes.add('say-verb', args)
+            emit_string = '%s%s|n warms up vocally with "%s|n"' % (char.STYLE, char.key, args)
+            here.msg_contents(emit_string)
+            return
+        if 'q' in switches or 'quote' in switches:
+            if len(args) > 2:
+                char.quote = args  # Not yet implemented.
                 return
-        speech = caller.location.at_say(caller, self.args)  # Notify NPCs and listeners.
-        if 'o' in self.switches or 'ooc' in self.switches:
-            emit_string = '[OOC]|n %s says, "%s"' % (caller.get_display_name(self.session), speech)
+        speech = here.at_say(char, args)  # Notify NPCs and listeners.
+        if 'o' in switches or 'ooc' in switches:
+            emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
         else:
-            verb = caller.attributes.get('say-verb') if caller.attributes.has('say-verb') else 'says'
-            emit_string = '%s %s, "%s|n"' % (caller.get_display_name(self.session), verb, speech)
-        caller.location.msg_contents(emit_string)
+            verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
+            emit_string = '%s%s|n %s, "%s|n"' % (char.STYLE, char.key, verb, speech)
+        here.msg_contents(emit_string)
 
 
 class CmdForge(MuxCommand):
@@ -834,6 +842,7 @@ class CmdPose(MuxCommand):
     key = 'pose'
     aliases = [':', ';', 'emote', 'try']
     locks = 'cmd:all()'
+    player_caller = True
 
     def parse(self):
         """
@@ -854,10 +863,15 @@ class CmdPose(MuxCommand):
         verb
         """
         super(CmdPose, self).parse()
-        args = unicode(self.args)
-        caller = self.caller
+        args = unicode(self.args).strip()
+        char = self.character
+        here = char.location
+        player = self.player
+        if not here:
+            player.execute_cmd("pub :%s" % args)
+            return
         if not self.args:
-            caller.execute_cmd("help pose")
+            char.execute_cmd("help pose")
             return
         self.verb = None
         self.obj = None
@@ -865,27 +879,26 @@ class CmdPose(MuxCommand):
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if 'magnet' in self.switches or 'm' in self.switches:
-            caller.msg("Pose magnet glyphs are %s." % non_space_chars)
-
+            char.msg("Pose magnet glyphs are %s." % non_space_chars)
         if self.cmdstring == 'try':
             args += '::'
         if len(args.split('::')) > 1:
-            verbnoun, pose = args.split('::', 1)
-            if 0 < len(verbnoun.split()):
+            verb_noun, pose = args.split('::', 1)
+            if 0 < len(verb_noun.split()):
                 args = pose
-                self.verb = verbnoun.split()[0]
-                noun = ' '.join(verbnoun.split()[1:])
+                self.verb = verb_noun.split()[0]
+                noun = ' '.join(verb_noun.split()[1:])
                 if noun == '':
                     # if self.verb is any of the current exits or aliases of the exits:
-                    exit_list = self.caller.location.exits
+                    exit_list = here.exits
                     if self.verb in exit_list:  # TODO: Test if the verb is an exit name
                         noun = self.verb
                         self.verb = 'go' 
                     else:
-                        self.obj = caller
+                        self.obj = char
                         noun = 'me'
                 else:
-                    self.obj = caller.search(noun, location=[caller, caller.location])
+                    self.obj = char.search(noun, location=[char, here])
         if args and not args[0] in non_space_chars:
             if not self.cmdstring == ";":
                 args = " %s" % args.strip()
@@ -893,77 +906,85 @@ class CmdPose(MuxCommand):
 
     def func(self):
         """Hook function"""
+        cmd = self.cmdstring
+        args = unicode(self.args).strip()
+        char = self.character
+        here = char.location
+        if not here:
+            return
         self.text = ''
-        caller = self.caller
         if self.args:
             if 'o' in self.switches or 'ooc' in self.switches:
-                self.text = "[OOC] %s%s" % (caller.get_display_name(self.session), self.args)
+                self.text = "[OOC] %s%s|n%s" % (char.STYLE, char.key, args)
             else:
-                self.text = "%s%s" % (caller.get_display_name(self.session), self.args)
+                self.text = "%s%s|n%s" % (char.STYLE, char.key, args)
             if self.obj and self.verb:
                 pass
             else:
-                caller.location.msg_contents(self.text)
-
-        elif self.cmdstring != 'try':
+                here.msg_contents(self.text)
+        elif cmd != 'try':
             return
 
     def at_post_cmd(self):
         """Verb response here."""
         super(CmdPose, self).at_post_cmd()
+        if not self.character.location:
+            return
         if self.obj:
             obj = self.obj
             verb = self.verb
             safe_verb = verb
-            caller = self.caller
+            char = self.character
+            player = self.player
+            here = char.location
             pose = self.text
             if verb == 'go':
                 verb = 'traverse'
                 safe_verb = 'traverse'
-            if not obj.access(caller, verb):  # Try original verb first.
+            if not obj.access(char, verb):  # Try original verb first.
                 safe_verb = 'v-' + verb  # If that does not work, then...
-            if obj.access(caller, safe_verb):  # try the safe verb form.
+            if obj.access(char, safe_verb):  # try the safe verb form.
                 if verb == 'drop':
-                    obj.drop(pose, caller)
+                    obj.drop(pose, char)
                 elif verb == 'get':
-                    obj.get(pose, caller)
+                    obj.get(pose, char)
                 elif verb == 'traverse':
-                    caller.execute_cmd(obj.name, caller)
+                    char.execute_cmd(obj.key)
                 elif verb == 'sit':
-                    obj.surface_put(pose, caller, 'on')
+                    obj.surface_put(pose, char, 'on')
                 elif verb == 'leave':
-                    obj.surface_off(pose, caller)
+                    obj.surface_off(pose, char)
                 elif verb == 'read':
-                    obj.read(pose, caller)
+                    obj.read(pose, char)
                 elif verb == 'drink':
-                    obj.drink(caller)
+                    obj.drink(char)
                 elif verb == 'eat':
-                    obj.eat(caller)
+                    obj.eat(char)
                 elif verb == 'view':
-                    caller.execute_cmd('%s #%s' % ('l', obj.id))
+                    char.execute_cmd('%s #%s' % ('l', obj.id))
                 elif verb == 'puppet':
-                    caller.execute_cmd('@ic ' + obj.name, caller)
+                    player.execute_cmd('@ic ' + obj.key)
                 elif verb == 'examine':
-                    caller.execute_cmd('examine ' + obj.name, caller)
+                    player.execute_cmd('examine ' + obj.key)
                 else:
                     if self.text != '':
-                        # self.text += " |g|S|n is able to %s %s." % (verb, obj.name)
+                        # self.text += " |g|S|n is able to %s %s%s|n." % (verb, obj.STYLE, obj.key)
                         # TODO: When pronoun substitution works.
-                        self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
+                        self.text = "|g%s|n is able to %s %s%s|n." % (char.key, verb, obj.STYLE, obj.key)
                         # TODO: Otherwise, do this.
                     else:
-                        self.text = "|g%s|n is able to %s %s." % (caller.name, verb, obj.name)
-                    caller.location.msg_contents(self.text)
+                        self.text = "|g%s|n is able to %s %s%s|n." % (char.key, verb, obj.STYLE, obj.key)
+                    here.msg_contents(self.text)
                     # TODO: Show actual message response below. TODO - show get_display_name once session is available.
-                    caller.location.msg_contents("%s responds to %s %s. |R(Response effect goes here)|n" %
-                                                 (obj.name, caller.name, verb))
+                    here.msg_contents("%s%s|n response message to %s%s|n %s goes here." %
+                                      (obj.STYLE, obj.key, char.STYLE, char.key, verb))
             else:
                 if self.obj.locks.get(verb):  # Test to see if a lock string exists.
                     if self.text != '':
-                        self.text += " |r|S|n fails to %s %s." % (verb, obj.name)
+                        self.text += " |r|S|n fails to %s %s%s|n." % (verb, obj.STYLE, obj.key)
                     else:
-                        self.text = "|r%s|n fails to %s %s." % (caller.name, verb, obj.name)
-                    caller.location.msg_contents(self.text)  # , exclude=caller)
-                    # caller.msg("You failed to %s %s." % (verb, obj.name))
+                        self.text = "|r%s|n fails to %s %s%s|n." % (char.key, verb, obj.STYLE, obj.key)
+                    here.msg_contents(self.text)  # , exclude=char)
+                    # char.msg("You failed to %s %s." % (verb, obj.name))
                 else:
-                    caller.msg("It is not possible to %s %s." % (verb, obj.name))
+                    char.msg("It is not possible to %s %s%s|n." % (verb, obj.STYLE, obj.key))
