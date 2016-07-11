@@ -1,4 +1,4 @@
-# Welcome to Novel Online World!
+# Welcome to Novel Online World!![Pangolin in motion](https://github.com/Pinacolada64/NOW/blob/master/web/static/website/images/NOW-icon.png)
 
 This directory is the directory that contains the NOW assets in
 development, and does not actually mirror the operating NOW server.
