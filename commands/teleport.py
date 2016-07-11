@@ -12,24 +12,26 @@ class CmdTeleport(default_cmds.MuxCommand):
                locations for the move.
     /intoexit  if target is an exit, teleport INTO
                the exit object instead of to its destination
-    /tonone    if set, teleport the object to a None-location. If this
-               switch is set, <target location> is ignored.
-               Note that the only way to retrieve an object from a
-               None location is by direct #dbref reference.
+    /vanish    if set, teleport the object into Nothingness. If this
+               option is used, <target location> is ignored.
+               Note that the only way to retrieve an object from
+               Nothingness is by direct #dbref reference.
     Examples:
       tel Limbo
       tel/quiet box=fog
-      tel/tonone box
+      tel/vanish box
     """
     key = 'teleport'
     aliases = ['tport', 'tel']
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
+    player_caller = True
 
     def func(self):
         """Performs the teleport, accounting for in-world conditions."""
 
-        caller = self.caller
+        caller = self.character
+        player = self.player
         args = self.args
         lhs, rhs = self.lhs, self.rhs
         switches = self.switches
@@ -40,9 +42,9 @@ class CmdTeleport(default_cmds.MuxCommand):
 
         # setting switches
         tel_quietly = 'quiet' in switches or 'silent' in switches
-        to_none = 'tonone' in switches
+        to_none = 'vanish' in switches
 
-        if to_none:  # teleporting to None
+        if to_none:  # teleporting to Nothingness
             if not args:
                 obj_to_teleport = caller
                 caller.msg("|*Teleported to None-location.|n")
@@ -53,14 +55,21 @@ class CmdTeleport(default_cmds.MuxCommand):
                 if not obj_to_teleport:
                     caller.msg("Did not find object to teleport.")
                     return
-                caller.msg("Teleported %s -> None-location." % obj_to_teleport)
+                if not player.check_permstring('Mages') or not obj_to_teleport.access(player, 'control'):
+                    caller.msg("You must have |wMages|n or higher access to send something into nothingness.")
+                    return
+                caller.msg("Teleported %s%s|n -> None-location." % (obj_to_teleport.STYLE, obj_to_teleport))
                 if obj_to_teleport.location and not tel_quietly:
-                    obj_to_teleport.location.msg_contents("%s teleported %s into nothingness."
-                                                          % (caller, obj_to_teleport),
-                                                          exclude=caller)
+                    if caller.location == obj_to_teleport.location:
+                        obj_to_teleport.location.msg_contents("%s%s|n sends %s%s|n into nothingness."
+                                                              % (caller.STYLE, caller,
+                                                                 obj_to_teleport.STYLE, obj_to_teleport))
+                    else:
+                        obj_to_teleport.location.msg_contents("%s%s|n vanishes into nothingness."
+                                                              % (obj_to_teleport.STYLE, obj_to_teleport))
             obj_to_teleport.location = None
             return
-        if not args and not to_none:  # not teleporting to None location
+        if not args:
             caller.msg("Usage: teleport[/switches] [<obj> =] <target_loc>||home")
             return
         if rhs:
@@ -88,13 +97,12 @@ class CmdTeleport(default_cmds.MuxCommand):
         use_destination = True
         if 'intoexit' in self.switches:
             use_destination = False
-
-        # try the teleport
         if obj_to_teleport == caller:
             caller.msg('Personal teleporting costs 1 coin.')
         if obj_to_teleport.move_to(destination, quiet=tel_quietly, emit_to_obj=caller,
                                    use_destination=use_destination):
             if obj_to_teleport == caller:
-                caller.msg("Teleported to %s." % destination)
+                caller.msg("Teleported to %s%s|n." % (destination.STYLE, destination))
             else:
-                caller.msg("Teleported %s -> %s." % (obj_to_teleport, destination))
+                caller.msg("Teleported %s%s|n -> %s%s|n." % (obj_to_teleport.STYLE, obj_to_teleport,
+                                                             destination.STYLE, destination))
