@@ -771,7 +771,7 @@ class CmdWho(MuxPlayerCommand):
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
-                    location = character.location.key if character and character.location else 'None'
+                    location = character.location.key if character and character.location else 'Nothingness'
                     table.add_row([utils.crop(character.key if character else '- Unknown -', width=25),
                                    utils.time_format(delta_conn, 0),
                                    utils.time_format(delta_cmd, 1),
@@ -791,8 +791,8 @@ class CmdWho(MuxPlayerCommand):
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
-                    species = character.attributes.get('species', default='- None -')
-                    table.add_row([utils.crop(character.key if character else '- Unknown -', width=25),
+                    species = character.attributes.get('species', default='*ghost*')
+                    table.add_row([utils.crop(character.key if character else '*ghost*', width=25),
                                    utils.time_format(delta_conn, 0),
                                    utils.time_format(delta_cmd, 1),
                                    utils.crop(species, width=25)])
@@ -907,7 +907,7 @@ class CmdPose(MuxCommand):
     def func(self):
         """Hook function"""
         cmd = self.cmdstring
-        args = unicode(self.args).strip()
+        args = unicode(self.args)
         char = self.character
         here = char.location
         if not here:

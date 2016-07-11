@@ -279,34 +279,40 @@ class CmdBack(Command):
         This turns you around if you are traveling,
         or tries to take you back to a previous room
         if you are stopped in a room.
+        If you are in Nothingness, you can return somewhere.
         """
-        caller = self.caller  # The character calling "back"
-        destination = caller.location.destination  # Where caller is going.
-        start = caller.location.location  # Where caller came from.
+        char = self.caller  # The character calling "back"
+        here = char.location
+        if not here:
+            safe_place = char.ndb.last_location or char.db.last_room or char.home
+            char.move_to(safe_place)  # TODO: Add a "Fades into view' message.
+            return
+        destination = here.destination  # Where char is going.
+        start = here.location  # Where char came from.
         if not destination:  # You are inside of something.
             # Find an exit that leads back to the last room you were in.
-            last_location = caller.ndb.last_location or False
-            last_room = caller.db.last_room or False
+            # last_location = char.ndb.last_location or False
+            last_room = char.db.last_room or False
             if last_room:  # Message if you have arrived in a room already.
-                if last_room != caller.location:  # We are not in the place we were.
+                if last_room != here:  # We are not in the place we were.
                     # We came from another room. How do we go back?
-                    exits = caller.location.exits  # All the ways we can go.
+                    exits = here.exits  # All the ways we can go.
                     if exits:
                         for e in exits:  # Iterate through all the exits...
                             # Is this exit the one that takes us back?
                             if e.destination == last_room:  # It's the way back!
-                                caller.execute_cmd(e.name)  # Try! It might fail.
+                                char.execute_cmd(e.name)  # Try! It might fail.
                     else:  # The room has no way out of it.
-                        caller.msg("You go back the way you came.")
-                        caller.move_to(last_room)
+                        char.msg("You go back the way you came.")
+                        char.move_to(last_room)
             else:  # No way back, try out.
                 if start:
-                    caller.msg("You leave %s." % caller.location.get_display_name(caller.sessions))
-                    caller.move_to(start)
+                    char.msg("You leave %s." % here.get_display_name(char.sessions))
+                    char.move_to(start)
                 else:
-                    caller.msg("You can not leave %s." % caller.location.get_display_name(caller.sessions))
+                    char.msg("You can not leave %s." % here.get_display_name(char.sessions))
             return
-        elif caller.ndb.currently_moving:  # If you are inside an exit,
-            caller.execute_cmd('stop')  # traveling, then stop, go back.
-        caller.msg("You turn around and go back the way you came.")
-        caller.move_to(start)
+        elif char.ndb.currently_moving:  # If you are inside an exit,
+            char.execute_cmd('stop')  # traveling, then stop, go back.
+        char.msg("You turn around and go back the way you came.")
+        char.move_to(start)
