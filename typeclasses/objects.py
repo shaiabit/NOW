@@ -258,12 +258,13 @@ class Object(DefaultObject):
             string = "You now have %s%s|n in your possession." % (self.STYLE, name)
             self.location.msg(string)
             return
-        src_name = "nowhere"
         loc_name = self.location.name
-        if source_location:
+        if source_location and source_location != self.location:  # TODO: Possible Evennia FIXME:
             src_name = source_location.name
-        string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
-                                                            source_location.STYLE, src_name)
+            string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
+                                                                source_location.STYLE, src_name)
+        else:
+            string = "|g%s|n suddenly appears in %s%s|n from |222Nothingness|n." % (name, self.location.STYLE, loc_name)
         self.location.msg_contents(string, exclude=self)
 
     def at_object_creation(self):
