@@ -56,15 +56,15 @@ class CmdTeleport(default_cmds.MuxCommand):
                     caller.msg("Did not find object to teleport.")
                     return
                 if not player.check_permstring('Mages') or not target.access(player, 'control'):
-                    caller.msg("You must have |wMages|n or higher access to send something into nothingness.")
+                    caller.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
                     return
                 caller.msg("Teleported %s%s|n -> None-location." % (target.STYLE, target))
                 if target.location and not tel_quietly:
                     if caller.location == target.location and caller != target:
-                        target.location.msg_contents("%s%s|n sends %s%s|n into nothingness."
+                        target.location.msg_contents("%s%s|n sends %s%s|n into |222Nothingness|n."
                                                      % (caller.STYLE, caller, target.STYLE, target))
                     else:
-                        target.location.msg_contents("|r%s|n vanishes into nothingness." % target)
+                        target.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % target)
             target.location = None
             return
         if not args:
