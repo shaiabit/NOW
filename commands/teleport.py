@@ -64,7 +64,7 @@ class CmdTeleport(default_cmds.MuxCommand):
                         target.location.msg_contents("%s%s|n sends %s%s|n into nothingness."
                                                      % (caller.STYLE, caller, target.STYLE, target))
                     else:
-                        target.location.msg_contents("|r%s|n vanishes into nothingness." % (target))
+                        target.location.msg_contents("|r%s|n vanishes into nothingness." % target)
             target.location = None
             return
         if not args:
