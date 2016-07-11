@@ -34,7 +34,7 @@ class CmdHome(default_cmds.MuxCommand):
                 you.msg("You are already home!")
             else:
                 you.msg("There's no place like home ...")
-                you.move_to(home)
+                you.move_to(home, use_destination=False)
         else:
             if not self.args:
                 obj = you
