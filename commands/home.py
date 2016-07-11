@@ -10,6 +10,7 @@ class CmdHome(default_cmds.MuxCommand):
       home
     Switches:
     /set <obj> [= home_location]  views or sets <obj>'s home location.
+    /here  sets current character's home to current location.
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
     should always have a home location for this reason.
@@ -26,7 +27,7 @@ class CmdHome(default_cmds.MuxCommand):
         you = self.character
         player = self.player
         home = you.home
-        if 'set' not in self.switches:
+        if not self.switches:
             if not home:
                 you.msg("You have no home yet.")
             elif home == you.location:
@@ -36,13 +37,12 @@ class CmdHome(default_cmds.MuxCommand):
                 you.move_to(home)
         else:
             if not self.args:
-                string = "Usage: home/set <obj> [= home_location]"
-                you.msg(string)
-                return
-            obj = you.search(self.lhs, global_search=True)
+                obj = you
+            else:
+                obj = you.search(self.lhs, global_search=True)
             if not obj:
                 return
-            if not self.rhs:  # just view the destination set as home
+            if not self.rhs and 'here' not in self.switches:  # just view the destination set as home
                 if obj != you and not player.check_permstring('Helpstaff') or not obj.access(player, 'puppet'):
                     you.msg("You must have |wHelpstaff|n or higher access to view the home of %s." % obj)
                     return
@@ -55,7 +55,10 @@ class CmdHome(default_cmds.MuxCommand):
                 if obj != you and not player.check_permstring('Mages') or not obj.access(player, 'puppet'):
                     you.msg("You must have |wMages|n or higher access to change the home of %s." % obj)
                     return
-                new_home = you.search(self.rhs, global_search=True)
+                if self.rhs and 'here' not in self.switches:
+                    new_home = you.search(self.rhs, global_search=True)
+                else:
+                    new_home = you.location
                 if not new_home:
                     return
                 old_home = obj.home
