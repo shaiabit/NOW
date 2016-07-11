@@ -42,18 +42,23 @@ class CmdFlag(default_cmds.MuxCommand):
         player = self.player
         cmd = self.cmdstring
         args = self.args.strip()
+        lhs, rhs = [self.lhs, self.rhs]
         switches = self.switches
-        switches_list = [u'list', u'search']
+        switches_list = [u'list', u'info', u'search']
 
         if not switches:
-            if not here:
-                player.msg("No flag can be put on this location. Try a different location.")
-                return
-            flags_here = here.tags.all(category='flags')
-            flags_here_count = len(flags_here)
-            if flags_here:  # returns a list of flags
+            obj = here
+            if not lhs:
+                if not here:
+                    player.msg("No flag can be put on this location. Trying flags on %s%s|n/" % (char.STYLE, char.key))
+                    obj = char
+            else:
+                obj = char.search(lhs, location=[char, char.location]) if args else here
+            flags_obj = obj.tags.all(category='flags')
+            flags_obj_count = len(flags_obj)
+            if flags_obj:  # returns a list of flags
                 player.msg('Flags in effect on %s: (%s) = |c%s' %
-                           (here.get_display_name(player), flags_here_count, "|n, |c".join(a for a in flags_here)))
+                           (obj.get_display_name(player), flags_obj_count, "|n, |c".join(a for a in flags_obj)))
         elif not all(x in switches_list for x in switches):
             player.msg("Not a valid switch for %s. Use only these: |g/%s" % (cmd, "|n, |g/".join(switches_list)))
             return
