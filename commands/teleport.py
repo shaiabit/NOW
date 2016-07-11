@@ -46,63 +46,60 @@ class CmdTeleport(default_cmds.MuxCommand):
 
         if to_none:  # teleporting to Nothingness
             if not args:
-                obj_to_teleport = caller
+                target = caller
                 caller.msg("|*Teleported to None-location.|n")
                 if caller.location and not tel_quietly:
                     caller.location.msg_contents("|r%s|n vanishes." % caller, exclude=caller)
             else:
-                obj_to_teleport = caller.search(lhs, global_search=True)
-                if not obj_to_teleport:
+                target = caller.search(lhs, global_search=True)
+                if not target:
                     caller.msg("Did not find object to teleport.")
                     return
-                if not player.check_permstring('Mages') or not obj_to_teleport.access(player, 'control'):
+                if not player.check_permstring('Mages') or not target.access(player, 'control'):
                     caller.msg("You must have |wMages|n or higher access to send something into nothingness.")
                     return
-                caller.msg("Teleported %s%s|n -> None-location." % (obj_to_teleport.STYLE, obj_to_teleport))
-                if obj_to_teleport.location and not tel_quietly:
-                    if caller.location == obj_to_teleport.location:
-                        obj_to_teleport.location.msg_contents("%s%s|n sends %s%s|n into nothingness."
-                                                              % (caller.STYLE, caller,
-                                                                 obj_to_teleport.STYLE, obj_to_teleport))
+                caller.msg("Teleported %s%s|n -> None-location." % (target.STYLE, target))
+                if target.location and not tel_quietly:
+                    if caller.location == target.location and caller != target:
+                        target.location.msg_contents("%s%s|n sends %s%s|n into nothingness."
+                                                     % (caller.STYLE, caller, target.STYLE, target))
                     else:
-                        obj_to_teleport.location.msg_contents("%s%s|n vanishes into nothingness."
-                                                              % (obj_to_teleport.STYLE, obj_to_teleport))
-            obj_to_teleport.location = None
+                        target.location.msg_contents("%s%s|n vanishes into nothingness." % (target.STYLE, target))
+            target.location = None
             return
         if not args:
             caller.msg("Usage: teleport[/switches] [<obj> =] <target_loc>||home")
             return
         if rhs:
-            obj_to_teleport = caller.search(lhs, global_search=True)
+            target = caller.search(lhs, global_search=True)
             destination = caller.search(rhs, global_search=True)
         else:
-            obj_to_teleport = caller
+            target = caller
             destination = caller.search(lhs, global_search=True)
-        if not obj_to_teleport:
+        if not target:
             caller.msg("Did not find object to teleport.")
             return
         if not destination:
             caller.msg("Destination not found.")
             return
-        if obj_to_teleport == destination:
+        if target == destination:
             caller.msg("You can not teleport an object inside of itself!")
             return
-        print("%s is trying to go to %s" % (obj_to_teleport.key, destination.location))
-        if obj_to_teleport == destination.location:
+        print("%s is trying to go to %s" % (target.key, destination.location))
+        if target == destination.location:
             caller.msg("You can not teleport an object inside something it holds!")
             return
-        if obj_to_teleport.location and obj_to_teleport.location == destination:
-            caller.msg("%s is already at %s." % (obj_to_teleport, destination))
+        if target.location and target.location == destination:
+            caller.msg("%s is already at %s." % (target, destination))
             return
         use_destination = True
         if 'intoexit' in self.switches:
             use_destination = False
-        if obj_to_teleport == caller:
+        if target == caller:
             caller.msg('Personal teleporting costs 1 coin.')
-        if obj_to_teleport.move_to(destination, quiet=tel_quietly, emit_to_obj=caller,
-                                   use_destination=use_destination):
-            if obj_to_teleport == caller:
+        if target.move_to(destination, quiet=tel_quietly, emit_to_obj=caller, use_destination=use_destination):
+            if target == caller:
                 caller.msg("Teleported to %s%s|n." % (destination.STYLE, destination))
             else:
-                caller.msg("Teleported %s%s|n -> %s%s|n." % (obj_to_teleport.STYLE, obj_to_teleport,
+                caller.msg("Teleported %s%s|n -> %s%s|n." % (target.STYLE, target,
                                                              destination.STYLE, destination))
