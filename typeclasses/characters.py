@@ -60,8 +60,9 @@ class Character(DefaultCharacter):
         before allowing the move. If it is, we do prevent the move by
         returning False.
         """
-
-        if self.attributes.has('locked'):
+        if destination == self.location:
+            return False
+        if self.db.locked:
             self.msg("\nYou're still sitting.")  # stance, prep, obj
             return False  # Object is supporting something; do not move it
         elif self.attributes.has('health') and self.db.health <= 0:
@@ -78,8 +79,9 @@ class Character(DefaultCharacter):
 
     def at_after_move(self, source_location):
         """Trigger look after a move."""
-        if self.location.access(self, "view"):
-            self.msg(text=((self.at_look(self.location),), {"window": "room"}))
+        if self.location.access(self, 'view'):
+            self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
+        return source_location
 
     def announce_move_from(self, destination):
         """
@@ -260,7 +262,8 @@ class Character(DefaultCharacter):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
-        self.msg("|g%s|n just looked at you." % viewer.key)
+        if self != viewer:
+            self.msg("|g%s|n just looked at you." % viewer.key)
         return string
 
     def return_detail(self, detailkey):
