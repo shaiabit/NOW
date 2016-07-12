@@ -30,14 +30,14 @@ class CmdTeleport(default_cmds.MuxCommand):
     def func(self):
         """Performs the teleport, accounting for in-world conditions."""
 
-        caller = self.character
+        char = self.character
         player = self.player
         args = self.args
         lhs, rhs = self.lhs, self.rhs
         switches = self.switches
 
-        if caller.ndb.currently_moving:
-            caller.msg("You can not teleport while moving. (|rstop|n, then try again.)")
+        if char.ndb.currently_moving:
+            player.msg("You can not teleport while moving. (|rstop|n, then try again.)")
             return
 
         # setting switches
@@ -46,60 +46,60 @@ class CmdTeleport(default_cmds.MuxCommand):
 
         if to_none:  # teleporting to Nothingness
             if not args:
-                target = caller
-                caller.msg("|*Teleported to None-location.|n")
-                if caller.location and not tel_quietly:
-                    caller.location.msg_contents("|r%s|n vanishes." % caller, exclude=caller)
+                target = char
+                player.msg("|*Teleported to Nothingness.|n")
+                if char.location and not tel_quietly:
+                    char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
-                target = caller.search(lhs, global_search=True)
+                target = char.search(lhs, global_search=True)
                 if not target:
-                    caller.msg("Did not find object to teleport.")
+                    player.msg("Did not find object to teleport.")
                     return
                 if not player.check_permstring('Mages') or not target.access(player, 'control'):
-                    caller.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
+                    player.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
                     return
-                caller.msg("Teleported %s%s|n -> None-location." % (target.STYLE, target))
+                player.msg("Teleported %s -> None-location." % (target.get_display_name(player)))
                 if target.location and not tel_quietly:
-                    if caller.location == target.location and caller != target:
+                    if char.location == target.location and char != target:
                         target.location.msg_contents("%s%s|n sends %s%s|n into |222Nothingness|n."
-                                                     % (caller.STYLE, caller, target.STYLE, target))
+                                                     % (char.STYLE, char, target.STYLE, target))
                     else:
                         target.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % target)
             target.location = None
             return
         if not args:
-            caller.msg("Usage: teleport[/switches] [<obj> =] <target_loc>||home")
+            player.msg("Usage: teleport[/switches] [<obj> =] <target_loc>||home")
             return
         if rhs:
-            target = caller.search(lhs, global_search=True)
-            destination = caller.search(rhs, global_search=True)
+            target = char.search(lhs, global_search=True)
+            destination = char.search(rhs, global_search=True)
         else:
-            target = caller
-            destination = caller.search(lhs, global_search=True)
+            target = char
+            destination = char.search(lhs, global_search=True)
         if not target:
-            caller.msg("Did not find object to teleport.")
+            player.msg("Did not find object to teleport.")
             return
         if not destination:
-            caller.msg("Destination not found.")
+            player.msg("Destination not found.")
             return
         if target == destination:
-            caller.msg("You can not teleport an object inside of itself!")
+            player.msg("You can not teleport an object inside of itself!")
             return
         print("%s is trying to go to %s" % (target.key, destination.location))
         if target == destination.location:
-            caller.msg("You can not teleport an object inside something it holds!")
+            player.msg("You can not teleport an object inside something it holds!")
             return
         if target.location and target.location == destination:
-            caller.msg("%s is already at %s." % (target, destination))
+            player.msg("%s is already at %s." % (target.get_display_name(player), destination.get_display_name(player)))
             return
         use_destination = True
         if 'intoexit' in self.switches:
             use_destination = False
-        if target == caller:
-            caller.msg('Personal teleporting costs 1 coin.')
-        if target.move_to(destination, quiet=tel_quietly, emit_to_obj=caller, use_destination=use_destination):
-            if target == caller:
-                caller.msg("Teleported to %s%s|n." % (destination.STYLE, destination))
+        if target == char:
+            player.msg('Personal teleporting costs 1 coin.')
+        if target.move_to(destination, quiet=tel_quietly, emit_to_obj=char, use_destination=use_destination):
+            if target == char:
+                player.msg("Teleported to %s." % destination.get_display_name(player))
             else:
-                caller.msg("Teleported %s%s|n -> %s%s|n." % (target.STYLE, target,
-                                                             destination.STYLE, destination))
+                player.msg("Teleported %s -> %s." % (target.get_display_name(player),
+                                                     destination.get_display_name(player)))
