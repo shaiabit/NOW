@@ -85,7 +85,7 @@ class CmdTeleport(default_cmds.MuxCommand):
         if target == destination:
             player.msg("You can not teleport an object inside of itself!")
             return
-        print("%s is trying to go to %s" % (target.key, destination.location))
+        print("%s is trying to go to %s" % (target.key, destination.key))
         if target == destination.location:
             player.msg("You can not teleport an object inside something it holds!")
             return
