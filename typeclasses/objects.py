@@ -215,17 +215,20 @@ class Object(DefaultObject):
 
     def at_before_move(self, destination):
         """
-        Called just before moving object - here we check to see if
-        it is supporting another object that is currently in the room
-        before allowing the move. If it is, we do prevent the move by
-        returning False.
+        Called just before moving object - If it is supporting another
+        object that is currently in the room before allowing the move.
+        If it is, we do prevent the move by returning False.
         """
+        print('%s is in %s, about to move.' % (self.key, self.location.key if self.location else 'Nothingness'))
+        if not self.location:
+            print('Allowed to move from Nothingness. (at_before_move -> True)')
+            return True  # Avoids being locked in Nothingness.
         # When self is supporting something, do not move it.
-        return False if self.attributes.has('locked') else True
+        return False if self.attributes.has('locked') and self.db.locked else True
 
     def at_get(self, caller):
         """Called after getting an object in the room."""
-        caller.msg("%s is now in your posession." % self.mxp_name(caller, 'sense #%s' % self.id))
+        caller.msg("%s is now in your possession." % self.mxp_name(caller, 'sense #%s' % self.id))
 
     def announce_move_from(self, destination):
         """
@@ -251,21 +254,20 @@ class Object(DefaultObject):
         Args:
             source_location (Object): The place we came from
         """
-        name = self.name
-        if not source_location and self.location.has_player:
+        this = self.name
+        here = self.location
+        there = source_location
+        print(there)
+        if not there and here.has_player:
             # This was created from nowhere and added to a player's
             # inventory; it's probably the result of a create command.
-            string = "You now have %s%s|n in your possession." % (self.STYLE, name)
-            self.location.msg(string)
+            here.msg("You now have %s%s|n in your possession." % (self.STYLE, this))
             return
-        loc_name = self.location.name
-        if source_location and source_location != self.location:  # TODO: Possible Evennia FIXME:
-            src_name = source_location.name
-            string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
-                                                                source_location.STYLE, src_name)
+        if there and there != here:  # TODO: Possible Evennia FIXME:
+            string = "|g%s|n arrives to %s%s|n from %s%s|n." % (this, here.STYLE, here.key, there.STYLE, there.key)
         else:
-            string = "|g%s|n suddenly appears in %s%s|n from |222Nothingness|n." % (name, self.location.STYLE, loc_name)
-        self.location.msg_contents(string, exclude=self)
+            string = "|g%s|n suddenly appears in %s%s|n from |222Nothingness|n." % (this, here.STYLE, here.key)
+        here.msg_contents(string, exclude=self)
 
     def at_object_creation(self):
             """Called after object is created."""
