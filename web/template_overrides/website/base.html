@@ -1,12 +1,16 @@
 {% load staticfiles %}<!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
   <head>
     <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static "website/css/jquery.mobile-1.4.5.min.css" %}" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="{% static "website/js/jquery.mobile-1.4.5.min.js" %}"></script>
 
     {% if sidebar %}
     <link rel="stylesheet" type="text/css" href="{% static "website/css/prosimii-screen-alt.css" %}" media="screen" title="Prosimii (Sidebar)" />
     {% else %}
-    <link rel="stylesheet" type="text/css" href="{% static "website/css/prosimii-screen.css" %}" media="screen" title="Prosimii" />
+    <link rel="stylesheet" type="text/css" href="{% static "website/css/NOW.css" %}" media="screen" title="Prosimii" />
     {% endif %}
     <link rel="stylesheet alternative" type="text/css" href="{% static "website/css/prosimii-print.css" %}" media="screen" title="Print Preview" />
     <link rel="stylesheet" type="text/css" href="{% static "website/css/prosimii-print.css" %}" media="print" />
@@ -17,64 +21,84 @@
   </head>
 
   <body>
-    <!-- For non-visual user agents: -->
-      <div id="top"><a href="#main-copy" class="doNotDisplay doNotPrint">Skip to main content.</a></div>
+    <div data-role='page'>
+      <!-- ##### Header ##### -->
 
-    <!-- ##### Header ##### -->
+      <div role="main" class="ui-content" id="main-copy">
+        <div id="header">
+          <div class="midHeader">
+            <a href="#now-links" alt='Pangolin in Motion' title='Pangolin in Motion'>
+            <img src="{% static "website/images/NOW-icon.png" %}" align='left' />
+            </a> <h1 class="headerTitle" lang='en'>{{game_name}}</h1>
+            <div class="headerSubTitle" title="Slogan">
+            <!-- Insert a slogan here if you want -->
+            Novel Online World<br />
+            {{game_slogan}}
+            </div>
+            <br class="doNotDisplay doNotPrint" />
+            <div class="headerLinks">
+              <span class="doNotDisplay">Tools:</span>
+              {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="ui-btn ui-icon-delete ui-btn-icon-notext ui-corner-all"
+                         alt='Log out' title='Log out' style="float: right; position:relative; top:-2em"></a><br />
+                Logged in as {{user.username}}
+              {% else %}
+                <a href="{% url 'login' %}">Log In</a>
+                <span class="doNotDisplay">|</span>
+                <a href="{% url 'to_be_implemented' %}">Register</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="subHeader">
+            <!--span class="doNotDisplay">Navigation:</span-->
+            <a href="/">Home</a> |
+            <a href="#popupBasic" data-rel="popup" data-transition="pop">About</a> |
+            <a href="https://github.com/Pinacolada64/NOW/wiki/#welcome-to-the-now-wiki">Documentation</a> |
+            <a href="{% url 'admin:index' %}">Admin Interface</a>
+            {% if webclient_enabled %}
+             | <a href="{% url 'webclient:index' %}">Play Online</a>
+            {% endif %}
+          </div>
+          <div data-role="popup" id="popupBasic">
+            <h1>Planned Features of NOW</h1>
 
-    <div id="header">
-      <div class="midHeader">
-        <img src="{% static "website/images/NOW-bmp-icon.png" %}" align='left' /> <h1 class="headerTitle" lang="la">{{game_name}}</h1>
-        <div class="headerSubTitle" title="Slogan">
-        <!-- Insert a slogan here if you want -->
-        Novel Online World  &nbsp;&#8212;&nbsp;
-        {{game_slogan}}			&nbsp;
-        </div>
+<ul style='padding: 3em'>
+<li>Being able to tag anything in the virtual world, much like you do with image sharing sites.</li>
+<li>
+<a class="internal present" href="https://github.com/Pinacolada64/NOW/wiki/Flags">Flags</a> system is extensible, not limited to the one alphabet letter, but any single word.</li>
+<li>A three dimensional (3D) simplification of movement within a 4x4x8 grid of room regions.</li>
+<li>Achievement system - awards based, encourages learning new things and regular usage and improvement by and for players.</li>
+<li>Provide <a class="internal present" href="https://github.com/Pinacolada64/NOW/wiki/commands">commands</a> that users are familiar with.</li>
+<li>Provides a familiarity for folks that are not ready to dive in to it via a portal to <a class="internal present" href="https://github.com/Pinacolada64/NOW/wiki/%22The-Past%22">"The Past"</a>. </li>
+<li>As rooms are maintained and updated they are promoted to the NOW, if desired.</li>
+<li>Primarily a <a class="internal present" href="https://github.com/Pinacolada64/NOW/wiki/Resource-Based-Economy">Resource Based Economy</a> with a monetary "helper" system.</li>          </div><!-- /popupBasic -->
+        </div><!-- /main -->
 
-        <br class="doNotDisplay doNotPrint" />
+        <!-- ##### Side Menu ##### -->
+        {% block sidebar %}{% endblock %}
+        <!-- ##### Main Copy ##### -->
 
-        <div class="headerLinks">
-          <span class="doNotDisplay">Tools:</span>
-          {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}">Log Out &laquo;</a>
-            <span class="doNotDisplay">|</span>
-            Logged in as {{user.username}} &laquo;
-          {% else %}
-            <a href="{% url 'login' %}">Log In &laquo;</a>
-            <span class="doNotDisplay">|</span>
-            <a href="{% url 'to_be_implemented' %}">Register &laquo;</a>
-          {% endif %}
-        </div>
+        {% block content %}
+        {% endblock %}
       </div>
 
-      <div class="subHeader">
-        <!--span class="doNotDisplay">Navigation:</span-->
-        <a href="/">Home</a> |
-        <a href="https://github.com/evennia/evennia/wiki/Evennia-Introduction/">About</a> |
-        <a href="https://github.com/Pinacolada64/NOW/wiki/#welcome-to-the-now-wiki">Documentation</a> |
-        <a href="{% url 'admin:index' %}">Admin Interface</a>
-        {% if webclient_enabled %}
-         | <a href="{% url 'webclient:index' %}">Play Online</a>
-        {% endif %}
+      <!-- ##### Footer ##### -->
 
-      </div>
-    </div>
-
-    <!-- ##### Side Menu ##### -->
-    {% block sidebar %}{% endblock %}
-    <!-- ##### Main Copy ##### -->
-
-    <div id="main-copy">
-      {% block content %}
-      {% endblock %}
-    </div>
-
-    <!-- ##### Footer ##### -->
-
-    <div id="footer">
-      <span class="doNotPrint">
-        Powered by Pangolins
-      </span>
-    </div>
+      <div data-role="footer" id="footer">
+         <a href="#popupDialog" data-rel='popup' data-position-to='window' data-transition='pop' alt='Pangolin in Motion' title='Pangolin in Motion' class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-check ui-btn-icon-left ui-btn-a">Powered by Pangolins in Motion</a>
+      </div><!-- /footer -->
+      <div data-role="panel" id="now-links" data-position="right" data-display="overlay" data-theme="b" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-closed">
+        <div class="ui-panel-inner">
+          <h3>Right Panel: Overlay</h3>
+          <p>This panel is positioned on the right with the overlay display mode. The panel markup is <em>after</em> the header, content and footer in the source order.</p><p>To close, click off the panel, swipe left or right, hit the Esc key, or use the button below:</p><a href="#close-links" data-rel="close" class="ui-btn ui-shadow ui-corner-all ui-btn-a ui-icon-delete ui-btn-icon-left ui-btn-inline">Close panel</a></div>
+	</div>
+     <!-- panel content goes here -->
+      </div><!-- /panel -->
+      <div data-role="panel" id="now-menu" data-position="left" data-display="overlay" data-theme="a" class="ui-panel ui-panel-position-left ui-panel-display-overlay ui-body-a ui-panel-animate ui-panel-closed">
+        <div class="ui-panel-inner">
+          <h3>Left Panel: Overlay</h3>
+          <p>This panel is positioned on the left with the overlay display mode. The panel markup is <em>after</em> the header, content and footer in the source order.</p><p>To close, click off the panel, swipe left or right, hit the Esc key, or use the button below:</p><a href="#close-menu" data-rel="close" class="ui-btn ui-shadow ui-corner-all ui-btn-b ui-icon-delete ui-btn-icon-left ui-btn-inline">Close panel</a></div>
+	</div><!-- /panel -->
+    </div><!-- /page -->
   </body>
 </html>

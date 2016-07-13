@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="rowOfBoxes">
    <!--div class="twoThirds noBorderOnLeft"-->
    <div class="noBorderOnLeft">
@@ -21,32 +22,32 @@
    </p>
 </div>
 <div class="rowOfBoxes dividingBorderAbove">
-   <div class="oneThird noBorderOnLeft">
-      <h2>Currently Connected</h2>
-      <p>
-      There's currently <strong>{{num_players_connected}}</strong> connected out of a total of <strong>{{num_players_registered}}</strong> players registered.</p>
-      <ul>
+   <h3 class="ui-bar ui-bar-a ui-corner-all">Currently Connected: {{num_players_connected}} of {{num_players_registered}}</h3>
+   <div class="noBorderOnLeft ui-body ui-body-a ui-corner-all">
+     <ul data-role='listview'>
       {% for player in players_connected_now %}
-      <li>{{player.username}} -- <em>On for {{player.last_login|timesince}}</em></li>
+      <li><a href="#">{{player.username}} -- <em>On for {{player.last_login|timesince}}</em></a></li>
       {% endfor %}
       </ul>
    </div>
-   <div class="oneThird">
-      <h2>Recently Connected</h2>
-      <ul>
+   <h3 class="ui-bar ui-bar-a ui-corner-all">Recently Connected</h3>
+   <div class="noBorderOnLeft ui-body ui-body-a ui-corner-all">
+     <ul data-role='listview'>
       {% for player in players_connected_recent %}
-      <li>{{player.username}} -- <em>{{player.last_login|timesince}} ago</em></li>
+      <li><a href="#">{{player.username}} &nbsp;&#8212;&nbsp; <em>{{player.last_login|timesince}} ago</em></a></li>
       {% endfor %}
-      </ul>
-      <p class="filler"><!-- Filler para to extend left vertical line --></p>
+     </ul>
+     <p class="filler"><!-- Filler para to extend left vertical line --></p>
    </div>
-   <div class="oneThird">
-      <h2>Database Stats</h2>
-      <ul>
-      <li>{{num_players_registered}} players (+ {{num_characters}} characters)</li>
-      <li>{{num_rooms}} rooms (+ {{num_exits}} exits)</li>
-      <li>{{num_others}} other objects</li>
-      </ul>
+   <h3 class="ui-bar ui-bar-a ui-corner-all">Database Stats</h3>
+   <div class="noBorderOnLeft ui-body ui-body-a ui-corner-all">
+     <ul data-role='listview' data-count-theme='b' data-inset='true'>
+      <li><a href="#">Players <span class='ui-li-count'>{{num_players_registered}}</span></a></li>
+      <li><a href="#">Characters <span class='ui-li-count'>{{num_characters}}</span></a></li>
+      <li><a href="#">Rooms <span class='ui-li-count'>{{num_rooms}}</span></a></li>
+      <li><a href="#">Exits <span class='ui-li-count'>{{num_exits}}</span></a></li>
+      <li><a href="#">Other <span class='ui-li-count'>{{num_others}}</span></a></li>
+     </ul>
    </div>
 </div>
 {% endblock %}
