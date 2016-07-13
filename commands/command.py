@@ -754,11 +754,12 @@ class CmdWho(MuxPlayerCommand):
                     delta_conn = time.time() - session.conn_time
                     player = session.get_player()
                     puppet = session.get_puppet()
-                    location = puppet.location.key if puppet else 'None'
-                    table.add_row([utils.crop(player.name, width=25),
+                    location = puppet.location.get_display_name(self.player)\
+                        if puppet and puppet.location else '|222Nothingness|n'
+                    table.add_row([utils.crop(player.get_display_name(self.player), width=25),
                                    utils.time_format(delta_conn, 0),
                                    utils.time_format(delta_cmd, 1),
-                                   utils.crop(puppet.key if puppet else 'None', width=25),
+                                   utils.crop(puppet.get_display_name(self.player) if puppet else 'None', width=25),
                                    utils.crop(location, width=25),
                                    session.cmd_total,
                                    session.protocol_key,
