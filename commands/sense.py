@@ -42,6 +42,8 @@ class CmdSense(default_cmds.MuxCommand):
             style = obj.STYLE if obj else '|c'
             if obj:
                 obj_string = obj.key
+            else:
+                return  # Trying to sense something that isn't there. "Could not find ''."
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
@@ -61,19 +63,10 @@ class CmdSense(default_cmds.MuxCommand):
                     player.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
                                (cmd, style, obj_string, rhs))
             return
-        if player.check_permstring('Helpstaff'):  # Sense if player of target is @quelled if senser has permission.
-            # you.msg("You must have |gHelpstaff|n or higher access to use this.")
-            # db._quell = True
-            # if player.attributes.get('_quell'):
-            # obj, aspect = [args, None] if "'s " not in args else args.rsplit("'s ", 1)
-            pass
-        if cmd != 'l' and 'look' not in cmd:
+        if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
             if 'sense' in cmd:
                 char.msg(obj)
-                if True:
-                    # if char and char.location:
-                    #    obj = char.search(args.strip(), candidates=[char.location] + char.location.contents +
-                    #                      char.contents) if args else char
+                if obj:
                     verb_msg = ''
                     if type(obj) != 'string' and obj.db.senses:  # Object must be database object, not string.
                         string = '%s can be sensed in the following ways: ' % obj.get_display_name(player)
@@ -108,9 +101,6 @@ class CmdSense(default_cmds.MuxCommand):
                             collector += "|r%s|n " % name
                     char.msg(verb_msg + "%s" % collector)
             elif 'taste' in cmd or 'touch' in cmd or 'smell' in cmd or 'listen' in cmd:  # Specific sense (not look)
-                obj, aspect = [args, None] if "'s " not in args else args.rsplit("'s ", 1)
-                obj = char.search(obj, candidates=[char.location] + char.location.contents + char.contents)\
-                    if args else char
                 if not obj:
                     return
                 # Object to sense might have been found. Check the senses dictionary.
@@ -148,9 +138,8 @@ class CmdSense(default_cmds.MuxCommand):
                 # sense. Start with that first, and start with the char's own self and inventory.
                 # when the /self;me and /inv;inventory switch is used?
             return
-        if args:
-            obj = char.search(args, candidates=char.location.contents + char.contents, use_nicks=True, quiet=True)
-            if not obj:
+        if args:  # Where LOOK begins.
+            if not obj:  # If no object was found, then look for a detail on the object.
                 # no object found. Check if there is a matching detail around the location.
                 # TODO: Restrict search for details by possessive parse:  [object]'s [aspect]
                 candidates = [char.location] + char.location.contents + char.contents
@@ -177,7 +166,5 @@ class CmdSense(default_cmds.MuxCommand):
         if not obj.access(char, 'view'):
             char.msg("You are unable to sense '%s'." % args)
             return
-        # get object's appearance
-        char.msg(obj.return_appearance(char))
-        # the object's at_desc() method.
-        obj.at_desc(looker=char)
+        char.msg(obj.return_appearance(char))  # get object's appearance
+        obj.at_desc(looker=char)  # the object's at_desc() method.
