@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Admin</h1>
+    <p>Welcome to the Evennia Admin Page. Here, you can edit many facets of players, characters, and other parts of the game.</p>
+    <div class="noBorderOnLeft ui-body ui-body-a ui-corner-all">
+      <ul data-role='listview' data-count-theme='b' data-inset='true'>
+       <li><a href="{% url "admin:players_playerdb_changelist" %}" data-ajax='false'><h3>Players</h3>
+         <p>Players are user accounts. Players can have several characters under them. A user's login and password information can be changed here.</p></a></li>
+       <li><a href="{% url "admin:objects_objectdb_changelist" %}" data-ajax='false'><h3>Objects</h3>
+         <p>Objects include everything from characters to rooms to exits.</p></a></li>
+       <li><a href="{% url "admin:scripts_scriptdb_changelist" %}" data-ajax='false'><h3>Scripts</h3>
+       <p>Scripts are meta objects used to store game information, handle special functionality or perform timed actions.</p></a></li>
+       <li><a href="{% url "admin:comms_channeldb_changelist" %}" data-ajax='false'><h3>Channels</h3>
+         <p>Channels are used for player communications.</p></a></li>
+       <li><a href="{% url "admin:help_helpentry_changelist" %}" data-ajax='false'><h3>Help Topics</h3>
+         <p>In-game help topics are presented with the help command when a player looks for help on specific topics.</p></a></li>
+       <li><a href="{% url "django_admin" %}" data-ajax='false'><h3>Advanced</h3>
+         <p>If you are an advanced user who needs access to the raw Django Admin.</p></a></li>
+      </ul>
+    </div>
+{% endblock content %}
