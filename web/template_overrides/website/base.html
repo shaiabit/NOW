@@ -24,15 +24,14 @@
 
     <div id="header">
       <div class="midHeader">
-        <img src="{% static "website/images/NOW-bmp-icon.png" %}" align='left' /> <h1 class="headerTitle" lang="la">{{game_name}}</h1>
+        <img src="{% static "website/images/NOW-bmp-icon.png" %}" align='left' />
+        <h1 class="headerTitle" lang='en'>{{game_name}}</h1>
         <div class="headerSubTitle" title="Slogan">
         <!-- Insert a slogan here if you want -->
         Novel Online World  &nbsp;&#8212;&nbsp;
         {{game_slogan}}			&nbsp;
         </div>
-
         <br class="doNotDisplay doNotPrint" />
-
         <div class="headerLinks">
           <span class="doNotDisplay">Tools:</span>
           {% if user.is_authenticated %}
