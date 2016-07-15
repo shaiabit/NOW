@@ -37,7 +37,9 @@ class CmdVehicle(CmdVehicleDefault):
     def func(self):
         """ """
         cmd = self.cmdstring
+        opt = self.switches
         args = self.args.strip()
+        lhs, rhs = [self.lhs, self.rhs]
         char = self.character
         where = self.obj
         here = char.location
@@ -74,6 +76,25 @@ class CmdVehicle(CmdVehicleDefault):
             if exit_message:
                 char.msg('%s%s|n %s' % (char.STYLE, char.key, exit_message))
         if 'operate' in cmd:
+            if 'on' in opt or 'off' in opt or 'toggle' in opt or 'set' in opt:
+                action = opt[0]
+                if action == 'on':
+                    action = 'engage'
+                elif action == 'off':
+                    action = 'disengage'
+                elif action == 'set':
+                    action = 'dial'
+                if 'set' in opt and rhs:
+                    message = '%s%s|n %ss %s to %s on %s%s|n control panel.' % \
+                              (char.STYLE, char.key, action, lhs if lhs else 'something', rhs,
+                               where.STYLE, where.key)
+                else:
+                    message = '%s%s|n %ss %s on %s%s|n control panel.' %\
+                              (char.STYLE, char.key, action, args if args else 'something', where.STYLE, where.key)
+                if not here == where:
+                    outside.msg_contents(message)
+                where.msg_contents(message)
+                return
             self.send_msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
                           (char.STYLE, char.key, where.STYLE, where.key, args))
             player.msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
