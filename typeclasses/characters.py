@@ -212,7 +212,11 @@ class Character(DefaultCharacter):
         return pronoun.capitalize() if typ.isupper() else pronoun
 
     def get_mass(self):
-        mass = self.attributes.get('mass') or 10
+        if not self.traits.mass:
+            mass = 10 if not self.db.mass else self.db.mass
+            self.traits.add('mass', 'Mass', type='static', base=mass)
+            print('Mass for %s(%s) set to %s.' % (self.key, self.id, repr(self.traits.mass)))
+        mass = self.traits.mass.actual or 10
         return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
 
     def get_carry_limit(self):
@@ -300,6 +304,11 @@ class NPC(Character):
     """Uses Character class as a starting point."""
     STYLE = '|m'
 
+    def at_object_creation(self):
+        """Initialize a newly-created NPC"""
+        super(Character, self).at_object_creation()
+        self.cmdset.add('commands.battle.BattleCmdSet', permanent=True)
+
     def at_post_puppet(self):  # TODO: Fix this for multi-puppeteers.
         """
         Called just after puppeting has been completed and all
@@ -311,6 +320,24 @@ class NPC(Character):
 #    Testing Trait system
         # self.traits.add('health', 'Health', type='gauge', base=20, min=0, max=20)
         # print(self.traits.health.current)
+
+        if not self.traits.mass:
+            mass = 10 if not self.db.mass else self.db.mass
+            self.traits.add('mass', 'Mass', type='static', base=mass)
+            print(self.traits.mass.current)
+
+        if not self.traits.stat_atm:
+            self.traits.add('stat_atm', 'Melee Attack', type='gauge', base=6, min=0, max=10)
+        if not self.traits.stat_atr:
+            self.traits.add('atr', 'Ranged Attack', type='gauge', base=6, min=0, max=10)
+        if not self.traits.stat_def:
+            self.traits.add('stat_def', 'Defense', type='gauge', base=6, min=0, max=10)
+        if not self.traits.stat_vit:
+            self.traits.add('stat_vit', 'Vitality', type='gauge', base=6, min=0, max=10)
+        if not self.traits.stat_mob:
+            self.traits.add('stat_mob', 'Mobility', type='gauge', base=6, min=0, max=10)
+        if not self.traits.stat_spe:
+            self.traits.add('stat_spe', 'Special', type='gauge', base=6, min=0, max=10)
 
         # def message(obj, from_obj):
         #    obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
