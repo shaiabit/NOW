@@ -332,7 +332,11 @@ class Object(DefaultObject):
             self.access(viewer, 'view') else ''
 
     def get_mass(self):  # TODO: Add mass of objects on surface, also.
-        mass = self.attributes.get('mass') or 1
+        if not self.traits.mass:
+            mass = 1 if not self.db.mass else self.db.mass
+            self.traits.add('mass', 'Mass', type='static', base=mass)
+            print('Mass for %s set to %s.' % (self.key, repr(self.traits.mass)))
+        mass = self.traits.mass.actual or 1
         return reduce(lambda x, y: x+y.get_mass(), [mass] + self.contents)
 
     def return_appearance(self, viewer):
