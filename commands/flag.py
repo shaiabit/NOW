@@ -4,7 +4,7 @@ from evennia.utils import search, utils
 
 class CmdFlag(default_cmds.MuxCommand):
     """
-    Add flag to object.
+    Set flag on object.
     Usage:
       flag   shows flags on the current room.
       flag <object>  shows flags on that object.
@@ -78,14 +78,14 @@ class CmdFlag(default_cmds.MuxCommand):
             if rhs:  # If something is on the right hand side!
                 good_flag = [x for x in self.FLAGS if x in rhs]
                 overlap = [x for x in good_flag if x in flags_obj]
-                to_add = [x for x in good_flag if x not in overlap]
+                to_set = [x for x in good_flag if x not in overlap]
                 if overlap:
                     is_one = abs(len(overlap)) == 1
                     plural = '' if is_one else 's'
                     player.msg('Flag%s already set: |y%s' % (plural, "|n, |y".join(a for a in overlap)))
-                is_one = abs(len(to_add)) == 1
+                is_one = abs(len(to_set)) == 1
                 plural = '' if is_one else 's'
-                player.msg('Added flag%s: |g%s' % (plural, "|n, |g".join(a for a in to_add)))
+                player.msg('Set flag%s: |g%s' % (plural, "|n, |g".join(a for a in to_set)))
         if 'list' in switches:
             player.msg('Displaying list of ' + ('|ymatching' if args else '|gall') + '|n flags:')
             if args:  # Show list of matching flags
