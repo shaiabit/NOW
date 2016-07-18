@@ -961,6 +961,8 @@ class CmdPose(MuxCommand):
                     obj.drink(char)
                 elif verb == 'eat':
                     obj.eat(char)
+                elif verb == 'follow':
+                    obj.follow(char)
                 elif verb == 'view':
                     char.execute_cmd('%s #%s' % ('l', obj.id))
                 elif verb == 'puppet':

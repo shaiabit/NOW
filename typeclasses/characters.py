@@ -49,10 +49,6 @@ class Character(DefaultCharacter):
     def effects(self):
         return EffectHandler(self)
 
-    # @lazy_property
-    # def equipment(self):
-    #     return EquipmentHandler(self)
-
     def at_before_move(self, destination):
         """
         Called just before moving object - here we check to see if
@@ -72,9 +68,17 @@ class Character(DefaultCharacter):
         if self.db.Combat_TurnHandler:
             self.caller.msg("You can't leave while engaged in combat!")
             return False
-        # if self.db.HP <= 0:
-        #    self.caller.msg("You can't move, you've been defeated! Type 'return' to return home and recover!")
-        #    return False
+        if self.nattributes.has('mover'):
+            return True
+        if self.attributes.has('followers') and self.db.followers:
+            self.ndb.followers = []
+            for each in self.db.followers:
+                if each.location == self.location:
+                    each.ndb.mover = self
+                    if not each.at_before_move(destination):
+                        continue
+                    self.ndb.followers.append(each)
+                    self.location.at_object_leave(each, destination)
         return True
 
     def at_after_move(self, source_location):
@@ -96,8 +100,16 @@ class Character(DefaultCharacter):
         name = self.name
         loc_name = self.location.name
         dest_name = destination.name
-        string = "|r%s|n is leaving %s%s|n, heading for %s%s|n." % (name, self.location.STYLE, loc_name,
-                                                                    destination.STYLE, dest_name)
+        string = '|r%s|n' % name
+        if self.ndb.followers and len(self.ndb.followers) > 0:
+            if len(self.ndb.followers) > 1:
+                string += ', |r' + '%s|n' % '|n, |r'.join(follower.key for follower in self.ndb.followers[:-1])
+                string += ' and |r%s|n are ' % self.ndb.followers[-1].key
+            else:
+                string += ' and |r%s|n are ' % self.ndb.followers[-1]
+        else:
+            string += ' is '
+        string += "leaving %s%s|n, heading for %s%s|n." % (self.location.STYLE, loc_name, destination.STYLE, dest_name)
         self.location.msg_contents(string, exclude=self)
 
     def announce_move_to(self, source_location):
@@ -108,19 +120,39 @@ class Character(DefaultCharacter):
             source_location (Object): The place we came from
         """
         name = self.name
+        here = self.location
         if not source_location and self.location.has_player:
             # This was created from nowhere and added to a player's
             # inventory; it's probably the result of a create command.
             string = "You now have %s%s|n in your possession." % (self.STYLE, name)
-            self.location.msg(string)
+            here.msg(string)
             return
-        src_name = "nowhere"
-        loc_name = self.location.name
+        src_name = 'Nothingness'
+        loc_name = here.name
         if source_location:
             src_name = source_location.name
-        string = "|g%s|n arrives to %s%s|n from %s%s|n." % (name, self.location.STYLE, loc_name,
-                                                            source_location.STYLE, src_name)
-        self.location.msg_contents(string, exclude=self)
+        string = '|g%s|n' % name
+        if self.ndb.followers and len(self.ndb.followers) > 0:
+            if len(self.ndb.followers) > 1:
+                string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
+                string += "|n and |g%s|n arrive " % self.ndb.followers[-1].key
+            else:
+                string += ' and |r%s|n arrive ' % self.ndb.followers[-1]
+        else:
+            string += ' arrives '
+        string += "to %s%s|n from %s%s|n." % (self.location.STYLE, loc_name, source_location.STYLE, src_name)
+        here.msg_contents(string, exclude=self)
+        if self.ndb.followers and len(self.ndb.followers) > 0:
+            for each in self.ndb.followers:
+                success = each.move_to(here, quiet=True, emit_to_obj=None, use_destination=False,
+                                       to_none=False, move_hooks=False)
+                if not success:
+                    self.msg('%s%s|n did not arrive.' % (each.STYLE, each.key))
+                    continue
+                here.at_object_receive(each, source_location)
+                each.at_after_move(source_location)
+                each.nattributes.remove('mover')
+            self.nattributes.remove('followers')
 
     def at_post_puppet(self):
         """
@@ -298,6 +330,21 @@ class Character(DefaultCharacter):
             self.db.details[detailkey.lower()] = description
         else:
             self.db.details = {detailkey.lower(): description}
+
+    def follow(self, caller):
+        """Set following agreement"""
+        if self == caller:
+            self.msg('You decide to follow your heart.')
+            return
+        if self.attributes.has('followers') and self.db.followers:
+            if caller in self.db.followers:
+                caller.msg("You are already following %s%s|n." % (self.STYLE, self.key))
+                return
+            self.db.followers.append(caller)
+        else:
+            self.db.followers = [caller]
+        msg = "|g%s|n decides to follow %s%s|n." % (caller.key, self.STYLE, self.key)
+        caller.location.msg_contents(msg)
 
 
 class NPC(Character):
