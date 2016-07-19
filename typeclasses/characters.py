@@ -70,7 +70,7 @@ class Character(DefaultCharacter):
             return False
         if self.nattributes.has('mover'):
             return True
-        if self.attributes.has('followers') and self.db.followers:
+        if self.attributes.has('followers') and self.db.followers and self.location:
             self.ndb.followers = []
             for each in self.db.followers:
                 if each.location == self.location:
@@ -137,7 +137,7 @@ class Character(DefaultCharacter):
                 string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
                 string += "|n and |g%s|n arrive " % self.ndb.followers[-1].key
             else:
-                string += ' and |r%s|n arrive ' % self.ndb.followers[-1]
+                string += ' and |g%s|n arrive ' % self.ndb.followers[-1]
         else:
             string += ' arrives '
         string += "to %s%s|n from %s%s|n." % (self.location.STYLE, loc_name, source_location.STYLE, src_name)
@@ -149,6 +149,7 @@ class Character(DefaultCharacter):
                 if not success:
                     self.msg('%s%s|n did not arrive.' % (each.STYLE, each.key))
                     continue
+            for each in self.ndb.followers:
                 here.at_object_receive(each, source_location)
                 each.at_after_move(source_location)
                 each.nattributes.remove('mover')
