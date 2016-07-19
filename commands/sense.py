@@ -28,22 +28,26 @@ class CmdSense(default_cmds.MuxCommand):
     def func(self):
         """Handle sensing objects in different ways. WIP: Expanding to handle other senses."""
         char = self.character
+        here = char.location
         player = self.player
+        if not (char or here):
+            player.msg("There's nothing here to sense.")
+            return
         args = self.args.strip()
         cmd = self.cmdstring
         lhs = self.lhs.strip()
         rhs = self.rhs
         obj_string, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
-        obj = None
-        if char and char.location:
-            obj = char.search(obj_string, candidates=[char.location] + char.location.contents + char.contents)\
-                if args else char
+        obj = char.search(obj_string, quiet=True,
+                          candidates=[here] + here.contents + char.contents) if args else [char]
+        if obj:
+            obj = obj[0]
+            obj_string = obj.key
+        else:
+            _AT_SEARCH_RESULT(obj, char, args, quiet=False)
+            return  # Trying to sense something that isn't there. "Could not find ''."
+        style = obj.STYLE if obj else '|c'
         if self.rhs is not None:  # Equals sign exists.
-            style = obj.STYLE if obj else '|c'
-            if obj:
-                obj_string = obj.key
-            else:
-                return  # Trying to sense something that isn't there. "Could not find ''."
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
@@ -65,11 +69,10 @@ class CmdSense(default_cmds.MuxCommand):
             return
         if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
             if 'sense' in cmd:
-                char.msg(obj)
+                char.msg('|wSensing %s%s|n...' % (obj.STYLE, obj.key))
                 if obj:
-                    verb_msg = ''
-                    if type(obj) != 'string' and obj.db.senses:  # Object must be database object, not string.
-                        string = '%s can be sensed in the following ways: ' % obj.get_display_name(player)
+                    if obj.db.senses:  # Object must be database object to be sensed.
+                        string = '* Senses available for %s: ' % obj.get_display_name(player)
                         string += ", ".join('|lc%s #%s|lt|g%s|n|le' % (element, obj.id, element)
                                             for element in obj.db.senses.keys())
                         char.msg(string)
@@ -81,12 +84,10 @@ class CmdSense(default_cmds.MuxCommand):
                         if len(string) > 0:
                             char.msg(obj.get_display_name(player) + ' has the following aspects that can be sensed: ' +
                                      string)
+                    if obj != char:
+                        verb_msg = "%s responds to: " % obj.get_display_name(player)
                     else:
-                        if obj:
-                            verb_msg = "%s responds to: " % obj.get_display_name(player)
-                        else:
-                            obj = char
-                            verb_msg = "%sYou|n respond to: " % char.STYLE
+                        verb_msg = "%sYou|n respond to: " % char.STYLE
                     verbs = obj.locks
                     collector = ''
                     show_red = True if obj.access(char, 'examine') else False
@@ -138,11 +139,11 @@ class CmdSense(default_cmds.MuxCommand):
                 # sense. Start with that first, and start with the char's own self and inventory.
                 # when the /self;me and /inv;inventory switch is used?
             return
-        if args:  # Where LOOK begins.
+        if args:  # < LOOK begins here. ------------------------------------------- >
             if not obj:  # If no object was found, then look for a detail on the object.
                 # no object found. Check if there is a matching detail around the location.
                 # TODO: Restrict search for details by possessive parse:  [object]'s [aspect]
-                candidates = [char.location] + char.location.contents + char.contents
+                candidates = [here] + here.contents + char.contents
                 for location in candidates:
                     # TODO: Continue if look location is not visible to looker.
                     if location and hasattr(location, "return_detail") and callable(location.return_detail):
@@ -150,21 +151,14 @@ class CmdSense(default_cmds.MuxCommand):
                         if detail:
                             char.msg(detail)  # Show found detail.
                             return  # TODO: Add /all switch to override return here to view all details.
-                # no detail found. Trigger delayed error messages
-                _AT_SEARCH_RESULT(obj, char, args, quiet=False)
+                _AT_SEARCH_RESULT(obj, char, args, quiet=False)  # no detail found. Trigger delayed error messages
                 return
             else:
                 obj = utils.make_iter(obj)[0]  # Use the first match in the list.
         else:
-            obj = char.location
-            if not obj:
-                char.msg("There is nothing to sense here.")
-                return
-        if not hasattr(obj, 'return_appearance'):
-            # this is likely due to a player calling the command.
-            obj = obj.character
+            obj = here
         if not obj.access(char, 'view'):
             char.msg("You are unable to sense '%s'." % args)
             return
-        char.msg(obj.return_appearance(char))  # get object's appearance
-        obj.at_desc(looker=char)  # the object's at_desc() method.
+        char.msg(obj.return_appearance(char))  # get object's appearance as seen by char
+        obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.
