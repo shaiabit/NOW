@@ -46,7 +46,7 @@ class CmdSense(default_cmds.MuxCommand):
         else:
             _AT_SEARCH_RESULT(obj, char, args, quiet=False)
             return  # Trying to sense something that isn't there. "Could not find ''."
-        style = obj.STYLE if obj else '|c'
+        style = obj.STYLE if obj and obj.hasattr('STYLE') else '|c'
         if self.rhs is not None:  # Equals sign exists.
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
