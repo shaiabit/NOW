@@ -7,7 +7,6 @@ is setup to be the "default" character type created by the default
 creation commands.
 
 """
-import re
 from world.helpers import make_bar, mass_unit
 from evennia import DefaultCharacter
 
@@ -56,21 +55,21 @@ class Character(DefaultCharacter):
         before allowing the move. If it is, we do prevent the move by
         returning False.
         """
-        if destination == self.location:
+        if destination == self.location:  # Prevent move into same room character is already in.
             return False
-        if self.db.locked:
+        if self.db.locked:  # Prevent leaving a room while still sitting.
             self.msg("\nYou're still sitting.")  # stance, prep, obj
             return False  # Object is supporting something; do not move it
-        elif self.attributes.has('health') and self.db.health <= 0:
+        elif self.attributes.has('health') and self.db.health <= 0:  # Prevent move while incapacitated.
             self.msg("You can't move; you're incapacitated!")  # Type 'home' to TODO:
             # go back home and recover, or wait for a healer to come to you.")
             return False
-        if self.db.Combat_TurnHandler:
+        if self.db.Combat_TurnHandler:  # Prevent move while in combat.
             self.caller.msg("You can't leave while engaged in combat!")
             return False
-        if self.nattributes.has('mover'):
+        if self.nattributes.has('mover'):  # Allow move when being moved by something.
             return True
-        if self.attributes.has('followers') and self.db.followers and self.location:
+        if self.attributes.has('followers') and self.db.followers and self.location:  # Test list of followers.
             self.ndb.followers = []
             for each in self.db.followers:
                 if each.location == self.location:
@@ -148,6 +147,8 @@ class Character(DefaultCharacter):
                                        to_none=False, move_hooks=False)
                 if not success:
                     self.msg('%s%s|n did not arrive.' % (each.STYLE, each.key))
+                    each.nattributes.remove('mover')
+                    self.ndb.followers.remove(each)
                     continue
             for each in self.ndb.followers:
                 here.at_object_receive(each, source_location)
