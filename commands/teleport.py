@@ -72,34 +72,39 @@ class CmdTeleport(default_cmds.MuxCommand):
             return
         if rhs:
             target = char.search(lhs, global_search=True)
-            destination = char.search(rhs, global_search=True)
+            loc = char.search(rhs, global_search=True)
         else:
             target = char
-            destination = char.search(lhs, global_search=True)
+            loc = char.search(lhs, global_search=True)
         if not target:
             player.msg("Did not find object to teleport.")
             return
-        if not destination:
+        if not loc:
             player.msg("Destination not found.")
             return
-        if target == destination:
+        if target == loc:
             player.msg("You can not teleport an object inside of itself!")
             return
-        print("%s is trying to go to %s" % (target.key, destination.key))
-        if target == destination.location:
+        print("%s is trying to go to %s" % (target.key, loc.key))
+        if target == loc.location:
             player.msg("You can not teleport an object inside something it holds!")
             return
-        if target.location and target.location == destination:
-            player.msg("%s is already at %s." % (target.get_display_name(player), destination.get_display_name(player)))
+        if target.location and target.location == loc:
+            player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
             return
-        use_destination = True
+        use_loc = True
         if 'intoexit' in self.switches:
-            use_destination = False
+            use_loc = False
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
-        if target.move_to(destination, quiet=tel_quietly, emit_to_obj=char, use_destination=use_destination):
+        else:
+            target.ndb.mover = char
+        if target.move_to(loc, quiet=tel_quietly, emit_to_obj=char, use_destination=use_loc):
             if target == char:
-                player.msg("Teleported to %s." % destination.get_display_name(player))
+                player.msg("Teleported to %s." % loc.get_display_name(player))
             else:
-                player.msg("Teleported %s -> %s." % (target.get_display_name(player),
-                                                     destination.get_display_name(player)))
+                player.msg("Teleported %s to %s." % (target.get_display_name(player), loc.get_display_name(player)))
+                target.nattributes.remove('mover')
+        else:
+            player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(player),
+                                                           loc.get_display_name(player)))
