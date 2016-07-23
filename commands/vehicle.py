@@ -1,5 +1,4 @@
-from evennia import CmdSet
-from evennia import default_cmds
+from evennia import default_cmds, CmdSet
 
 
 class VehicleCmdSet(CmdSet):
@@ -85,12 +84,11 @@ class CmdVehicle(CmdVehicleDefault):
                 elif action == 'set':
                     action = 'dial'
                 if 'set' in opt and rhs:
-                    message = '%s%s|n %ss %s to %s on %s%s|n control panel.' % \
-                              (char.STYLE, char.key, action, lhs if lhs else 'something', rhs,
-                               where.STYLE, where.key)
+                    message = '|g%s|n %ss %s to %s on %s%s|n control panel.' % \
+                              (char.key, action, lhs if lhs else 'something', rhs, where.STYLE, where.key)
                 else:
-                    message = '%s%s|n %ss %s on %s%s|n control panel.' %\
-                              (char.STYLE, char.key, action, args if args else 'something', where.STYLE, where.key)
+                    message = '|g%s|n %ss %s on %s%s|n control panel.' %\
+                              (char.key, action, args if args else 'something', where.STYLE, where.key)
                 if not here == where:
                     outside.msg_contents(message)
                 where.msg_contents(message)
