@@ -26,7 +26,7 @@ class CmdSense(default_cmds.MuxCommand):
     player_caller = True
 
     def func(self):
-        """Handle sensing objects in different ways. WIP: Expanding to handle other senses."""
+        """Handle sensing objects in different ways, including look."""
         char = self.character
         here = char.location
         player = self.player
@@ -46,11 +46,15 @@ class CmdSense(default_cmds.MuxCommand):
         else:
             _AT_SEARCH_RESULT(obj, char, args, quiet=False)
             return  # Trying to sense something that isn't there. "Could not find ''."
-        style = obj.STYLE if obj and obj.hasattr('STYLE') else '|c'
+        style = obj.STYLE if obj and hasattr(obj, 'STYLE') else '|c'
+        senses = obj.db.senses
+        details = obj.db.details
         if self.rhs is not None:  # Equals sign exists.
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
+                # Scan senses before deleting details - make sure not to remove detail if another sense uses it.
                 player.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+
                 if aspect:
                     player.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
                                (cmd, style, obj_string, aspect))
