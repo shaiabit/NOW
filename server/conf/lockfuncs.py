@@ -75,7 +75,14 @@ def no_home(accessing_obj, accessed_obj, *args, **kwargs):
     called in lockstring with no_home() and returns False
     when accessing_obj unable to go home. (May already be home)
     """
-    return True
+    return True if not accessing_obj.home else False
+
+def at_home(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with no_home() and returns False
+    when accessing_obj unable to go home. (May already be home)
+    """
+    return True if accessing_obj.location == accessing_obj.home else False
 
 def roll(accessing_obj, accessed_obj, *args, **kwargs):
     return True if args else False
