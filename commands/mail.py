@@ -116,11 +116,11 @@ class CmdMail(default_cmds.MuxCommand):
         create.create_message(char, message, receivers=rec_objs)
 
         for c_obj in rec_objs:  # TODO: Notify character of mail delivery. (birdseed)
+            received.append('%s%s|n' % (c_obj.STYLE, c_obj.key))
             if hasattr(c_obj, 'sessions') and not c_obj.sessions.count():
                 r_strings.append("%s is offline." % received[-1])
             else:  # Tell the receiving characters about receiving a letter if they are online.
                 c_obj.msg('%s %s' % (header, message))
-            received.append('%s%s|n' % (c_obj.STYLE, c_obj.key))
 
         if r_strings:
             self.msg("\n".join(r_strings))
@@ -129,4 +129,4 @@ class CmdMail(default_cmds.MuxCommand):
         char.location.msg_contents('|g%s|n places %s on an envelope and slips it into the %s%s|n mailbox.'
                                    % (char.key, stamp_plural, char.STYLE, char.location), exclude=char)
         self.msg('Mail delivery costs %s.' % stamp_plural)
-        self.msg("You mailed %s: '%s'." % (', '.join(received), message))
+        self.msg("You mailed %s: %s" % (', '.join(received), message))
