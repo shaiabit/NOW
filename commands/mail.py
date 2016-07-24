@@ -16,15 +16,13 @@ class MailCmdSet(CmdSet):
 
 class CmdMail(default_cmds.MuxCommand):
     """
-    send a private message to another player
+    Mail a private letter to another character or
+    show your last <number> of letters (default is 5)
     Usage:
       mail[/switches] [<player>,<player>,... = <message>]
       mail <number>
-    Switch:
-      last - shows who you last messaged
-      list - show your last <number> of tells/pages (default)
-    Send a message to target user (if online). If no
-    argument is given, you will get a list of your latest messages.
+    Options:
+      last - shows your last correspondence.
     """
 
     key = 'mail'
@@ -45,8 +43,8 @@ class CmdMail(default_cmds.MuxCommand):
 
         if 'last' in self.switches:
             if sent_messages:
-                recv = ",".join(obj.key for obj in sent_messages[-1].receivers)
-                self.msg("You last mailed |w%s|n:%s" % (recv, sent_messages[-1].message))
+                recv = ', '.join('%s%s|n' % (obj.STYLE, obj.key) for obj in sent_messages[-1].receivers)
+                self.msg("You last mailed |w%s|n: |w%s" % (recv, sent_messages[-1].message))
             else:
                 self.msg("You haven't mailed anyone yet.")
             return
@@ -69,28 +67,28 @@ class CmdMail(default_cmds.MuxCommand):
                 mail_last = mail
             template = "|w%s|n |w%s|n to |w%s|n: %s"
             mail_last = "\n ".join(template %
-                                   (utils.datetime_format(mail.date_sent), ",".join(obj.key for obj in mail.senders),
-                                    "|n,|w ".join([obj.key for obj in mail.receivers]),
+                                   (utils.datetime_format(mail.date_sent),
+                                    ', '.join('%s%s|n' % (obj.STYLE, obj.key) for obj in mail.senders),
+                                    ', '.join(['%s%s|n' % (obj.STYLE, obj.key) for obj in mail.receivers]),
                                     mail.message) for mail in mail_last)
-
             if mail_last:
                 string = "Your latest letters:\n %s" % mail_last
             else:
                 string = "You haven't mailed anyone yet."
             self.msg(string)
             return
-        # Send mode: Build a list of targets.
-        if not self.lhs:
-            # If there are no targets, then set the targets to the last person mailed.
-            if sent_messages:
+        if not self.lhs:  # Send mode
+            if sent_messages:  # If no recipients provided, then default to the last character mailed.
                 receivers = sent_messages[-1].receivers
             else:
                 self.msg("Who do you want to mail?")
                 return
-        else:
+        else:  # Build a list of comma-delimited recipients.
             receivers = self.lhslist
 
         rec_objs = []
+        received = []
+        r_strings = []
         for receiver in set(receivers):
             if isinstance(receiver, basestring):
                 c_obj = char.search(receiver, global_search=True, exact=True)
@@ -100,6 +98,9 @@ class CmdMail(default_cmds.MuxCommand):
                 self.msg("Who do you want to mail?")
                 return
             if c_obj:
+                if not c_obj.access(char, 'mail'):
+                    r_strings.append("You are not able to mail %s." % c_obj)
+                    continue
                 rec_objs.append(c_obj)
 
         if not rec_objs:
@@ -112,22 +113,15 @@ class CmdMail(default_cmds.MuxCommand):
         if message.startswith(':'):  # Format as pose if message begins with a :
             message = "%s%s|n %s" % (char.STYLE, char.key, message.strip(':'))
 
-        #  TODO: prune rec_objs with not c_obj.access(char, 'mail') lock check.  (Don't actually send unless allowed.)
         create.create_message(char, message, receivers=rec_objs)
 
-        # Tell the receiving characters about the message if they are online.
-        received = []
-        r_strings = []
-        for c_obj in rec_objs:
-            if not c_obj.access(char, 'mail'):
-                r_strings.append("You are not allowed to mail %s." % c_obj)
-                continue
-            c_obj.msg("%s %s" % (header, message))  # TODO: Notify character of mail delivery. (birdseed)
+        for c_obj in rec_objs:  # TODO: Notify character of mail delivery. (birdseed)
             if hasattr(c_obj, 'sessions') and not c_obj.sessions.count():
-                received.append("%s%s|n" % (c_obj.STYLE, c_obj.key))
                 r_strings.append("%s is offline." % received[-1])
-            else:
-                received.append("%s%s|n" % (c_obj.STYLE, c_obj.key))
+            else:  # Tell the receiving characters about receiving a letter if they are online.
+                c_obj.msg('%s %s' % (header, message))
+            received.append('%s%s|n' % (c_obj.STYLE, c_obj.key))
+
         if r_strings:
             self.msg("\n".join(r_strings))
         stamp_count = len(rec_objs)
