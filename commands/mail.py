@@ -2,7 +2,7 @@ from evennia import default_cmds, CmdSet
 from past.builtins import cmp
 from django.conf import settings
 from evennia.comms.models import ChannelDB, Msg
-from evennia.utils import create, utils, evtable
+from evennia.utils import create, utils, evtable, delay
 from evennia.utils.utils import make_iter, class_from_module
 
 
@@ -22,37 +22,43 @@ class CmdMail(default_cmds.MuxCommand):
       mail[/switches] [<player>,<player>,... = <message>]
       mail <number>
     Options:
-      last - shows your last correspondence.
+      last   shows your last sent correspondence.
+      check  check for new messages since last read.
     """
-
     key = 'mail'
     locks = 'cmd:not pperm(mail_banned) and at_home()'
     help_category = 'Communication'
-
     player_caller = True
+
+    def mail_check(self):
+        char = self.character
+        if char.ndb.new_mail:
+            self.msg('You have new mail in your %s%s|n mailbox.' % (char.location.STYLE, char.location.key))
+            return True
+        else:
+            return False
 
     def func(self):
         """Implement function using the Msg methods"""
-        # Since player_caller is set above, this will be a Player.
         char = self.character
-
-        # get the messages we've sent (not to channels)
         sent_messages = Msg.objects.get_messages_by_sender(char, exclude_channel_messages=True)
-        # get last messages we've got
         recd_messages = Msg.objects.get_messages_by_receiver(char)
-
         if 'last' in self.switches:
+            self.mail_check()
             if sent_messages:
                 recv = ', '.join('%s%s|n' % (obj.STYLE, obj.key) for obj in sent_messages[-1].receivers)
                 self.msg("You last mailed |w%s|n: |w%s" % (recv, sent_messages[-1].message))
             else:
                 self.msg("You haven't mailed anyone yet.")
+            self.mail_check()
             return
-
+        if 'check' in self.switches:
+            if not self.mail_check():
+                if not ('silent' in self.switches and 'quiet' in self.switches):
+                    self.msg('Your %s%s|n mailbox has no new mail.' % (char.location.STYLE, char.location.key))
         if not self.args or not self.rhs:
             mail = sent_messages + recd_messages
             mail.sort(lambda x, y: cmp(x.date_sent, y.date_sent))
-
             number = 5
             if self.args:
                 try:
@@ -60,7 +66,6 @@ class CmdMail(default_cmds.MuxCommand):
                 except ValueError:
                     self.msg("Usage: mail [<character> = msg]")
                     return
-
             if len(mail) > number:
                 mail_last = mail[-number:]
             else:
@@ -76,16 +81,17 @@ class CmdMail(default_cmds.MuxCommand):
             else:
                 string = "You haven't mailed anyone yet."
             self.msg(string)
+            char.nattributes.remove('new_mail')  # Removes the notice.
             return
-        if not self.lhs:  # Send mode
-            if sent_messages:  # If no recipients provided, then default to the last character mailed.
-                receivers = sent_messages[-1].receivers
+        # Send mode
+        if not self.lhs:
+            if sent_messages:  # If no recipients provided,
+                receivers = sent_messages[-1].receivers  # default to sending to the last character mailed.
             else:
                 self.msg("Who do you want to mail?")
                 return
         else:  # Build a list of comma-delimited recipients.
             receivers = self.lhslist
-
         rec_objs = []
         received = []
         r_strings = []
@@ -102,31 +108,31 @@ class CmdMail(default_cmds.MuxCommand):
                     r_strings.append("You are not able to mail %s." % c_obj)
                     continue
                 rec_objs.append(c_obj)
-
         if not rec_objs:
             self.msg("No one found to mail.")
             return
-
-        header = '|mMessage|n from %s%s:|n ' % (char.STYLE, char.key)
         message = self.rhs.strip()
-
         if message.startswith(':'):  # Format as pose if message begins with a :
             message = "%s%s|n %s" % (char.STYLE, char.key, message.strip(':'))
-
         create.create_message(char, message, receivers=rec_objs)
 
-        for c_obj in rec_objs:  # TODO: Notify character of mail delivery. (birdseed)
+        def letter_delivery():
+            # c_obj.msg('%s %s' % (header, message))
+            c_obj.msg('|/A letter has arrived in %s%s|n mailbox for you.|/' % (c_obj.home.STYLE, c_obj.home.key))
+
+        for c_obj in rec_objs:  # Notify character of mail delivery.
             received.append('%s%s|n' % (c_obj.STYLE, c_obj.key))
             if hasattr(c_obj, 'sessions') and not c_obj.sessions.count():
-                r_strings.append("%s is offline." % received[-1])
+                r_strings.append("|r%s|n is currently asleep, and won't read the letter until later." % received[-1])
+                c_obj.ndb.new_mail = True
             else:  # Tell the receiving characters about receiving a letter if they are online.
-                c_obj.msg('%s %s' % (header, message))
-
+                utils.delay(20, callback=letter_delivery)
         if r_strings:
             self.msg("\n".join(r_strings))
         stamp_count = len(rec_objs)
         stamp_plural = 'a stamp' if stamp_count == 1 else '%i stamps' % stamp_count
-        char.location.msg_contents('|g%s|n places %s on an envelope and slips it into the %s%s|n mailbox.'
-                                   % (char.key, stamp_plural, char.STYLE, char.location), exclude=char)
         self.msg('Mail delivery costs %s.' % stamp_plural)
-        self.msg("You mailed %s: %s" % (', '.join(received), message))
+        char.location.msg_contents('|g%s|n places %s on an envelope and slips it into the %s%s|n mailbox.'
+                                   % (char.key, stamp_plural, char.location.STYLE, char.location.key))
+        self.msg("Your letter to %s will be delivered soon. You wrote: %s" % (', '.join(received), message))
+        self.mail_check()

@@ -173,6 +173,8 @@ class Character(DefaultCharacter):
 
         self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
+        if self.ndb.new_mail:
+            self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
 
         def message(obj, from_obj):
             obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
@@ -371,6 +373,8 @@ class NPC(Character):
         """
         self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
+        if self.ndb.new_mail:
+            self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
 
 #    Testing Trait system
         # self.traits.add('health', 'Health', type='gauge', base=20, min=0, max=20)
