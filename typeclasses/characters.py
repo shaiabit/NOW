@@ -176,10 +176,13 @@ class Character(DefaultCharacter):
 
         def message(obj, from_obj):
             obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
-        self.location.for_contents(message, exclude=[self], from_obj=self)
+
+        if self.location != self.home:
+            self.location.for_contents(message, exclude=[self], from_obj=self)
 
         def message(obj, from_obj):
             obj.msg("|g%s|n awakens." % self.key, from_obj=from_obj)
+
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
@@ -194,19 +197,22 @@ class Character(DefaultCharacter):
             session (Session): Session controlling the connection that
                 just disconnected.
         """
-        if not self.sessions.count():
-            # only remove this char from grid if no sessions control it anymore.
+        if not self.sessions.count():  # Only remove this char from grid if no sessions control it anymore.
             if self.location:
 
                 def message(obj, from_obj):
                     obj.msg("|r%s|n sleeps." % self.key, from_obj=from_obj)
+
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
-                self.location = None
+                if self.location != self.home:
+                    self.location = None
 
                 def message(obj, from_obj):
                     obj.msg("%s fades from view." % self.get_display_name(obj), from_obj=from_obj)
-                self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
+
+                if self.location != self.home:
+                    self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
 
     def get_display_name(self, looker, **kwargs):
         """Displays the name of the object in a viewer-aware manner."""
