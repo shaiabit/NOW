@@ -2,20 +2,8 @@ from evennia import default_cmds, CmdSet
 from past.builtins import cmp
 from django.conf import settings
 from evennia.comms.models import ChannelDB, Msg
-from evennia.players.models import PlayerDB
-from evennia.players import bots
-from evennia.comms.channelhandler import CHANNELHANDLER
 from evennia.utils import create, utils, evtable
 from evennia.utils.utils import make_iter, class_from_module
-
-COMMAND_DEFAULT_CLASS = class_from_module(settings.COMMAND_DEFAULT_CLASS)
-
-# limit symbol import for API
-__all__ = ("CmdAddCom", "CmdDelCom", "CmdAllCom",
-           "CmdChannels", "CmdCdestroy", "CmdCBoot", "CmdCemit",
-           "CmdCWho", "CmdChannelCreate", "CmdClock", "CmdCdesc",
-           "CmdPage", "CmdIRC2Chan", "CmdRSS2Chan")
-_DEFAULT_WIDTH = settings.CLIENT_DEFAULT_WIDTH
 
 
 class MailCmdSet(CmdSet):
@@ -43,7 +31,6 @@ class CmdMail(default_cmds.MuxCommand):
     locks = 'cmd:not pperm(mail_banned) and at_home()'
     help_category = 'Communication'
 
-    # this is used by the COMMAND_DEFAULT_CLASS parent
     player_caller = True
 
     def func(self):
@@ -59,11 +46,10 @@ class CmdMail(default_cmds.MuxCommand):
         if 'last' in self.switches:
             if sent_messages:
                 recv = ",".join(obj.key for obj in sent_messages[-1].receivers)
-                self.msg("You last mailed |c%s|n:%s" % (recv, sent_messages[-1].message))
-                return
+                self.msg("You last mailed |w%s|n:%s" % (recv, sent_messages[-1].message))
             else:
                 self.msg("You haven't mailed anyone yet.")
-                return
+            return
 
         if not self.args or not self.rhs:
             mail = sent_messages + recd_messages
@@ -88,7 +74,7 @@ class CmdMail(default_cmds.MuxCommand):
                                     mail.message) for mail in mail_last)
 
             if mail_last:
-                string = "Your latest messages:\n %s" % mail_last
+                string = "Your latest letters:\n %s" % mail_last
             else:
                 string = "You haven't mailed anyone yet."
             self.msg(string)
@@ -103,17 +89,19 @@ class CmdMail(default_cmds.MuxCommand):
                 return
         else:
             receivers = self.lhslist
+
         rec_objs = []
         for receiver in set(receivers):
             if isinstance(receiver, basestring):
-                c_obj = char.search(receiver)
-            elif hasattr(receiver, 'character'):
+                c_obj = char.search(receiver, global_search=True, exact=True)
+            elif hasattr(receiver, 'location'):
                 c_obj = receiver
             else:
                 self.msg("Who do you want to mail?")
                 return
             if c_obj:
                 rec_objs.append(c_obj)
+
         if not rec_objs:
             self.msg("No one found to mail.")
             return
@@ -121,27 +109,30 @@ class CmdMail(default_cmds.MuxCommand):
         header = '|mMessage|n from %s%s:|n ' % (char.STYLE, char.key)
         message = self.rhs.strip()
 
-        # if message begins with a :, we assume it is a 'page-pose'
-        if message.startswith(':'):
+        if message.startswith(':'):  # Format as pose if message begins with a :
             message = "%s%s|n %s" % (char.STYLE, char.key, message.strip(':'))
 
-        # TODO: persist message only if character is not online currently.
+        #  TODO: prune rec_objs with not c_obj.access(char, 'mail') lock check.  (Don't actually send unless allowed.)
         create.create_message(char, message, receivers=rec_objs)
 
-        # tell the character about the message.
+        # Tell the receiving characters about the message if they are online.
         received = []
         r_strings = []
         for c_obj in rec_objs:
-            if not c_obj.access(char, 'tell'):
+            if not c_obj.access(char, 'mail'):
                 r_strings.append("You are not allowed to mail %s." % c_obj)
                 continue
-            c_obj.msg("%s %s" % (header, message))
+            c_obj.msg("%s %s" % (header, message))  # TODO: Notify character of mail delivery. (birdseed)
             if hasattr(c_obj, 'sessions') and not c_obj.sessions.count():
                 received.append("%s%s|n" % (c_obj.STYLE, c_obj.key))
-                r_strings.append("%s is offline."
-                                 % received[-1])
+                r_strings.append("%s is offline." % received[-1])
             else:
                 received.append("%s%s|n" % (c_obj.STYLE, c_obj.key))
         if r_strings:
             self.msg("\n".join(r_strings))
+        stamp_count = len(rec_objs)
+        stamp_plural = 'a stamp' if stamp_count == 1 else '%i stamps' % stamp_count
+        char.location.msg_contents('|g%s|n places %s on an envelope and slips it into the %s%s|n mailbox.'
+                                   % (char.key, stamp_plural, char.STYLE, char.location), exclude=char)
+        self.msg('Mail delivery costs %s.' % stamp_plural)
         self.msg("You mailed %s: '%s'." % (', '.join(received), message))
