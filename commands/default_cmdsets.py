@@ -21,7 +21,7 @@ from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 # [commands modules]
 from commands import prelogin
 from commands import exitdirections
-from commands import desc
+# from commands import desc
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
@@ -31,9 +31,10 @@ from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
+from commands.sayposeooc import CmdSay, CmdPose, CmdOoc, CmdSpoof
 # from commands import destroy # Not ready for testing.
-from commands.command import CmdQuit, CmdPose, CmdSay, CmdWho, CmdForge
-from commands.command import CmdOoc, CmdSpoof, CmdAccess, CmdChannels
+from commands.command import CmdQuit, CmdWho, CmdForge
+from commands.command import CmdAccess, CmdChannels
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
