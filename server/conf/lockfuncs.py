@@ -1,3 +1,6 @@
+# -*- coding: UTF-8 -*-
+from random import *
+
 """
 
 Lockfuncs
@@ -20,6 +23,7 @@ lock functions from evennia.locks.lockfuncs.
 
 """
 
+
 def tellfalse(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with tellfalse().
@@ -29,22 +33,20 @@ def tellfalse(accessing_obj, accessed_obj, *args, **kwargs):
     print "%s tried to access %s. Access denied." % (accessing_obj, accessed_obj)
     return False
 
-from random import *
 
 def half(accessing_obj, accessed_obj, *args, **kwargs):
-    if random() > 0.5:
-	return False
-    return True
+    return False if random() > 0.5 else True
+
 
 def on_path(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with on_path() and returns False
     when accessing_obj is on a path (inside an exit).
     """
-    if accessing_obj.location == None:
-        return True # Nowhere is not on a path.
-    destination = accessing_obj.location.destination
-    return False if destination == None else True
+    if not accessing_obj.location:
+        return True  # Nowhere is not on a path.
+    return True if accessing_obj.location.destination else False
+
 
 def on_exit(accessing_obj, accessed_obj, *args, **kwargs):
     """
@@ -56,12 +58,13 @@ def on_exit(accessing_obj, accessed_obj, *args, **kwargs):
     print("args=%s, reached=%s, in location=%s" % (args[0], reached, location))
 
     if not location or not reached:
-        return False # Nowhere is not on an path.
+        return False  # Nowhere is not on an path.
     else:
         if args:
             return True if args[0] in accessing_obj.db.reached else False
         else:
             return False
+
 
 def no_back(accessing_obj, accessed_obj, *args, **kwargs):
     """
@@ -70,6 +73,7 @@ def no_back(accessing_obj, accessed_obj, *args, **kwargs):
     """
     return False
 
+
 def no_home(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with no_home() and returns False
@@ -77,12 +81,14 @@ def no_home(accessing_obj, accessed_obj, *args, **kwargs):
     """
     return True if not accessing_obj.home else False
 
+
 def at_home(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with no_home() and returns False
     when accessing_obj unable to go home. (May already be home)
     """
     return True if accessing_obj.location == accessing_obj.home else False
+
 
 def roll(accessing_obj, accessed_obj, *args, **kwargs):
     return True if args else False
