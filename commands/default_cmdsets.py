@@ -21,19 +21,20 @@ from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 # [commands modules]
 from commands import prelogin
 from commands import exitdirections
-# from commands import desc
+from commands.say import CmdSay, CmdOoc, CmdSpoof
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
 from commands.mail import CmdMail
+from commands.pose import CmdPose
+from commands.quit import CmdQuit
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
-from commands.sayposeooc import CmdSay, CmdPose, CmdOoc, CmdSpoof
 # from commands import destroy # Not ready for testing.
-from commands.command import CmdQuit, CmdWho, CmdForge
+from commands.command import CmdWho, CmdForge
 from commands.command import CmdAccess, CmdChannels
 
 
@@ -54,12 +55,12 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdDrop)
-        self.remove(default_cmds.CmdLook)
+        self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
-        self.remove(default_cmds.CmdSetHome)
-        self.remove(default_cmds.CmdDestroy)  # Need an alternate destroy method
-        self.remove(default_cmds.CmdTeleport)  # Teleport that costs and has conditions.
+        self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
+        self.remove(default_cmds.CmdDestroy)  # Reuse instead of destroy database objects.
+        self.remove(default_cmds.CmdTeleport)  # Teleport haa cost and conditions.
 # [...]
         self.add(CmdSay)
         self.add(CmdOoc)
