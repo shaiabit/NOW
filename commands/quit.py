@@ -32,13 +32,13 @@ class CmdQuit(MuxPlayerCommand):
             for session in player.sessions.all():
                 player.disconnect_session_from_player(session)
         else:
-            nsess = len(player.sessions.all())
-            if nsess == 2:
+            session_count = len(player.sessions.all())
+            if session_count == 2:
                 msg = bye + '. One session is still connected.'
                 player.msg(msg, session=self.session)
-            elif nsess > 2:
+            elif session_count > 2:
                 msg = bye + ". %i sessions are still connected."
-                player.msg(msg % (nsess - 1), session=self.session)
+                player.msg(msg % (session_count - 1), session=self.session)
             else:
                 # If quitting the last available session, give connect time.
                 online = utils.time_format(time.time() - self.session.conn_time, 1)
