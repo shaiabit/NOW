@@ -366,7 +366,7 @@ class NPC(Character):
         super(Character, self).at_object_creation()
         self.cmdset.add('commands.battle.BattleCmdSet', permanent=True)
 
-    def at_post_puppet(self):  # TODO: Fix this for multi-puppeteers.
+    def at_post_puppet(self):
         """
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
@@ -376,34 +376,12 @@ class NPC(Character):
         if self.ndb.new_mail:
             self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
 
-#    Testing Trait system
-        # self.traits.add('health', 'Health', type='gauge', base=20, min=0, max=20)
-        # print(self.traits.health.current)
-
-        if not self.traits.mass:
-            mass = 10 if not self.db.mass else self.db.mass
-            self.traits.add('mass', 'Mass', type='static', base=mass)
-            print(self.traits.mass.current)
-
-        if not self.traits.stat_atm:
-            self.traits.add('stat_atm', 'Melee Attack', type='gauge', base=6, min=0, max=10)
-        if not self.traits.stat_atr:
-            self.traits.add('atr', 'Ranged Attack', type='gauge', base=6, min=0, max=10)
-        if not self.traits.stat_def:
-            self.traits.add('stat_def', 'Defense', type='gauge', base=6, min=0, max=10)
-        if not self.traits.stat_vit:
-            self.traits.add('stat_vit', 'Vitality', type='gauge', base=6, min=0, max=10)
-        if not self.traits.stat_mob:
-            self.traits.add('stat_mob', 'Mobility', type='gauge', base=6, min=0, max=10)
-        if not self.traits.stat_spe:
-            self.traits.add('stat_spe', 'Special', type='gauge', base=6, min=0, max=10)
-
-        # def message(obj, from_obj):
-        #    obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
-        # self.location.for_contents(message, exclude=[self], from_obj=self)
-
         def message(obj, from_obj):
-            obj.msg("%s%s|n awakens." % (self.STYLE, self.get_display_name(obj)), from_obj=from_obj)
+            if self.sessions.count() > 1:  # Show as pose if NPC already has a player.
+                obj.msg("%s awakens." % self.get_display_name(obj), from_obj=from_obj)
+            else:
+                obj.msg("|g%s|n awakens." % self.key, from_obj=from_obj)
+
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
@@ -418,14 +396,13 @@ class NPC(Character):
             session (Session): Session controlling the connection that
                 just disconnected.
         """
-        if not self.sessions.count():
-            # only remove this char from grid if no sessions control it anymore.
-            if self.location:
-                def message(obj, from_obj):
-                    obj.msg("%s%s|n sleeps." % (self.STYLE, self.get_display_name(obj)), from_obj=from_obj)
-                self.location.for_contents(message, exclude=[self], from_obj=self)
-                self.db.prelogout_location = self.location
-                # self.location = None  # TODO: Send NPC home after unpuppeting?
-                # def message(obj, from_obj):
-                #     obj.msg("|r%s|n fades from view." % self.get_display_name(obj), from_obj=from_obj)
-                # self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
+        if self.location:
+
+            def message(obj, from_obj):
+                if self.sessions.count():  # Show as pose if NPC still has a player.
+                    obj.msg("%s sleeps." % (self.get_display_name(obj)), from_obj=from_obj)
+                else:  # Show as gone if NPC has no player now.
+                    obj.msg("|r%s|n sleeps." % self.key, from_obj=from_obj)
+
+            self.location.for_contents(message, exclude=[self], from_obj=self)
+            self.db.prelogout_location = self.location
