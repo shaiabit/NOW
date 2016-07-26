@@ -88,6 +88,8 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(exitdirections.CmdExitNorthwest())
         self.add(exitdirections.CmdExitSoutheast())
         self.add(exitdirections.CmdExitSouthwest())
+        self.add(exitdirections.CmdExitUp())
+        self.add(exitdirections.CmdExitdown())
 
 
 class PlayerCmdSet(default_cmds.PlayerCmdSet):
