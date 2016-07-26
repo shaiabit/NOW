@@ -8,8 +8,9 @@ class CmdHome(default_cmds.MuxCommand):
     where your home is set, or provide a what and where to set its home.
     Usage:
       home
-    Switches:
+    Options:
     /set <obj> [= home_location]  views or sets <obj>'s home location.
+    /sweep <obj>  send obj home.
     /here  sets current character's home to current location.
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
