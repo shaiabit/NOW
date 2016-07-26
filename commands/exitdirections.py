@@ -134,11 +134,13 @@ class CmdExit(default_cmds.MuxCommand):
             return None 
 
         def back_dir(x):
-            return {'n': 's', 's': 'n', 'e': 'w', 'w': 'e', 'nw': 'se', 'se': 'nw', 'ne': 'sw', 'sw': 'ne'}[x]
+            return {'n': 's', 's': 'n', 'e': 'w', 'w': 'e',
+                    'nw': 'se', 'se': 'nw', 'ne': 'sw',
+                    'sw': 'ne', 'u': 'd', 'd': 'u'}[x]
 
         def long_dir(x):
             return {'n': 'north', 's': 'south', 'e': 'east', 'w': 'west', 'nw': 'northwest', 'se': 'southeast',
-                    'ne': 'northeast', 'sw': 'southwest'}[x]
+                    'ne': 'northeast', 'sw': 'southwest', 'u': 'up', 'd': 'down'}[x]
 
         def tun(you_tun, loc_tun, dest_tun, dir_tun):
             """Command for tunneling an exit back - checks existing exits, location and permissions."""
@@ -314,46 +316,58 @@ class CmdExit(default_cmds.MuxCommand):
 class CmdExitNorth(CmdExit):
     __doc__ = CmdExit.__doc__
     key = "north"
-    aliases = ["n"]
+    aliases = ['n']
 
 
 class CmdExitNortheast(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "northeast"
-    aliases = ["ne"]
+    key = 'northeast'
+    aliases = ['ne']
 
 
 class CmdExitNorthwest(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "northwest"
-    aliases = ["nw"]
+    key = 'northwest'
+    aliases = ['nw']
 
 
 class CmdExitEast(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "east"
-    aliases = ["e"]
+    key = 'east'
+    aliases = ['e']
 
 
 class CmdExitSouth(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "south"
-    aliases = ["s"]
+    key = 'south'
+    aliases = ['s']
 
 
 class CmdExitSoutheast(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "southeast"
-    aliases = ["se"]
+    key = 'southeast'
+    aliases = ['se']
 
 
 class CmdExitSouthwest(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "southwest"
-    aliases = ["sw"]
+    key = 'southwest'
+    aliases = ['sw']
 
 
 class CmdExitWest(CmdExit):
     __doc__ = CmdExit.__doc__
-    key = "west"
-    aliases = ["w"]
+    key = 'west'
+    aliases = ['w']
+
+
+class CmdExitUp(CmdExit):
+    __doc__ = CmdExit.__doc__
+    key = 'up'
+    aliases = ['u']
+
+
+class CmdExitDown(CmdExit):
+    __doc__ = CmdExit.__doc__
+    key = 'down'
+    aliases = ['d', 'dn']
