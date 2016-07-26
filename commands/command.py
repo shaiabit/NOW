@@ -641,8 +641,7 @@ class CmdWho(MuxPlayerCommand):
                 table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wSpecies"])
                 for session in session_list:
                     character = session.get_puppet()
-                    # my_character = self.caller.get_puppet(self.session)
-                    if not session.logged_in or character.location != my_character.location:
+                    if not session.logged_in or not character or character.location != my_character.location:
                         continue
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
