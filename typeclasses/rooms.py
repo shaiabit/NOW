@@ -75,7 +75,7 @@ class Room(DefaultRoom):
         exits, ways, users, things = [], [], [], []
 
         way_dir = {'ne': 'northeast', 'n': 'north', 'nw': 'northwest', 'e': 'east',
-                   'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west'}
+                   'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west', 'u': 'up', 'd': 'down'}
 
         default_exits = [u'north', u'south', u'east', u'west', u'northeast', u'northwest', u'southeast', u'southwest',
                          u'up', u'down', u'in', u'out']
