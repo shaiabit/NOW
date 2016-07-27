@@ -370,4 +370,4 @@ class CmdExitUp(CmdExit):
 class CmdExitDown(CmdExit):
     __doc__ = CmdExit.__doc__
     key = 'down'
-    aliases = ['d', 'dn']
+    aliases = ['d']
