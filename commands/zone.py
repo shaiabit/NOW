@@ -1,8 +1,9 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import search, utils
 
 
-class CmdZone(default_cmds.MuxCommand):
+class CmdZone(MuxCommand):
     """
     Add zone to object.
     Usage:

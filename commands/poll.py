@@ -1,5 +1,6 @@
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia import CmdSet
-from evennia import default_cmds
 from evennia.utils.evmenu import get_input
 
 
@@ -12,7 +13,7 @@ class PollCmdSet(CmdSet):
         self.add(CmdSuggest())
 
 
-class CmdPoll(default_cmds.MuxCommand):
+class CmdPoll(MuxCommand):
     """
     Poll player or characters with questions.
     Usage:
@@ -65,7 +66,7 @@ class CmdPoll(default_cmds.MuxCommand):
         pass
 
 
-class CmdSuggest(default_cmds.MuxCommand):
+class CmdSuggest(MuxCommand):
     """
     Poll player or characters with questions.
     Usage:

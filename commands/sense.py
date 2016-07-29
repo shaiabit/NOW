@@ -1,4 +1,5 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from django.conf import settings
 from evennia import utils
 
@@ -6,7 +7,7 @@ from evennia import utils
 _AT_SEARCH_RESULT = utils.variable_from_module(*settings.SEARCH_AT_RESULT.rsplit('.', 1))
 
 
-class CmdSense(default_cmds.MuxCommand):
+class CmdSense(MuxCommand):
     """
     Handle sensing objects in different ways. WIP: Expanding to handle other senses.
     Sense yourself, your location or objects in your vicinity.

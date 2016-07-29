@@ -1,8 +1,9 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import utils, search
 
 
-class CmdHome(default_cmds.MuxCommand):
+class CmdHome(MuxCommand):
     """
     Takes you to your home, if you have one. home/set will show you
     where your home is set, or provide a what and where to set its home.

@@ -1,9 +1,11 @@
-from evennia import default_cmds
-# from evennia.utils.evmenu import get_input # Might not be needed.
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils.eveditor import EvEditor
+
 
 def _desc_load(caller):
     return caller.db.evmenu_target.db.desc or ''
+
 
 def _desc_save(caller, buf):
     """
@@ -14,11 +16,13 @@ def _desc_save(caller, buf):
     caller.msg('Saved.')
     return True
 
+
 def _desc_quit(caller):
     caller.attributes.remove('evmenu_target')
     caller.msg("Exited editor.")
 
-class CmdDesc(default_cmds.MuxCommand):
+
+class CmdDesc(MuxCommand):
     """
     Describe yourself!
     Usage:
@@ -34,12 +38,13 @@ class CmdDesc(default_cmds.MuxCommand):
     arg_regex = r'^/|\s|$'
 
     def edit_handler(self):
+        char = self.character
         if self.args:
             self.msg("|yYou may specify a description, or use the edit switch, "
                      "but not both.|n")
             return
         else:
-            obj = self.caller
+            obj = char
 
         def load(obj):
             return obj.db.evmenu_target.db.desc or ''
@@ -57,12 +62,13 @@ class CmdDesc(default_cmds.MuxCommand):
             obj.attributes.remove('evmenu_target')
             obj.msg('Exited editor.')
 
-        self.caller.db.evmenu_target = obj  # launch the editor
+        char.db.evmenu_target = obj  # launch the editor
         EvEditor(obj, loadfunc=load, savefunc=save, quitfunc=quit, key='desc', persistent=True)
         return
 
     def func(self):
         """Add the description."""
+        char = self.character
         if 'edit' in self.switches:
             self.edit_handler()
             return
@@ -77,11 +83,11 @@ class CmdDesc(default_cmds.MuxCommand):
                 caller.location.msg_contents(msg)
                 caller.db.desc = user_input.strip()
 
-            get_input(caller, "Type your description now, and then |g[enter]|n: ", desc_callback)
+            get_input(char, "Type your description now, and then |g[enter]|n: ", desc_callback)
             return
         if 'brief' in self.switches:
             self.caller.db.desc_brief = self.args[0:65].strip()
             self.caller.msg("Your brief description has been saved: %s" % self.caller.db.desc_brief)
             return
-        self.caller.db.desc = self.args.strip()
-        self.caller.msg('You successfully set your description.')
+        char.db.desc = self.args.strip()
+        char.msg('You successfully set your description.')

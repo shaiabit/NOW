@@ -1,9 +1,10 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import evtable
 from world.helpers import mass_unit
 
 
-class CmdInventory(default_cmds.MuxCommand):
+class CmdInventory(MuxCommand):
     """
     Shows your inventory: carrying, wielding, wearing, obscuring.
     Usage:

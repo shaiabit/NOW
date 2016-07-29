@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
-from evennia import default_cmds
+from commands.command import MuxCommand
 
 
-class CmdPose(default_cmds.MuxCommand):
+class CmdPose(MuxCommand):
     """
     Describe and/or attempt to trigger an action on an object.
     The pose text will automatically begin with your name.
@@ -29,6 +29,7 @@ class CmdPose(default_cmds.MuxCommand):
     key = 'pose'
     aliases = [':', ';', 'emote', 'try']
     locks = 'cmd:all()'
+    verb, obj = None, None
     player_caller = True
 
     def parse(self):
@@ -60,8 +61,7 @@ class CmdPose(default_cmds.MuxCommand):
         if not self.args:
             char.execute_cmd("help pose")
             return
-        self.verb = None
-        self.obj = None
+
         self.msg = ''
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 

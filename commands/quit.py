@@ -1,6 +1,7 @@
-import time
+# -*- coding: UTF-8 -*-
+from commands.command import MuxPlayerCommand
 from evennia.utils import utils
-from evennia.commands.default.muxcommand import MuxPlayerCommand
+import time
 
 
 class CmdQuit(MuxPlayerCommand):

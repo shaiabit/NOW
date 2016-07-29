@@ -1,5 +1,7 @@
-from evennia import default_cmds, CmdSet
+# -*- coding: UTF-8 -*-
 from builtins import range
+from commands.command import MuxCommand
+from evennia import CmdSet
 from random import randint
 
 
@@ -11,7 +13,7 @@ class MyDieCmdSet(CmdSet):
         self.add(CmdMyDie())
 
 
-class CmdMyDieDefault(default_cmds.MuxCommand):
+class CmdMyDieDefault(MuxCommand):
     """Add command to the set - this set will be attached to the vehicle object (item or room)."""
     key = 'mydie'
     locks = 'cmd:all()'

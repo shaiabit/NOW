@@ -1,4 +1,5 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import utils
 import os
 import sys
@@ -6,7 +7,7 @@ import twisted
 import django
 
 
-class CmdAbout(default_cmds.MuxCommand):
+class CmdAbout(MuxCommand):
     """
     Display info about the game engine.
     Usage:

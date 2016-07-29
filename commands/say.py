@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
-from evennia import default_cmds
+from commands.command import MuxCommand
 from evennia.utils import ansi
 
 
-class CmdSay(default_cmds.MuxCommand):
+class CmdSay(MuxCommand):
     """
     Speak as your character.
     Usage:
@@ -48,7 +48,7 @@ class CmdSay(default_cmds.MuxCommand):
         here.msg_contents(emit_string)
 
 
-class CmdOoc(default_cmds.MuxCommand):
+class CmdOoc(MuxCommand):
     """
     Send an out-of-character message to your current location.
     Usage:
@@ -75,7 +75,7 @@ class CmdOoc(default_cmds.MuxCommand):
             caller.location.msg_contents('[OOC %s] %s' % (caller.get_display_name(self.session), args))
 
 
-class CmdSpoof(default_cmds.MuxCommand):
+class CmdSpoof(MuxCommand):
     """
     Send a spoofed message to your current location.
     Usage:

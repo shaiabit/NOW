@@ -23,6 +23,7 @@ from commands import prelogin
 from commands import exitdirections
 from commands.say import CmdSay, CmdOoc, CmdSpoof
 from commands.set import CmdSettings
+from commands.who import CmdWho
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
@@ -32,11 +33,10 @@ from commands.quit import CmdQuit
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
+from commands.access import CmdAccess
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
-# from commands import destroy # Not ready for testing.
-from commands.command import CmdWho, CmdForge
-from commands.command import CmdAccess, CmdChannels
+from commands.command import CmdChannels
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -125,7 +125,6 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdAbout)
         self.add(CmdAccess)
         self.add(CmdChannels)
-        # self.add(CmdForge) # TODO: Make this a verb, along with "quench" and place on forge room.
         # self.add(CmdChannelWizard) # TODO: Too dangerous to add without testing.
 
 

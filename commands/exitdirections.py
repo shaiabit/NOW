@@ -1,4 +1,5 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import search
 from evennia.utils import create
 from django.conf import settings
@@ -7,15 +8,15 @@ from evennia.objects.models import ObjectDB
 from evennia.utils.utils import inherits_from, class_from_module
 
 
-class CmdExit(default_cmds.MuxCommand):
+class CmdExit(MuxCommand):
     """
     Simple destinations are stored on the room in its 'exits' attribute in a dictionary.
     All simple exits on the room use the same attribute, compared to object-based exits,
     which create a new database object.  Simple exits use much less database space.
     Actual exit objects superceed simple exits in every way.
     Usage:
-    |w<|ydirection|w><|glist of switches|w> <|ydestination|w>|n
-    Switches:
+    |w<|ydirection|w>[|glist of switches|w] [|ydestination|w]|n
+    Options:
     |g/add|n [name starts with or alias]  adds simple exit to destination in the given direction.
     |g/del|n  removes simple exit in given direction.
     |g/tun|n <name>   adds simple exit from destination in opposite direction.
@@ -25,7 +26,7 @@ class CmdExit(default_cmds.MuxCommand):
     |g/go|n  after any above operations, move to destination.
     |g/show|n  shows room exit information and back exit from <direction>.
 
-    Switches combine in some combinations e.g. west/del/tun/go would remove the exits
+    Options combine in some combinations e.g. west/none/go would remove the exits
     into and out of the room in the given direction, then take you to the destination room.
 
     This command never deletes rooms, but can create them in a simple fashion when needed.

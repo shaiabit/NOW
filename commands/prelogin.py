@@ -1,18 +1,18 @@
-from evennia import default_cmds
-import time
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.server.sessionhandler import SESSIONS
 from evennia.utils import utils
+import time
 
-
-class CmdWhoinfo(default_cmds.MuxCommand):
+class CmdWhoinfo(MuxCommand):
     """Parent class for pre-login who and info commands."""
     locks = "cmd:all()"
     auto_help = True
 
 
 class CmdWhoUs(CmdWhoinfo):
-    key = "who"
-    aliases = ["w"]
+    key = 'who'
+    aliases = ['w']
 
     def func(self):
         """returns the list of online characters"""  # TODO: pad field widths to fixed length

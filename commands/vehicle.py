@@ -1,4 +1,6 @@
-from evennia import default_cmds, CmdSet
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
+from evennia import CmdSet
 
 
 class VehicleCmdSet(CmdSet):
@@ -9,7 +11,7 @@ class VehicleCmdSet(CmdSet):
         self.add(CmdVehicle())
 
 
-class CmdVehicleDefault(default_cmds.MuxCommand):
+class CmdVehicleDefault(MuxCommand):
     """Add command to the set - this set will be attached to the vehicle object (item or room)."""
     key = 'vehicle'
     locks = 'cmd:all()'

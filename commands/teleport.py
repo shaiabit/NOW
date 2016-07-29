@@ -1,7 +1,8 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 
 
-class CmdTeleport(default_cmds.MuxCommand):
+class CmdTeleport(MuxCommand):
     """
     Change object's location - IC component-aware.
     If no object is given, you are teleported to the target location.

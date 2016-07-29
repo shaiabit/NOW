@@ -1,4 +1,6 @@
-from evennia import default_cmds, CmdSet
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
+from evennia import CmdSet
 
 
 class SettingsCmdSet(CmdSet):
@@ -9,7 +11,7 @@ class SettingsCmdSet(CmdSet):
         self.add(CmdSettings())
 
 
-class CmdSettingsDefault(default_cmds.MuxCommand):
+class CmdSettingsDefault(MuxCommand):
     """Add command to the set - this set will be attached to the item or room."""
     key = 'set'
     locks = 'cmd:all()'

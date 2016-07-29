@@ -4,14 +4,12 @@ Commands
 Commands describe the input the player can do to the game.
 
 """
-from evennia import CmdSet
-from evennia import default_cmds
-from evennia import Command as BaseCommand
-from evennia import utils
-from evennia.utils import evmenu
-from world import rules
-from random import randint
 import math
+from evennia import CmdSet, utils
+from evennia.utils import evmenu
+from commands import MuxCommand
+from random import randint
+from world import rules
 
 
 class BattleCmdSet(CmdSet):
@@ -22,7 +20,7 @@ class BattleCmdSet(CmdSet):
         self.add(CmdStat())
 
 
-class CmdStat(default_cmds.MuxCommand):
+class CmdStat(MuxCommand):
     """
     Set the stat of a character
 
@@ -43,10 +41,14 @@ class CmdStat(default_cmds.MuxCommand):
         switches = self.switches
         if 'reset' in switches:
             self.caller.msg("All stats reset to 6.")
-            for stat in ('ATM', 'DEF', 'VIT', 'ATR', 'MOB', 'SPE'):
-                self.caller.attributes.add(stat, 6)
-            self.caller.db.HP = 18
-            self.caller.db.SP = 12
+            self.traits.add('stat_atm', 'Melee Attack', type='gauge', base=6, min=0, max=10)
+            self.traits.add('atr', 'Ranged Attack', type='gauge', base=6, min=0, max=10)
+            self.traits.add('stat_def', 'Defense', type='gauge', base=6, min=0, max=10)
+            self.traits.add('stat_vit', 'Vitality', type='gauge', base=6, min=0, max=10)
+            self.traits.add('stat_mob', 'Mobility', type='gauge', base=6, min=0, max=10)
+            self.traits.add('stat_spe', 'Special', type='gauge', base=6, min=0, max=10)
+            self.traits.add('health', 'Health', type='gauge', base=18, min=0, max=20)
+            self.traits.add('special', 'Super', type='gauge', base=12, min=0, max=20)
             return
         errmsg = "You must supply a valid stat name and a number" \
                  " between 0 and 10.|/Syntax: |555%s [stat] = [1-10]|n" % cmd
@@ -78,26 +80,26 @@ class CmdStat(default_cmds.MuxCommand):
         # Now, we'll test to see what stat is named, using either the
         # abbreviation or the stat's full name.
         if statname == "atm" or statname == "melee" or statname == "melee attack":
-            self.caller.db.ATM = value
+            self.caller.trait.stat_atm = value
             self.caller.msg("Your Melee Attack was set to |555%i|n." % value)
         elif statname == "def" or statname == "defense":
-            self.caller.db.DEF = value
+            self.caller.trait.stat_def = value
             self.caller.msg("Your Defense was set to |555%i|n." % value)
         elif statname == "vit" or statname == "vitality":
-            self.caller.db.VIT = value
+            self.caller.trait.stat_vit = value
             # Also sets your HP to its new maximum.
-            self.caller.db.HP = max(value * 3, 1)
+            self.caller.traits.health = max(value * 3, 1)
             self.caller.msg(
                 "Your Vitality was set to %i|n and your new HP maximum is |555%i|n." % (value, max(value * 3, 1)))
         elif statname == "atr" or statname == "ranged attack" or statname == "ranged":
-            self.caller.db.ATR = value
+            self.caller.trait.stat_atr = value
             self.caller.msg("Your Ranged Attack was set to |555%i|n." % value)
         elif statname == "mob" or statname == "mobility":
-            self.caller.db.MOB = value
+            self.caller.trait.stat_mob = value
             self.caller.msg("Your Mobility was set to |555%i|n." % value)
         elif statname == "spe" or statname == "special":
             self.caller.db.SP = value * 2
-            self.caller.db.SPE = value
+            self.caller.trait.stat_spe = value
             self.caller.msg(
                 "Your Special was set to |555%i|n and your new SP maximum is |555%i|n." % (value, value * 2))
         # If the stat didn't have a valid name, return an error.
@@ -106,8 +108,8 @@ class CmdStat(default_cmds.MuxCommand):
                                               " Ranged Attack (|525ATR|n), Defense (|225DEF|n), Vitality (|252VIT|n),"
                                               " Mobility (|552MOB|n), and Special (|255SPE|n).")
             return
-        remain = 36 - (self.caller.db.ATM + self.caller.db.DEF + self.caller.db.VIT +
-                       self.caller.db.ATR + self.caller.db.MOB + self.caller.db.SPE)
+        remain = 36 - (self.caller.trait.stat_atm.actual + self.caller.trait.stat_def + self.caller.trait.stat_vit +
+                       self.caller.trait.stat_atr + self.caller.trait.stat_mob + self.caller.trait.stat_spe)
         point = "points"
         if remain == 1 or remain == -1:
             point = "point"
@@ -119,7 +121,7 @@ class CmdStat(default_cmds.MuxCommand):
                             (remain, point))
 
 
-class CmdRangeMessage(default_cmds.MuxCommand):
+class CmdRangeMessage(MuxCommand):
     """
     Lets you set pre-defined messages for your attacks.
 
@@ -207,7 +209,7 @@ class CmdRangeMessage(default_cmds.MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdMeleeMessage(default_cmds.MuxCommand):
+class CmdMeleeMessage(MuxCommand):
     """
     Lets you set pre-defined messages for your close range attacks.
 
@@ -280,7 +282,7 @@ class CmdMeleeMessage(default_cmds.MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdSpecialMessage(default_cmds.MuxCommand):
+class CmdSpecialMessage(MuxCommand):
     """Lets you set pre-defined messages for your special moves."""
     key = 'specialmessage'
     help_category = 'battle'
@@ -342,7 +344,7 @@ class CmdSpecialMessage(default_cmds.MuxCommand):
                 self.caller.msg(("%i. " + message) % itemnumber)
 
 
-class CmdAttack(default_cmds.MuxCommand):
+class CmdAttack(MuxCommand):
     """
     Attack another character in combat.
     Usage:
@@ -415,7 +417,7 @@ class CmdAttack(default_cmds.MuxCommand):
         self.caller.db.Combat_Actions -= 1
 
 
-class CmdSecond(default_cmds.MuxCommand):
+class CmdSecond(MuxCommand):
     """
     Use your second attack as part of a special move with the
     'Double Attack' effect. It must be of the same type as the
@@ -460,7 +462,7 @@ class CmdSecond(default_cmds.MuxCommand):
         del self.caller.db.Combat_Second
 
 
-class CmdDefend(default_cmds.MuxCommand):
+class CmdDefend(MuxCommand):
     """
     Defend from an attack in combat.
 
@@ -502,7 +504,7 @@ class CmdDefend(default_cmds.MuxCommand):
             rules.defend_queue(self.caller, 'defend', [])
 
 
-class CmdEndure(default_cmds.MuxCommand):
+class CmdEndure(MuxCommand):
     """
     Defend from an attack in combat.
 
@@ -533,7 +535,7 @@ class CmdEndure(default_cmds.MuxCommand):
             rules.defend_queue(self.caller, "endure", [])
 
 
-class CmdRest(default_cmds.MuxCommand):
+class CmdRest(MuxCommand):
     """
     Restores all HP and SP. You must be in the recovery bay
     in order to use this command - use the 'return' command
@@ -559,7 +561,7 @@ class CmdRest(default_cmds.MuxCommand):
         rules.recover(self.caller)
 
 
-class CmdReturn(default_cmds.MuxCommand):
+class CmdReturn(MuxCommand):
     """
     Returns you to the Institute of Battle's recovery bay.
     """
@@ -588,7 +590,7 @@ class CmdReturn(default_cmds.MuxCommand):
         self.caller.location.msg_contents("%s appears in a flash of glowing green light." % self.caller)
 
 
-class CmdAlly(default_cmds.MuxCommand):
+class CmdAlly(MuxCommand):
     """
     View, add, or remove allies.
 
@@ -670,7 +672,7 @@ class CmdAlly(default_cmds.MuxCommand):
             self.caller.msg("You no longer consider %s an ally." % target)
 
 
-class CmdStats(default_cmds.MuxCommand):
+class CmdStats(MuxCommand):
     """
     Displays your stats as well as your current HP and SP.
 
@@ -736,8 +738,8 @@ class CmdStats(default_cmds.MuxCommand):
         attack_range = self.caller.db.ATR
         mobility = self.caller.db.MOB
         special = self.caller.db.SPE
-        hp = self.caller.db.HP
-        sp = self.caller.db.SP
+        hp = self.caller.traits.health.actual
+        sp = self.caller.traits.special.actual
         max_hp = max(self.caller.db.VIT * 3, 1)
         max_sp = self.caller.db.SPE * 2
         current_hp = ("%i/%i" % (hp, max_hp))
@@ -749,7 +751,7 @@ class CmdStats(default_cmds.MuxCommand):
                          current_hp, current_sp))
 
 
-class CmdFight(default_cmds.MuxCommand):
+class CmdFight(MuxCommand):
     """
     Starts a fight with everyone in the current room.
     """
@@ -767,7 +769,7 @@ class CmdFight(default_cmds.MuxCommand):
             self.caller.msg("%s%s|n is no place for battles!" % (here.STYLE, here.key))
             return
         for thing in here.contents:
-            if thing.db.HP:
+            if thing.traits.health.actual:
                 fighters.append(thing)
         if len(fighters) <= 1:
             self.caller.msg("There's nobody here to fight!")
@@ -780,7 +782,7 @@ class CmdFight(default_cmds.MuxCommand):
         here.scripts.add("scripts.TurnHandler")
 
 
-class CmdPass(default_cmds.MuxCommand):
+class CmdPass(MuxCommand):
     """Passes on your turn."""
     key = 'pass'
     aliases = ["wait", "hold"]
@@ -808,7 +810,7 @@ class CmdPass(default_cmds.MuxCommand):
             del self.caller.db.Combat_Second
 
 
-class CmdDisengage(default_cmds.MuxCommand):
+class CmdDisengage(MuxCommand):
     """Like 'pass', but can end combat."""
     key = "disengage"
     aliases = ["spare"]
@@ -836,7 +838,7 @@ class CmdDisengage(default_cmds.MuxCommand):
             del self.caller.db.Combat_Second
 
 
-class CmdWithdraw(default_cmds.MuxCommand):
+class CmdWithdraw(MuxCommand):
     """
     Moves away another character.
 
@@ -901,7 +903,7 @@ class CmdWithdraw(default_cmds.MuxCommand):
         rules.ms_withdraw(self.caller, target, distance, "normal")
 
 
-class CmdApproach(default_cmds.MuxCommand):
+class CmdApproach(MuxCommand):
     """
     Moves toward another character.
 
@@ -963,7 +965,7 @@ class CmdApproach(default_cmds.MuxCommand):
         rules.ms_approach(self.caller, target, distance, "normal")
 
 
-class CmdDash(default_cmds.MuxCommand):
+class CmdDash(MuxCommand):
     """
     Spend your action to get more movement.
 
@@ -1011,7 +1013,7 @@ class CmdDash(default_cmds.MuxCommand):
             "%s |552[|554+%i|552 Movement]|n" % (message, int(math.ceil(float(self.caller.db.MOB) / 2))))
 
 
-class CmdCharge(default_cmds.MuxCommand):
+class CmdCharge(MuxCommand):
     """Prepare a special move."""
     key = "charge"
     aliases = ["ready", "prepare"]
@@ -1059,7 +1061,7 @@ class CmdCharge(default_cmds.MuxCommand):
         self.caller.location.msg_contents("%s |255[Charge: |455%s|255]|n" % (message, matchedspecial))
 
 
-class CmdRange(default_cmds.MuxCommand):
+class CmdRange(MuxCommand):
     """
     Displays your distance to other fighters in combat.
 
@@ -1136,7 +1138,7 @@ class CmdRange(default_cmds.MuxCommand):
             return
 
 
-class CmdSetSpecial(default_cmds.MuxCommand):
+class CmdSetSpecial(MuxCommand):
     """
     Launches the special move creation menu.
     """
@@ -1149,7 +1151,7 @@ class CmdSetSpecial(default_cmds.MuxCommand):
         evmenu.EvMenu(self.caller, 'typeclasses.special_menu', startnode='menunode_specialtype')
 
 
-class CmdSpecial(default_cmds.MuxCommand):
+class CmdSpecial(MuxCommand):
     """
     Use one of your special moves.
 
@@ -1216,11 +1218,11 @@ class CmdSpecial(default_cmds.MuxCommand):
                 special_message = "default"
                 # If there's a 'Desperation Move' or 'Vital Move' effect, check the user's HP first.
                 if "Desperation Move" in self.caller.db.Special_Moves[special_name][1]:
-                    if self.caller.db.HP > self.caller.db.VIT:
+                    if self.caller.traits.health.actual > self.caller.traits.stat_vit.actual:
                         self.caller.msg("|413You have too much HP to use %s!" % special_name)
                         return
                 if "Vital Move" in self.caller.db.Special_Moves[special_name][1]:
-                    if self.caller.db.HP < self.caller.db.VIT * 2:
+                    if self.caller.traits.health.actual < self.caller.traits.stat_vit.actual * 2:
                         self.caller.msg("|413You don't have enough HP to use %s!" % special_name)
                         return
                 # If there's a 'Charge Move' effect, check to see if it's charged.
@@ -1527,7 +1529,7 @@ class CmdSpecial(default_cmds.MuxCommand):
                                effects)
 
 
-class CmdRemoveSpecial(default_cmds.MuxCommand):
+class CmdRemoveSpecial(MuxCommand):
     """
     Removes a special move.
 
@@ -1554,7 +1556,7 @@ class CmdRemoveSpecial(default_cmds.MuxCommand):
         self.caller.msg("You don't have a special move named %s." % self.args)
 
 
-class CmdEnterGame(default_cmds.MuxCommand):
+class CmdEnterGame(MuxCommand):
     """
     enters the game
 

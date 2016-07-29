@@ -1,8 +1,9 @@
-from evennia import default_cmds
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
 from evennia.utils import search, utils
 
 
-class CmdFlag(default_cmds.MuxCommand):
+class CmdFlag(MuxCommand):
     """
     Set flag on object.
     Usage:
@@ -47,13 +48,13 @@ class CmdFlag(default_cmds.MuxCommand):
         cmd = self.cmdstring
         args = self.args.strip()
         lhs, rhs = [self.lhs, self.rhs]
-        switches = self.switches
-        switches_list = [u'list', u'info', u'long', u'search']
+        opt = self.switches
+        opt_list = [u'list', u'info', u'long', u'search']
 
-        if not all(x in switches_list for x in switches):
-            player.msg("Not a valid switch for |y%s|n. Use only these: |g/%s" % (cmd, "|n, |g/".join(switches_list)))
+        if not all(x in opt_list for x in opt):
+            player.msg("Not a valid switch for |y%s|n. Use only these: |g/%s" % (cmd, "|n, |g/".join(opt_list)))
             return
-        if not switches or 'long' in switches:
+        if not opt or 'long' in opt:
             obj = here
             if not lhs:
                 if not here:
@@ -66,7 +67,7 @@ class CmdFlag(default_cmds.MuxCommand):
             flags_obj = obj.tags.all(category='flags')
             flags_obj_count = len(flags_obj)
             if flags_obj:  # returns a list of flags
-                if 'long' in switches:
+                if 'long' in opt:
                     player.msg('Flag list on %s: (%s): ' % (obj.get_display_name(player), flags_obj_count))
                     for flag in flags_obj:
                         player.msg('|c%s: |w%s|n|/' % (flag, self.FLAGS[flag]))
@@ -86,18 +87,18 @@ class CmdFlag(default_cmds.MuxCommand):
                 is_one = abs(len(to_set)) == 1
                 plural = '' if is_one else 's'
                 player.msg('Set flag%s: |g%s' % (plural, "|n, |g".join(a for a in to_set)))
-        if 'list' in switches:
+        if 'list' in opt:
             player.msg('Displaying list of ' + ('|ymatching' if args else '|gall') + '|n flags:')
             if args:  # Show list of matching flags
                 match_list = [x for x in self.FLAGS if x in args]  # This match is not "starts with" or partial.
                 player.msg('|c%s' % "|n, |c".join(match_list))
             else:
                 player.msg('|c%s' % "|n, |c".join(a for a in self.FLAGS))
-        if 'info' in switches:
+        if 'info' in opt:
             good_flag = [x for x in self.FLAGS if x in args] if args else self.FLAGS
             player.msg('Displaying info for ' + ('|ymatching' if args else '|gall') + '|n flags:')
             player.msg("|/".join('|c%s|n - |w%s' % (a, self.FLAGS[a]) for a in good_flag))
-        if 'search' in switches:
+        if 'search' in opt:
             obj = search.search_tag(args, category='flags')
             object_count = len(obj)
             if object_count > 0:

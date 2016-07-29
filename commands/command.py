@@ -7,9 +7,10 @@ Commands describe the input the player can do to the world.
 """
 from evennia import gametime
 from django.conf import settings
-from evennia import Command as BaseCommand
-from evennia import default_cmds
 from evennia import utils
+from evennia import default_cmds
+from evennia import Command as BaseCommand
+from evennia.commands.default.muxcommand import MuxCommand, MuxPlayerCommand
 
 
 class Command(BaseCommand):
@@ -30,7 +31,6 @@ class Command(BaseCommand):
         - func(): Performs the actual work.
         - at_post_command(): Extra actions, often things done after
             every command, like prompts.
-
     """
     # these need to be specified
 
@@ -89,7 +89,7 @@ class Command(BaseCommand):
         by the `cmdhandler` right after `self.parser()` finishes, and so has access
         to all the variables defined therein.
         """
-        self.caller.msg("Command called!")
+        self.caller.msg('Command "%s" called!' % self.cmdstring)
 
     def at_post_cmd(self):
         """
@@ -130,27 +130,67 @@ class MuxCommand(default_cmds.MuxCommand):
     strings, but case is preserved.
     """
 
+    def at_pre_cmd(self):
+        """
+        This hook is called before self.parse() on all commands
+        """
+        pass
+
+    def parse(self):
+        """
+        This method is called by the cmdhandler once the command name
+        has been identified. It creates a new set of member variables
+        that can be later accessed from self.func()
+        """
+        super(MuxCommand, self).parse()
+
     def func(self):
         """
         This is the hook function that actually does all the work. It is called
         by the `cmdhandler` right after `self.parser()` finishes, and so has access
         to all the variables defined therein.
         """
-        # this can be removed in your child class, it's just
-        # printing the ingoing variables as a demo.
         super(MuxCommand, self).func()
 
+    def at_post_cmd(self):
+        """
+        This hook is called after the command has finished executing
+        (after self.func()).
+        """
+        pass
 
-from past.builtins import cmp
+
+class MuxPlayerCommand(MuxCommand):
+    """
+    This is an on-Player version of the MuxCommand. Since these commands sit
+    on Players rather than on Characters/Objects, we need to check
+    this in the parser.
+    Player commands are available also when puppeting a Character, it's
+    just that they are applied with a lower priority and are always
+    available, also when disconnected from a character (i.e. "ooc").
+    This class makes sure that caller is always a Player object, while
+    creating a new property "character" that is set only if a
+    character is actually attached to this Player and Session.
+    """
+    def parse(self):
+        """
+        We run the parent parser as usual, then fix the result
+        """
+        super(MuxPlayerCommand, self).parse()
+
+        if utils.inherits_from(self.caller, "evennia.objects.objects.DefaultObject"):
+            self.character = self.caller  # caller is an Object/Character
+            self.caller = self.caller.player
+        elif utils.inherits_from(self.caller, "evennia.players.players.DefaultPlayer"):
+            self.character = self.caller.get_puppet(self.session)  # caller was already a Player
+        else:
+            self.character = None
+
 from django.conf import settings
 from evennia.comms.models import ChannelDB, Msg
-#from evennia.comms import irc, imc2, rss
-from evennia.players.models import PlayerDB
-from evennia.players import bots
 from evennia.comms.channelhandler import CHANNELHANDLER
 from evennia.utils import create, utils, evtable
 from evennia.utils.utils import make_iter
-from evennia.commands.default.muxcommand import MuxCommand, MuxPlayerCommand
 
 _DEFAULT_WIDTH = settings.CLIENT_DEFAULT_WIDTH
 
@@ -185,11 +225,11 @@ class CmdChannels(MuxPlayerCommand):
     location. Channels use their alias as the command to post to then.
     Usage:
       chan
-    Switches:
+    Options:
     /list to display all available channels.
     /join (on) or /part (off) to join or depart channels.
 
-       Batch:
+    Batch options:
     /all      to affect all channels at once:
     /all on   to join all available channels.
     /all off  to part all channels currently on.
@@ -477,194 +517,3 @@ class CmdChannels(MuxPlayerCommand):
                                    chan.db.desc])
             caller.msg("\n|wChannel subscriptions|n (use |w@chan/list|n to list all, " +
                        "|w/join|n |w/part|n to join or part):|n\n%s" % comtable)
-
-import time
-from builtins import range
-from evennia.server.sessionhandler import SESSIONS
-from evennia.commands.default.muxcommand import MuxPlayerCommand
-from evennia.utils import ansi, utils, create, search, prettytable
-
-
-class CmdAccess(MuxCommand):
-    """
-    Displays your current world access levels for
-    your current player and character account.
-    Usage:
-      access
-    Switches:
-    /groups  - Also displays the system's permission groups hierarchy.
-    """
-    key = 'access'
-    locks = 'cmd:all()'
-    help_category = 'System'
-
-    def func(self):
-        """Load the permission groups"""
-        caller = self.caller
-        hierarchy_full = settings.PERMISSION_HIERARCHY
-        string = ''
-        if 'groups' in self.switches:
-            string = "|wPermission Hierarchy|n (climbing): %s|/" % ", ".join(hierarchy_full)
-        if caller.player.is_superuser:
-            cperms = "<|ySuperuser|n> " + ", ".join(caller.permissions.all())
-            pperms = "<|ySuperuser|n> " + ", ".join(caller.player.permissions.all())
-        else:
-            cperms = ", ".join(caller.permissions.all())
-            pperms = ", ".join(caller.player.permissions.all())
-        string += "|wYour Player/Character access|n: "
-        if hasattr(caller, 'player'):
-            string += "Player: (%s: %s) and " % (caller.player.key, pperms)
-        string += "Character (%s: %s)" % (caller.get_display_name(self.session), cperms)
-        caller.msg(string)
-
-
-class CmdForge(MuxCommand):
-    """
-    Retool tutorial object
-    Usage:
-      forge <object>
-    """
-    key = 'forge'
-    locks = 'cmd:all()'
-
-    def func(self):
-        """Here's where the forge magic happens."""
-        you = self.caller
-        args = self.args
-
-        if you and you.location:
-            obj = you.search(args, location=[you, you.location]) if args else you
-        if not self.args:
-            you.msg("Usage: %s <object>" % self.cmdstring)
-            return
-        # get object to swap on
-        obj = you.search(self.args)
-        if not obj:
-            you.msg("Your hammer swing misses its mark.")
-            return
-        if not hasattr(obj, "__dbclass__"):
-            string = "%s is not a typed object." % obj.name
-            you.msg(string)
-            return
-        new_typeclass = 'typeclasses.objects.Tool' or obj.path
-        if 'show' in self.switches:
-            you.msg("%s's current typeclass is %s." % (obj.name, obj.__class__))
-            return
-        if not hasattr(obj, 'swap_typeclass'):
-            you.msg("This object cannot have a type at all!")
-            return
-        is_same = obj.is_typeclass(new_typeclass, exact=True)
-        if is_same:
-            string = "%s is already forged as typeclass '%s'." % (obj.name, new_typeclass)
-        else:
-            old_typeclass_path = obj.typeclass_path
-            # Raise exception if needed
-            obj.swap_typeclass(new_typeclass, clean_attributes=False)
-            if is_same:
-                string = "%s (%s) is re-forged.\n" % (obj.name, obj.path)
-            else:
-                string = "%s (%s) is reforged to %s.\n" % (obj.name,
-                                                           old_typeclass_path,
-                                                           obj.typeclass_path)
-            string += "Creation occurred."
-            string += " Attributes set before swap were not removed."
-        you.msg(string)
-
-
-class CmdWho(MuxPlayerCommand):
-    """
-    Shows who is currently online.
-    Usage:
-      who
-    Switches:
-    /f             - shows character locations, and more info for those with permissions.
-    /s or /species - shows species setting for characters in your location.
-    """
-    key = 'who'
-    aliases = 'ws'
-    locks = 'cmd:all()'
-
-    def func(self):
-        """Get all connected players by polling session."""
-        player = self.player
-        session_list = SESSIONS.get_sessions()
-        session_list = sorted(session_list, key=lambda o: o.player.key)
-        show_session_data = player.check_permstring('Immortals') if 'f' in self.switches else False
-        nplayers = (SESSIONS.player_count())
-        if 'f' in self.switches or 'full' in self.switches:
-            if show_session_data:
-                # privileged info - who/f by wizard or immortal
-                table = prettytable.PrettyTable(["|wPlayer Name",
-                                                 "|wOn for",
-                                                 "|wIdle",
-                                                 "|wCharacter",
-                                                 "|wRoom",
-                                                 "|wCmds",
-                                                 "|wProtocol",
-                                                 "|wHost"])
-                for session in session_list:
-                    if not session.logged_in:
-                        continue
-                    delta_cmd = time.time() - session.cmd_last_visible
-                    delta_conn = time.time() - session.conn_time
-                    player = session.get_player()
-                    puppet = session.get_puppet()
-                    location = puppet.location.get_display_name(self.player)\
-                        if puppet and puppet.location else '|222Nothingness|n'
-                    table.add_row([utils.crop(player.get_display_name(self.player), width=25),
-                                   utils.time_format(delta_conn, 0),
-                                   utils.time_format(delta_cmd, 1),
-                                   utils.crop(puppet.get_display_name(self.player) if puppet else 'None', width=25),
-                                   utils.crop(location, width=25),
-                                   session.cmd_total,
-                                   session.protocol_key,
-                                   isinstance(session.address, tuple) and session.address[0] or session.address])
-            else:  # unprivileged info - who/f by player
-                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wLocation"])
-                for session in session_list:
-                    if not session.logged_in:
-                        continue
-                    delta_cmd = time.time() - session.cmd_last_visible
-                    delta_conn = time.time() - session.conn_time
-                    character = session.get_puppet()
-                    location = character.location.key if character and character.location else 'Nothingness'
-                    table.add_row([utils.crop(character.key if character else '- Unknown -', width=25),
-                                   utils.time_format(delta_conn, 0),
-                                   utils.time_format(delta_cmd, 1),
-                                   utils.crop(location, width=25)])
-        else:
-            if 's' in self.switches or 'species' in self.switches or self.cmdstring == 'ws':
-                my_character = self.caller.get_puppet(self.session)
-                if not (my_character and my_character.location):
-                    self.msg("You can't see anyone here.")
-                    return
-                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle", "|wSpecies"])
-                for session in session_list:
-                    character = session.get_puppet()
-                    if not session.logged_in or not character or character.location != my_character.location:
-                        continue
-                    delta_cmd = time.time() - session.cmd_last_visible
-                    delta_conn = time.time() - session.conn_time
-                    character = session.get_puppet()
-                    species = character.attributes.get('species', default='*ghost*')
-                    table.add_row([utils.crop(character.key if character else '*ghost*', width=25),
-                                   utils.time_format(delta_conn, 0),
-                                   utils.time_format(delta_cmd, 1),
-                                   utils.crop(species, width=25)])
-            else:  # unprivileged info - who
-                table = prettytable.PrettyTable(["|wCharacter", "|wOn for", "|wIdle"])
-                for session in session_list:
-                    if not session.logged_in:
-                        continue
-                    delta_cmd = time.time() - session.cmd_last_visible
-                    delta_conn = time.time() - session.conn_time
-                    character = session.get_puppet()
-                    table.add_row([utils.crop(character.key if character else '- Unknown -', width=25),
-                                   utils.time_format(delta_conn, 0),
-                                   utils.time_format(delta_cmd, 1)])
-        is_one = nplayers == 1
-        string = "%s\n%s " % (table, 'A' if is_one else nplayers)
-        string += 'single' if is_one else 'unique'
-        plural = '' if is_one else 's'
-        string += " account%s logged in." % plural
-        self.msg(string)

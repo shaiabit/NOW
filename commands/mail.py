@@ -1,9 +1,11 @@
-from evennia import default_cmds, CmdSet
-from past.builtins import cmp
-from django.conf import settings
+# -*- coding: UTF-8 -*-
+from commands.command import MuxCommand
+# from django.conf import settings
+from evennia import CmdSet
 from evennia.comms.models import ChannelDB, Msg
 from evennia.utils import create, utils, evtable, delay
-from evennia.utils.utils import make_iter, class_from_module
+# from evennia.utils.utils import make_iter, class_from_module
+from past.builtins import cmp
 
 
 class MailCmdSet(CmdSet):
@@ -14,7 +16,7 @@ class MailCmdSet(CmdSet):
         self.add(CmdMail())
 
 
-class CmdMail(default_cmds.MuxCommand):
+class CmdMail(MuxCommand):
     """
     Mail a private letter to another character or
     show your last <number> of letters (default is 5)
