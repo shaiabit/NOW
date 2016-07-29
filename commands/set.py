@@ -37,6 +37,8 @@ class CmdSettings(CmdSettingsDefault):
 
         if 'set' in cmd:
             if 'list' in opt:
+                if not char.db.settings:
+                    char.db.settings = {}
                 player.msg('Listing %s%s|n control panel settings: |g%s'
                            % (char.STYLE, char.key, '|n, |g'.join('%s|n: |c%s' % (each, char.db.settings[each])
                                                                   for each in char.db.settings)))

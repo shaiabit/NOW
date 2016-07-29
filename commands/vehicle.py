@@ -77,6 +77,8 @@ class CmdVehicle(CmdVehicleDefault):
                 char.msg('%s%s|n %s' % (char.STYLE, char.key, exit_message))
         if 'operate' in cmd:
             if 'list' in opt:
+                if not where.db.settings:
+                    where.db.settings = {}
                 player.msg('Listing %s%s|n control panel settings: |g%s'
                            % (where.STYLE, where.key, '|n, |g'.join('%s|n: |c%s' % (each, where.db.settings[each])
                                                                     for each in where.db.settings)))
