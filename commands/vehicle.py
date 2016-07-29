@@ -44,6 +44,7 @@ class CmdVehicle(CmdVehicleDefault):
         here = char.location
         outside = where.location
         player = self.player
+        setting = where.db.settings or {}
         if 'vehicle' in cmd:
             player.msg('|wCommand list for %s%s|n:|/|C%s' % (where.STYLE, where.key, '|n, |C'.join(self.aliases)))
         if 'board' in cmd or 'enter' in cmd:
@@ -75,14 +76,25 @@ class CmdVehicle(CmdVehicleDefault):
             if exit_message:
                 char.msg('%s%s|n %s' % (char.STYLE, char.key, exit_message))
         if 'operate' in cmd:
+            if 'list' in opt:
+                player.msg('Listing %s%s|n control panel settings: |g%s'
+                           % (where.STYLE, where.key, '|n, |g'.join('%s|n: |c%s' % (each, where.db.settings[each])
+                                                                    for each in where.db.settings)))
+                return
             if 'on' in opt or 'off' in opt or 'toggle' in opt or 'set' in opt:
                 action = opt[0]
                 if action == 'on':
                     action = 'engage'
+                    setting[args] = True
                 elif action == 'off':
                     action = 'disengage'
+                    setting[args] = False
                 elif action == 'set':
                     action = 'dial'
+                    setting[lhs] = rhs
+                else:
+                    setting[args] = False if where.db.settings and args in where.db.settings\
+                                             and where.db.settings[args] else True
                 if 'set' in opt and rhs:
                     message = '|g%s|n %ss %s to %s on %s%s|n control panel.' % \
                               (char.key, action, lhs if lhs else 'something', rhs, where.STYLE, where.key)
@@ -92,6 +104,7 @@ class CmdVehicle(CmdVehicleDefault):
                 if not here == where:
                     outside.msg_contents(message)
                 where.msg_contents(message)
+                where.db.settings = setting
                 return
             self.send_msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
                           (char.STYLE, char.key, where.STYLE, where.key, args))

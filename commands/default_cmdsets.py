@@ -22,6 +22,7 @@ from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 from commands import prelogin
 from commands import exitdirections
 from commands.say import CmdSay, CmdOoc, CmdSpoof
+from commands.set import CmdSettings
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
@@ -72,6 +73,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdZone)
         self.add(CmdSense)
         self.add(CmdSpoof)
+        self.add(CmdSettings)
         self.add(CmdTeleport)
         self.add(CmdInventory)
 # [...]
