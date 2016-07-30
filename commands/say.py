@@ -62,17 +62,19 @@ class CmdOoc(MuxCommand):
 
     def func(self):
         """Run the ooc command"""
-        caller = self.caller
+        char = self.character
+        player = self.player
+        here = char.location
         args = self.args.strip()
         if not args:
-            caller.execute_cmd('help ooc')
+            player.execute_cmd('help ooc')
             return
         elif args[0] == '"' or args[0] == "'":
-            caller.execute_cmd('say/o ' + caller.location.at_say(caller, args[1:]))
+            player.execute_cmd('say/o ' + here.at_say(char, args[1:]))
         elif args[0] == ':' or args[0] == ';':
-            caller.execute_cmd('pose/o %s' % args[1:])
+            player.execute_cmd('pose/o %s' % args[1:])
         else:
-            caller.location.msg_contents('[OOC %s] %s' % (caller.get_display_name(self.session), args))
+            here.msg_contents('[OOC %s] %s' % (char.get_display_name(self.session), args))
 
 
 class CmdSpoof(MuxCommand):
@@ -89,16 +91,18 @@ class CmdSpoof(MuxCommand):
 
     def func(self):
         """Run the spoof command"""
-        caller = self.caller
-        if not self.args:
-            caller.execute_cmd('help spoof')
+        char = self.character
+        here = char.location
+        args = self.args.strip()
+        if not args:
+            char.execute_cmd('help spoof')
             return
         if 'self' in self.switches:
-            caller.msg(self.args)
+            char.msg(self.args)
             return
         else:  # Strip any markup to secure the spoof.
-            spoof = ansi.strip_ansi(self.args)
+            spoof = ansi.strip_ansi(args)
         # calling the speech hook on the location.
         # An NPC would know who spoofed.
-        spoof = caller.location.at_say(caller, spoof)
-        caller.location.msg_contents(spoof, options={'raw': True})
+        spoof = here.at_say(char, spoof)
+        here.msg_contents(spoof, options={'raw': True})
