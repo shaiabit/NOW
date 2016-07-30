@@ -124,7 +124,7 @@ class Room(DefaultRoom):
                     exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
             string += ", ".join(d for d in sort_exits(exits_simple, exits_complex))
         elif viewer.db.last_room:
-            string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.name
+            string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.get_display_name(viewer)
         if users or things:
             user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id) for u in users)
             ut_joiner = ', ' if users and things else ''
