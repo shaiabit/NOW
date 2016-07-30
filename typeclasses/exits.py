@@ -173,9 +173,7 @@ class Exit(DefaultExit):
 
     def at_after_traverse(self, traveller, source_loc):
         """called by at_traverse just after traversing."""
-        traveller.ndb.last_location = source_loc
-        if not source_loc.destination:
-            traveller.db.last_room = source_loc
+        pass
 
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
 

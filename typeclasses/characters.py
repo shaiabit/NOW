@@ -81,7 +81,10 @@ class Character(DefaultCharacter):
         return True
 
     def at_after_move(self, source_location):
-        """Trigger look after a move."""
+        """Store last location and room then trigger the arrival look after a move."""
+        self.ndb.last_location = source_location
+        if not source_location.destination:
+            self.db.last_room = source_location
         if self.location.access(self, 'view'):
             self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
         return source_location
