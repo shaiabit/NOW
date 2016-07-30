@@ -159,9 +159,10 @@ class MuxCommand(default_cmds.MuxCommand):
         (after self.func()).
         """
         char = self.character
-        here = char.location
-        print('(%s%s)' % (self.cmdstring, self.raw))
-        if here.location:
+        here = char.location if char else None
+        who = self.player.key if self.player else '-visitor-'
+        print('%s> %s%s' % (who, self.cmdstring, self.raw))
+        if here:
             if char.db.settings and 'broadcast command' in char.db.settings and char.db.settings['broadcast command']:
                 here.msg_contents('|r(|n%s%s|n|r)|n' % (self.cmdstring, self.raw))
 
