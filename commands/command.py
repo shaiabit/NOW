@@ -129,6 +129,7 @@ class MuxCommand(default_cmds.MuxCommand):
     All args and list members are stripped of excess whitespace around the
     strings, but case is preserved.
     """
+    player_caller = True
 
     def at_pre_cmd(self):
         """
@@ -157,7 +158,12 @@ class MuxCommand(default_cmds.MuxCommand):
         This hook is called after the command has finished executing
         (after self.func()).
         """
-        pass
+        char = self.character
+        here = char.location
+        print('(%s%s)' % (self.cmdstring, self.raw))
+        if here.location:
+            if char.db.settings and 'broadcast command' in char.db.settings and char.db.settings['broadcast command']:
+                here.msg_contents('|r(|n%s%s|n|r)|n' % (self.cmdstring, self.raw))
 
 
 class MuxPlayerCommand(MuxCommand):

@@ -18,19 +18,20 @@ class CmdAccess(MuxCommand):
 
     def func(self):
         """Load the permission groups"""
-        caller = self.caller
+        char = self.character
+        player = self.player
         hierarchy_full = settings.PERMISSION_HIERARCHY
         string = ''
         if 'groups' in self.switches:
             string = "|wPermission Hierarchy|n (climbing): %s|/" % ", ".join(hierarchy_full)
-        if caller.player.is_superuser:
-            cperms = "<|ySuperuser|n> " + ", ".join(caller.permissions.all())
-            pperms = "<|ySuperuser|n> " + ", ".join(caller.player.permissions.all())
+        if player.is_superuser:
+            cperms = "<|ySuperuser|n> " + ", ".join(char.permissions.all())
+            pperms = "<|ySuperuser|n> " + ", ".join(player.permissions.all())
         else:
-            cperms = ", ".join(caller.permissions.all())
-            pperms = ", ".join(caller.player.permissions.all())
+            cperms = ", ".join(char.permissions.all())
+            pperms = ", ".join(player.permissions.all())
         string += "|wYour Player/Character access|n: "
-        if hasattr(caller, 'player'):
-            string += "Player: (%s: %s) and " % (caller.player.key, pperms)
-        string += "Character (%s: %s)" % (caller.get_display_name(self.session), cperms)
-        caller.msg(string)
+        if hasattr(char, 'player'):
+            string += "Player: (%s: %s) and " % (player.get_display_name(self.session), pperms)
+        string += "Character (%s: %s)" % (char.get_display_name(self.session), cperms)
+        player.msg(string)
