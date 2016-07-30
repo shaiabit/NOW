@@ -34,9 +34,9 @@ from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.access import CmdAccess
+from commands.channel import CmdChannels
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
-from commands.command import CmdChannels
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
