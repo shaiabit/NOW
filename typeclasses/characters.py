@@ -74,7 +74,7 @@ class Character(DefaultCharacter):
             for each in self.db.followers:
                 if each.location == self.location:
                     each.ndb.mover = self
-                    if not each.at_before_move(destination):
+                    if not (each.has_player and each.at_before_move(destination)):
                         continue
                     self.ndb.followers.append(each)
                     self.location.at_object_leave(each, destination)
