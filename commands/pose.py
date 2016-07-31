@@ -29,8 +29,7 @@ class CmdPose(MuxCommand):
     key = 'pose'
     aliases = [':', ';', 'emote', 'try']
     locks = 'cmd:all()'
-    verb, obj = None, None
-    player_caller = True
+    verb, noun, obj = None, None, None
 
     def parse(self):
         """
@@ -62,7 +61,6 @@ class CmdPose(MuxCommand):
             char.execute_cmd("help pose")
             return
 
-        self.msg = ''
         non_space_chars = ["®", "©", "°", "·", "~", "@", "-", "'", "’", ",", ";", ":", ".", "?", "!", "…"]
 
         if 'magnet' in self.switches or 'm' in self.switches:
