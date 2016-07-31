@@ -164,7 +164,7 @@ class MuxCommand(default_cmds.MuxCommand):
         print('%s> %s%s' % (who, self.cmdstring, self.raw))
         if here:
             if char.db.settings and 'broadcast command' in char.db.settings and char.db.settings['broadcast command']:
-                here.msg_contents('|r(|n%s%s|n|r)|n' % (self.cmdstring, self.raw))
+                here.msg_contents('|r(|w%s|r)|n %s%s|n' % (self.character.key, self.cmdstring, self.raw))
 
 
 class MuxPlayerCommand(MuxCommand):
