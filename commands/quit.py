@@ -25,7 +25,7 @@ class CmdQuit(MuxPlayerCommand):
         exit_msg = 'Hope to see you again, soon.'
 
         if self.args.strip():
-            bye += " ( |w%s\n ) " % self.args.strip()
+            bye += " ( |w%s ) " % self.args.strip()
 
         if 'all' in self.switches:
             msg = bye + ' all sessions. ' + exit_msg
