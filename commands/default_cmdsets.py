@@ -45,31 +45,29 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
     in-world Character objects. It is merged with the `PlayerCmdSet` when
     a Player puppets a Character.
     """
-    key = "DefaultCharacter"
+    key = 'DefaultCharacter'
 
     def at_cmdset_creation(self):
-        """
-        Populates the cmdset
-        """
+        """Populates the DefaultCharacter cmdset"""
 
         super(CharacterCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdGet)
+        self.remove(default_cmds.CmdSay)
         self.remove(default_cmds.CmdDrop)
         self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
+        self.remove(default_cmds.CmdPose)
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
         self.remove(default_cmds.CmdDestroy)  # Reuse instead of destroy database objects.
         self.remove(default_cmds.CmdTeleport)  # Teleport haa cost and conditions.
 # [...]
-        self.add(CmdSay)
         self.add(CmdOoc)
         self.add(CmdDesc)
         self.add(CmdFlag)
         self.add(CmdHome)
         self.add(CmdMail)
-        self.add(CmdPose)
         self.add(CmdZone)
         self.add(CmdSense)
         self.add(CmdSpoof)
@@ -101,12 +99,10 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
     Character. It holds game-account-specific commands, channel
     commands, etc.
     """
-    key = "DefaultPlayer"
+    key = 'DefaultPlayer'
 
     def at_cmdset_creation(self):
-        """
-        Populates the cmdset
-        """
+        """Populates the DefaultPlayer cmdset"""
         super(PlayerCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdCWho)
@@ -120,7 +116,9 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.remove(default_cmds.CmdAllCom)
         self.remove(default_cmds.CmdCdestroy)
         self.remove(default_cmds.CmdChannelCreate)
+        self.add(CmdSay)
         self.add(CmdWho)
+        self.add(CmdPose)
         self.add(CmdQuit)
         self.add(CmdAbout)
         self.add(CmdAccess)
@@ -133,12 +131,10 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
     Command set available to the Session before being logged in.  This
     holds commands like creating a new account, logging in, etc.
     """
-    key = "DefaultUnloggedin"
+    key = 'DefaultUnloggedin'
 
     def at_cmdset_creation(self):
-        """
-        Populates the cmdset
-        """
+        """Populates the DefaultUnloggedin cmdset"""
         super(UnloggedinCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
         self.add(prelogin.CmdWhoUs())
@@ -146,10 +142,10 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
 
 class SessionCmdSet(default_cmds.SessionCmdSet):
     """
-    This cmdset is made available on Session level once logged in. It
-    is empty by default.
+    This cmdset is made available on Session level once logged in.
+    It is empty by default.
     """
-    key = "DefaultSession"
+    key = 'DefaultSession'
 
     def at_cmdset_creation(self):
         """
