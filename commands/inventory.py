@@ -19,7 +19,7 @@ class CmdInventory(MuxCommand):
 
     def func(self):
         """check inventory"""
-        you = self.caller
+        you = self.character
         items = you.contents
         if you.traits.mass:
             mass = you.traits.mass.actual or 10
