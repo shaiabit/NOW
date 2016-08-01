@@ -25,7 +25,10 @@ class CmdSay(MuxCommand):
         opt = self.switches
         args = self.args.strip()
         if not (here and char):
-            player.execute_cmd("pub %s" % args)
+            if args:
+                player.execute_cmd('pub %s' % args)
+            else:
+                player.msg('Usage: say <message>   to speak on public channel.')
             return
         if not args:
             player.execute_cmd("help say")
