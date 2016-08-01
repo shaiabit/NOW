@@ -13,39 +13,51 @@ class CmdSay(MuxCommand):
     /v or /verb - set default say verb.
     """
     key = 'say'
-    aliases = ['"', "'"]
+    aliases = ['"', "'", '""', "''", 'lsay']
     locks = 'cmd:all()'
-    player_caller = True
 
     def func(self):
         """Run the say command"""
         char = self.character
-        here = char.location
+        here = char.location if char else None
         player = self.player
+        cmd = self.cmdstring
+        opt = self.switches
         args = self.args.strip()
-        switches = self.switches
-        if not here:
+        if not (here and char):
             player.execute_cmd("pub %s" % args)
             return
         if not args:
-            char.execute_cmd("help say")
+            player.execute_cmd("help say")
             return
-        if 'v' in switches or 'verb' in switches:
+        if 'v' in opt or 'verb' in opt:
             char.attributes.add('say-verb', args)
             emit_string = '%s%s|n warms up vocally with "%s|n"' % (char.STYLE, char.key, args)
             here.msg_contents(emit_string)
             return
-        if 'q' in switches or 'quote' in switches:
+        if 'q' in opt or 'quote' in opt:
             if len(args) > 2:
                 char.quote = args  # Not yet implemented.
                 return
-        speech = here.at_say(char, args)  # Notify NPCs and listeners.
-        if 'o' in switches or 'ooc' in switches:
-            emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
-        else:
+        if 'l' in opt or 'local' in opt or cmd == 'lsay' or cmd == "''" or cmd == '""':
+            seat = here  # seat is where character is sitting.
+            speech = seat.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             emit_string = '%s%s|n %s, "%s|n"' % (char.STYLE, char.key, verb, speech)
-        here.msg_contents(emit_string)
+            sitters = []
+            for sitter in sitters:
+                if 'o' in opt or 'ooc' in opt:
+                    emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
+                else:
+                    sitter.msg(emit_string)
+        else:
+            speech = here.at_say(char, args)  # Notify NPCs and listeners.
+            verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
+            if 'o' in opt or 'ooc' in opt:
+                emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
+            else:
+                emit_string = '%s%s|n %s, "%s|n"' % (char.STYLE, char.key, verb, speech)
+            here.msg_contents(emit_string)
 
 
 class CmdOoc(MuxCommand):
