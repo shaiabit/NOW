@@ -24,15 +24,16 @@ class CmdSense(MuxCommand):
     aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen']
     locks = 'cmd:all()'
     arg_regex = r'\s|$'
-    player_caller = True
 
     def func(self):
         """Handle sensing objects in different ways, including look."""
         char = self.character
-        here = char.location
+        here = char.location if char else None
         player = self.player
-        if not (char or here):
-            player.msg("There's nothing here to sense.")
+        if not (char and here):
+            player.msg('You sense only Nothingness.')
+            message = '|gback|n or |ghome' if char else '|g@ic'
+            player.msg('(Type %s|n to return to the NOW.)' % message)
             return
         args = self.args.strip()
         cmd = self.cmdstring
