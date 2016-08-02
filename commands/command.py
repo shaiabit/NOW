@@ -169,7 +169,8 @@ class MuxCommand(default_cmds.MuxCommand):
                     if each.has_player:
                         if each == self or each.db.settings and 'see commands' in each.db.settings and\
                                         each.db.settings['see commands'] is True:
-                            each.msg('|r(|w%s|r)|n %s%s|n' % (self.character.key, self.cmdstring, self.raw))
+                            each.msg('|r(|w%s|r)|n %s%s|n' % (self.character.key, self.cmdstring,
+                                                              self.raw.replace('|', '||')))
 
 
 class MuxPlayerCommand(MuxCommand):
