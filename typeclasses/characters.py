@@ -71,11 +71,16 @@ class Character(DefaultCharacter):
             return True
         if self.attributes.has('followers') and self.db.followers and self.location:  # Test list of followers.
             self.ndb.followers = []
+            if self.db.settings and 'lead others' in self.db.settings and self.db.settings['lead others'] is False:
+                return True  # Character has followers, but does not want to lead others.
             for each in self.db.followers:
                 if each.location == self.location:
                     each.ndb.mover = self
                     if not (each.has_player and each.at_before_move(destination)):
                         continue
+                    if each.db.settings and 'follow others' in each.db.settings and each.db.settings['follow others']\
+                            is False:
+                            continue
                     self.ndb.followers.append(each)
                     self.location.at_object_leave(each, destination)
         return True
@@ -312,7 +317,10 @@ class Character(DefaultCharacter):
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         if self != viewer:
-            self.msg("|g%s|n just looked at you." % viewer.key)
+            if self.db.settings and 'look notify' in self.db.settings and self.db.settings['look notify'] is False:
+                self.msg("|g%s|n just looked at you, but you are not receiving any notification." % viewer.key)
+            else:
+                self.msg("|g%s|n just looked at you." % viewer.key)
         return string
 
     def return_detail(self, detailkey):
