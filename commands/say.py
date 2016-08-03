@@ -42,17 +42,6 @@ class CmdSay(MuxCommand):
             if len(args) > 2:
                 char.quote = args  # Not yet implemented.
                 return
-        if 'l' in opt or 'local' in opt or cmd == 'lsay' or cmd == "''" or cmd == '""':
-            seat = here  # seat is where character is sitting.
-            speech = seat.at_say(char, args)  # Notify NPCs and listeners.
-            verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
-            emit_string = '%s%s|n %s, "%s|n"' % (char.STYLE, char.key, verb, speech)
-            sitters = []
-            for sitter in sitters:
-                if 'o' in opt or 'ooc' in opt:
-                    emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
-                else:
-                    sitter.msg(emit_string)
         else:
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
@@ -98,7 +87,8 @@ class CmdSpoof(MuxCommand):
     Usage:
       spoof <message>
     Switches:
-    /self <message only to you>
+    /strip <message sent to room with markup stripped>
+    /self <message only to you with full markup>
     """
     key = 'spoof'
     aliases = ['~', '`', 'sp']
@@ -108,16 +98,18 @@ class CmdSpoof(MuxCommand):
         """Run the spoof command"""
         char = self.character
         here = char.location
+        opt = self.switches
         args = self.args.strip()
         if not args:
             char.execute_cmd('help spoof')
             return
-        if 'self' in self.switches:
-            char.msg(self.args)
+        if 'self' in opt:
+            char.msg(args)
             return
-        else:  # Strip any markup to secure the spoof.
-            spoof = ansi.strip_ansi(args)
-        # calling the speech hook on the location.
-        # An NPC would know who spoofed.
-        spoof = here.at_say(char, spoof)
-        here.msg_contents(spoof, options={'raw': True})
+        stripped = ansi.strip_ansi(args)
+        marked = self.args.replace('|', '||')
+        here.at_say(char, stripped)  # calling the speech hook on the location.
+        if 'strip' in opt:  # Optionally strip any markup or escape it,
+            here.msg_contents(stripped, options={'raw': True})
+        else:
+            here.msg_contents(marked)
