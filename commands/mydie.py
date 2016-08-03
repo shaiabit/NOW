@@ -49,7 +49,18 @@ class CmdMyDieDefault(MuxCommand):
 class CmdMyDie(CmdMyDieDefault):
     """
 
-    Usage:
+    Usage: 
+      Mydie [/switch] [diename] [=character names/face name]
+    
+    Switch: 
+      hidden - tells the room what diename is being rolled but only show results to self.
+      secret - don't inform the room about neither roll nor result only to self.
+      new - Create a new die with name set this to [default]
+      add - add a face to the die name
+      rem - remove the last face [or named face] from the particular die
+      show - show all die faces.
+      n times - roll the particular die n times 
+      n shows- - show n faces of the die (no repeats)
 
     """
     aliases = ['1', '2', '3']
@@ -65,4 +76,14 @@ class CmdMyDie(CmdMyDieDefault):
         # here = char.location
         # outside = where.location
         # player = self.player
+        # 
+        # Check if user has mydie set on them
+        #   Inform them if they do not of how to add and inform of help
+        #   Is this Usage of Die or Modification of Die
+        #     Roll the die and store the results    
+        #     Usage check for appropriate switches (ignore incorrect ones typos/new/add/rem <show) actually shows all the die faces>
+        #     Send to affected parties per swtiches
+        #  Does Die Exist
+        #     Use switches to determine what to do, check for conflict no add & rem
+        #     Inform use they have create diename they now need to /add faces
         pass
