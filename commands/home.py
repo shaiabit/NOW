@@ -62,8 +62,9 @@ class CmdHome(MuxCommand):
                     was = obj.location
                     obj.move_to(home, use_destination=False)
                     if you.location != was:
+                        source_location_name = was.get_display_name(you) if was else '|222Nothingness|n'
                         you.msg("%s left %s and went home to %s."
-                                % (obj.get_display_name(you), was.get_display_name(you), home.get_display_name(you)))
+                                % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return
             if not self.rhs and 'here' not in opt:  # just view the destination set as home
                 if obj != you and not player.check_permstring('Helpstaff') or not obj.access(player, 'puppet'):
