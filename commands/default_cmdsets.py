@@ -71,7 +71,6 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdZone)
         self.add(CmdSpoof)
         self.add(CmdSettings)
-        self.add(CmdTeleport)
         self.add(CmdInventory)
 # [...]
         self.add(CmdStop)
@@ -123,6 +122,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdSense)
         self.add(CmdAccess)
         self.add(CmdChannels)
+        self.add(CmdTeleport)
         # self.add(CmdChannelWizard) # TODO: Too dangerous to add without testing.
 
 

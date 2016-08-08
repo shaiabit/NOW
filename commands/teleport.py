@@ -8,7 +8,7 @@ class CmdTeleport(MuxCommand):
     If no object is given, you are teleported to the target location.
     Usage:
       tel/switch [<object> =] <target location>
-    Switches:
+    Options:
     /quiet     don't echo leave/arrive messages to the source/target
                locations for the move.
     /intoexit  if target is an exit, teleport INTO
@@ -26,7 +26,6 @@ class CmdTeleport(MuxCommand):
     aliases = ['tport', 'tel']
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
-    player_caller = True
 
     def func(self):
         """Performs the teleport, accounting for in-world conditions."""
@@ -35,15 +34,15 @@ class CmdTeleport(MuxCommand):
         player = self.player
         args = self.args
         lhs, rhs = self.lhs, self.rhs
-        switches = self.switches
+        opt = self.switches
 
         if char.ndb.currently_moving:
             player.msg("You can not teleport while moving. (|rstop|n, then try again.)")
             return
 
-        # setting switches
-        tel_quietly = 'quiet' in switches or 'silent' in switches
-        to_none = 'vanish' in switches
+        # setting command options
+        tel_quietly = 'quiet' in opt or 'silent' in opt
+        to_none = 'vanish' in opt
 
         if to_none:  # teleporting to Nothingness
             if not args:
@@ -69,7 +68,7 @@ class CmdTeleport(MuxCommand):
             target.location = None
             return
         if not args:
-            player.msg("Usage: teleport[/switches] [<obj> =] <target_loc>||home")
+            player.msg("Usage: teleport[/options] [<obj> =] <target_loc>||home")
             return
         if rhs:
             target = char.search(lhs, global_search=True)
@@ -94,7 +93,7 @@ class CmdTeleport(MuxCommand):
             player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
             return
         use_loc = True
-        if 'intoexit' in self.switches:
+        if 'intoexit' in self.opt:
             use_loc = False
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
