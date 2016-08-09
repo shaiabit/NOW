@@ -61,8 +61,8 @@ class CmdWho(MuxPlayerCommand):
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
-                    here = character.location
-                    location = here.get_display_name(you) if character and here else 'Nothingness'
+                    here = character.location if character else None
+                    location = here.get_display_name(you) if character and here else '|222Nothingness|n'
                     table.add_row(character.get_display_name(you) if character else '- Unknown -',
                                   utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1), location)
         else:

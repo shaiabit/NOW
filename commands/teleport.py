@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
 
-
 class CmdTeleport(MuxCommand):
     """
     Change object's location - IC component-aware.
@@ -31,12 +30,13 @@ class CmdTeleport(MuxCommand):
         """Performs the teleport, accounting for in-world conditions."""
 
         char = self.character
+        cmd = self.cmdstring
         player = self.player
         args = self.args
         lhs, rhs = self.lhs, self.rhs
         opt = self.switches
 
-        if char.ndb.currently_moving:
+        if char and char.ndb.currently_moving:
             player.msg("You can not teleport while moving. (|rstop|n, then try again.)")
             return
 
@@ -44,14 +44,21 @@ class CmdTeleport(MuxCommand):
         tel_quietly = 'quiet' in opt or 'silent' in opt
         to_none = 'vanish' in opt
 
+        search_as = player.db._playable_characters[0]
+        if not search_as:
+            search_as = player.db._last_puppet
+        if not search_as:
+            player.msg("|yMust be |c@ic|y to use |g%s|w." % cmd)
+            return
+
         if to_none:  # teleporting to Nothingness
-            if not args:
+            if not args and char:
                 target = char
                 player.msg("|*Teleported to Nothingness.|n")
-                if char.location and not tel_quietly:
+                if char and char.location and not tel_quietly:
                     char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
-                target = char.search(lhs, global_search=True)
+                target = search_as.search(lhs, global_search=True)
                 if not target:
                     player.msg("Did not find object to teleport.")
                     return
@@ -60,7 +67,7 @@ class CmdTeleport(MuxCommand):
                     return
                 player.msg("Teleported %s -> None-location." % (target.get_display_name(player)))
                 if target.location and not tel_quietly:
-                    if char.location == target.location and char != target:
+                    if char and char.location == target.location and char != target:
                         target.location.msg_contents("%s%s|n sends %s%s|n into |222Nothingness|n."
                                                      % (char.STYLE, char, target.STYLE, target))
                     else:
@@ -71,11 +78,11 @@ class CmdTeleport(MuxCommand):
             player.msg("Usage: teleport[/options] [<obj> =] <target_loc>||home")
             return
         if rhs:
-            target = char.search(lhs, global_search=True)
-            loc = char.search(rhs, global_search=True)
+            target = search_as.search(lhs, global_search=True)
+            loc = search_as.search(rhs, global_search=True)
         else:
             target = char
-            loc = char.search(lhs, global_search=True)
+            loc = search_as.search(lhs, global_search=True)
         if not target:
             player.msg("Did not find object to teleport.")
             return
@@ -93,18 +100,19 @@ class CmdTeleport(MuxCommand):
             player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
             return
         use_loc = True
-        if 'intoexit' in self.opt:
+        if 'intoexit' in opt:
             use_loc = False
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
         else:
-            target.ndb.mover = char
+            target.ndb.mover = char or player
         if target.move_to(loc, quiet=tel_quietly, emit_to_obj=char, use_destination=use_loc):
-            if target == char:
+            if char and target == char:
                 player.msg("Teleported to %s." % loc.get_display_name(player))
             else:
                 player.msg("Teleported %s to %s." % (target.get_display_name(player), loc.get_display_name(player)))
                 target.nattributes.remove('mover')
         else:
-            player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(player),
-                                                           loc.get_display_name(player)))
+            if target.location != loc:
+                player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(player),
+                                                               loc.get_display_name(player)))

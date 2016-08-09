@@ -134,11 +134,15 @@ class Character(DefaultCharacter):
             string = "You now have %s%s|n in your possession." % (self.STYLE, name)
             here.msg(string)
             return
-        src_name = 'Nothingness'
+        src_name = '|222Nothingness'
         loc_name = here.name
         if source_location:
-            src_name = source_location.name
+            src_name = source_location.STYLE + source_location.key
         string = '|g%s|n' % name
+        if self.location:
+            depart_name = '%s%s' % (self.location.STYLE, loc_name)
+        else:
+            depart_name = '|222Nothingness'
         if self.ndb.followers and len(self.ndb.followers) > 0:
             if len(self.ndb.followers) > 1:
                 string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
@@ -147,7 +151,7 @@ class Character(DefaultCharacter):
                 string += ' and |g%s|n arrive ' % self.ndb.followers[-1]
         else:
             string += ' arrives '
-        string += "to %s%s|n from %s%s|n." % (self.location.STYLE, loc_name, source_location.STYLE, src_name)
+        string += "to %s|n from %s|n." % (depart_name, src_name)
         here.msg_contents(string, exclude=self)
         if self.ndb.followers and len(self.ndb.followers) > 0:
             for each in self.ndb.followers:
@@ -185,7 +189,7 @@ class Character(DefaultCharacter):
             self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
 
         def message(obj, from_obj):
-            obj.msg("|g%s|n fades into view." % self.get_display_name(obj), from_obj=from_obj)
+            obj.msg("|g%s|n fades into view." % self.key, from_obj=from_obj)
 
         if self.location != self.home:
             self.location.for_contents(message, exclude=[self], from_obj=self)
@@ -215,11 +219,11 @@ class Character(DefaultCharacter):
 
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
-                if self.location != self.home:
+                if self.location != self.home:  # If not already home, send to Nothingness.
                     self.location = None
 
                 def message(obj, from_obj):
-                    obj.msg("%s fades from view." % self.get_display_name(obj), from_obj=from_obj)
+                    obj.msg("%s%s|n fades from view." % (self.STYLE, self.key), from_obj=from_obj)
 
                 if self.location != self.home:
                     self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
@@ -291,13 +295,17 @@ class Character(DefaultCharacter):
                 users.append(con)
             else:
                 things.append(con)
-        # get description, build string
-
-        string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)
+        string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)  # Start building description string.
         string += " |y(%s)|n " % mass_unit(self.get_mass())
-        if self.attributes.has('health') and self.attributes.has('health_max'):  # Add character health bar.
+        health_attribute_pair = True if self.attributes.has('health') and self.attributes.has('health_max') else False
+        health_trait_gauge = True if self.traits.health.actual else False
+        if health_attribute_pair or health_trait_gauge:  # Add character health bar if character has health attributes.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-            health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
+            if health_trait_gauge:
+                pass  # TODO: Trait health gauge goes here.
+                health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
+            else:
+                health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
             string += " %s\n" % health
         else:
             string += "\n"
