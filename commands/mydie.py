@@ -63,6 +63,14 @@ class CmdMyDie(CmdMyDieDefault):
     /deal <n>  - show n faces, no repeats.  (Deal like cards - permutations )
     """
 
+    # A list structure inside a dictionary, with 'default' indexing symbol for the current set, as so with
+    # dictionary keys as set names, and the values are a list of elements of that set:
+    EXAMPLE_SET = {'default': 'fruits', 'fruits': ['apple', 'orange', 'banana', 'pear', 'strawberry'],
+                   'coins': ['Quarter farthing', 'third farthing', 'half farthing', 'farthing', 'halfpenny', 'penny',
+                             'threepence', 'groat', 'sixpense', 'shilling', 'florin', 'half crown', 'crown', 'pound',
+                             'two pounds', 'five pounds'],
+                   'months': ['January', 'February', 'March', 'April', 'May', '...']}
+
     def func(self):
         """ """
         cmd = self.cmdstring
@@ -81,11 +89,12 @@ class CmdMyDie(CmdMyDieDefault):
                        'See: |ghelp mydie|n for more information' % cmd)
             return
         else:
-            current = 'My First Die'  # Where will selected die be stored? Recall from state storage here. TODO
+            dice = where.db.dice if where.db.dice else self.EXAMPLE_SET
+            current = dice[dice['default']]
             # Is this Usage of Die or Modification of Die?
-            if not rhs:  # If no = sign given, then using, not modifying.
+            if not rhs:  # If no equals sign was supplied, then using dice sets, not modifying them.
                 # If using, randomize the die and store the result.
-                char.ndb.roll_result = random.shuffle(my_die)  # Stored on character.
+                char.ndb.roll_result = random.shuffle(current)  # Store results on on character.
                 # Usage check for appropriate switches (ignore incorrect ones typos/new/add/rem <show)
                 # Generate roll result
                 result = []  # Start with an empty list.
@@ -101,11 +110,11 @@ class CmdMyDie(CmdMyDieDefault):
                     faces = '|c' + '|w, |c'.join(my_die if 'shuffle' in opt else char.db.dice)  # Potentially shuffle.
                     player.msg('The current die, %s, has |g%i|n sides marked %s' % (current, face_count, faces))
                 # Next, send result to appropriate parties per options.
-                if 'hidden' in opt:  # Pose that character rolled current die, but do not display result.
-                    here.msg_contents('%s%s|n rolls a hidden %s die.' % (char.STYLE, char.key, current))
-                elif 'secret' in opt:  # Only give results to the character.
+                if 'secret' in opt or 'hidden' in opt:
                     char.msg('You rolled %s to get %s.' % (current, result))
-                else:  # Pose roll and results.
+                if 'hidden' in opt:  # Pose that character rolled current die, but do not display result.
+                    here.msg_contents('%s%s|n rolls a hidden %s die.' % (char.STYLE, char.key, current), exclude=char)
+                elif 'secret' not in opt:  # Pose roll and results.
                     here.msg_contents('%s%s|n rolls the %s die from the %s%s|n to get %s' %
                                       (char.STYLE, char.key, current, where.STYLE, where.key, result))
             else:  # Modifying die
