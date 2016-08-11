@@ -8,12 +8,12 @@ class CmdSay(MuxCommand):
     Speak as your character.
     Usage:
       say <message>
-    Switches:
+    Options:
     /o or /ooc  - Out-of-character to the room.
     /v or /verb - set default say verb.
     """
     key = 'say'
-    aliases = ['"', "'", '""', "''", 'lsay']
+    aliases = ['"', "'"]
     locks = 'cmd:all()'
 
     def func(self):
@@ -21,7 +21,6 @@ class CmdSay(MuxCommand):
         char = self.character
         here = char.location if char else None
         player = self.player
-        cmd = self.cmdstring
         opt = self.switches
         args = self.args.strip()
         if not (here and char):
