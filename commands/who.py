@@ -29,14 +29,14 @@ class CmdWho(MuxPlayerCommand):
         session_list = sorted(session_list, key=lambda o: o.player.key)
         show_session_data = you.check_permstring('Immortals') if 'f' in opt else False
         player_count = (SESSIONS.player_count())
-        table = evtable.EvTable(border='none', maxwidth=79)
+        table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
         if 'f' in opt or 'full' in opt or cmd == 'wa' or cmd == 'where':
             if show_session_data:  # privileged info - who/f by wizard or immortal
                 table.add_header('|wCharacter', '|wPlayer', '|wQuell', '|wCmds', '|wProtocol', '|wAddress')
                 table.reformat_column(0, align='l')
                 table.reformat_column(1, align='r')
                 table.reformat_column(2, width=7, align='r')
-                table.reformat_column(3, width=6, align='r')
+                table.reformat_column(3, width=6, pad_right=1, align='r')
                 table.reformat_column(4, width=11, align='l')
                 table.reformat_column(5, width=16, align='r')
                 for session in session_list:
@@ -74,7 +74,7 @@ class CmdWho(MuxPlayerCommand):
                 table.add_header('|wCharacter', '|wOn for', '|wIdle', '|wSpecies')
                 table.reformat_column(0, width=25, align='l')
                 table.reformat_column(1, width=8, align='l')
-                table.reformat_column(2, width=7, align='r')
+                table.reformat_column(2, width=7, pad_right=1, align='r')
                 table.reformat_column(3, width=25, align='l')
                 for session in session_list:
                     character = session.get_puppet()
