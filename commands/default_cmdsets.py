@@ -30,6 +30,7 @@ from commands.home import CmdHome
 from commands.mail import CmdMail
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
+from commands.verb import CmdTry
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
@@ -64,6 +65,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdTeleport)  # Teleport haa cost and conditions.
 # [...]
         self.add(CmdOoc)
+        self.add(CmdTry)
         self.add(CmdDesc)
         self.add(CmdFlag)
         self.add(CmdHome)

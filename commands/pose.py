@@ -6,12 +6,11 @@ class CmdPose(MuxCommand):
     """
     Describe and/or attempt to trigger an action on an object.
     The pose text will automatically begin with your name.
-    pose, try, :, ;
+    pose, emote, :, ;
     Usage:
       pose <pose text>
       pose's <pose text>
       pose <pose text> = <verb> <noun>
-      try <verb> <noun>
     Options:
     /o or /ooc  (Out-of-character to the room or channel.)
     /m or /magnet  (Show which characters remove name/pose space.)
@@ -19,16 +18,12 @@ class CmdPose(MuxCommand):
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.
 
-      > pose puts his back into it. = get anvil
-      Rulan tries to get the anvil. He puts his back into it.
+      > pose strains to lift the anvil. = get anvil
+      Werewolf strains to lift the anvil. Werewolf takes the anvil.
       (optional success message if anvil is liftable.)
-
-      > try unlock door
-      Rulan tries to unlock the door.
-      (optional success message if door is unlocked.)
     """
     key = 'pose'
-    aliases = [':', ';', 'emote', 'try']
+    aliases = [':', ';', 'emote']
     locks = 'cmd:all()'
 
     def func(self):
