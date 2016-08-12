@@ -161,7 +161,8 @@ class MuxCommand(default_cmds.MuxCommand):
         char = self.character
         here = char.location if char else None
         who = self.player.key if self.player else '-visitor-'
-        print('%s> %s%s' % (who, self.cmdstring, self.raw))
+        cmd = self.cmdstring if self.cmdstring != '__nomatch_command' else ''
+        print('%s> %s%s' % (who, cmd, self.raw))
         if here:
             if char.db.settings and 'broadcast commands' in char.db.settings and \
                             char.db.settings['broadcast commands'] is True:
@@ -169,8 +170,7 @@ class MuxCommand(default_cmds.MuxCommand):
                     if each.has_player:
                         if each == self or each.db.settings and 'see commands' in each.db.settings and\
                                         each.db.settings['see commands'] is True:
-                            each.msg('|r(|w%s|r)|n %s%s|n' % (self.character.key, self.cmdstring,
-                                                              self.raw.replace('|', '||')))
+                            each.msg('|r(|w%s|r)|n %s%s|n' % (self.character.key, cmd, self.raw.replace('|', '||')))
 
 
 class MuxPlayerCommand(MuxCommand):

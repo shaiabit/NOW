@@ -36,20 +36,22 @@ class CmdPose(MuxCommand):
         here = char.location if char else None
         non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
         magnet = True if args and args[0] in non_space_chars or cmd == ";" else False
-        if cmd != 'try':
-            if not (here and char):
-                if args:
-                    player.execute_cmd('pub :%s%s' % ('' if magnet else ' ', args))
-                else:
-                    player.msg('Usage: pose <message>   to pose to public channel.')
-                return
-            if 'magnet' in opt or 'm' in opt:
-                char.msg("Pose magnet glyphs are %s." % non_space_chars)
+        pose = self.lhs if self.rhs else args
+        if not (here and char):
             if args:
-                emote = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
-                emote += "%s%s|n%s%s" % (char.STYLE, char.key, '' if magnet else ' ', args)
-                here.msg_contents(emote)
+                player.execute_cmd('pub :%s%s' % ('' if magnet else '|_', pose))
             else:
-                player.execute_cmd('help pose')
+                player.msg('Usage: pose <message>   to pose to public channel.')
+            return
+        if 'magnet' in opt or 'm' in opt:
+            char.msg("Pose magnet glyphs are %s." % non_space_chars)
+        if args:
+            emote = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
+            emote += "%s%s|n%s%s" % (char.STYLE, char.key, '' if magnet else '|_', pose)
+            if self.rhs:
+                char.ndb.power_pose = emote
+                player.execute_cmd(self.rhs)
+            else:
+                here.msg_contents(emote)
         else:
-            player.msg('"Try" is |rdisabled|n. (|wCurrently being renovated!|n)')
+            player.execute_cmd('help pose')
