@@ -30,8 +30,12 @@ class CmdTry(MuxCommand):
         verb, noun = args.split(' ', 1) if ' ' in args else [args, '']
         obj = None
         if args:
-            if verb not in verb_list:
-                player.msg(self.suggest_command())
+            if verb not in verb_list:  # No valid verb used
+                if char.ndb.power_pose:  # Detect invalid power pose.
+                    here.msg_contents('%s = %s' % (char.ndb.power_pose, args))  # Display as normal pose.
+                    char.nattributes.remove('power_pose')  # Flush power pose
+                else:
+                    player.msg(self.suggest_command())
                 return
             else:
                 good_targets = self.objects_allowing_verb(verb)
@@ -48,23 +52,27 @@ class CmdTry(MuxCommand):
                     else:
                         here.msg_contents('%s%s|n tries to %s %s%s|n.'
                                           % (char.STYLE, char.key, verb, obj.STYLE, obj.key))
-                    here.msg_contents('%s%s|n responds to %s. |m(|wSuccess or fail message here|m)'
-                                      % (obj.STYLE, obj.key, verb))
-                    # Triggers object method (check for method on object - check against forbidden list.)
-                    # Triggers command alias (tabled)
-                    # Triggers message (look for message)
+                    self.trigger_response(verb, obj)
                 else:
                     if good_targets:
                         if obj:
                             player.msg('You can only %s %s|n.' %
                                        (verb, self.style_object_list(good_targets)))
                         else:
-                            player.msg('You can not %s %s%s|n, but you can %s %s|n.' %
-                                       (verb, obj.STYLE, obj.key, verb, self.style_object_list(good_targets)))
+                            player.msg('You can %s %s|n.' %
+                                       (verb, self.style_object_list(good_targets)))
                     else:
                         player.msg('You can not %s %s%s|n.' % (verb, obj.STYLE, obj.key))
         else:
             player.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
+
+    def trigger_response(self, verb, obj):
+        """
+        Triggers object method (check for method on object - check against forbidden list.)
+        Triggers command alias (tabled)
+        Triggers message (look for message)
+        """
+        obj.location.msg_contents('%s%s|n responds to %s.' % (obj.STYLE, obj.key, verb))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""
