@@ -56,23 +56,25 @@ class CmdTry(MuxCommand):
                 else:
                     if good_targets:
                         if obj:
-                            player.msg('You can only %s %s|n.' %
-                                       (verb, self.style_object_list(good_targets)))
+                            player.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets)))
                         else:
-                            player.msg('You can %s %s|n.' %
-                                       (verb, self.style_object_list(good_targets)))
+                            player.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets)))
                     else:
                         player.msg('You can not %s %s%s|n.' % (verb, obj.STYLE, obj.key))
         else:
             player.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
 
-    def trigger_response(self, verb, obj):
+    @staticmethod
+    def trigger_response(verb, obj):
         """
         Triggers object method (check for method on object - check against forbidden list.)
         Triggers command alias (tabled)
         Triggers message (look for message)
         """
-        obj.location.msg_contents('%s%s|n responds to %s.' % (obj.STYLE, obj.key, verb))
+        if obj.db.messages and verb in obj.db.messages:
+            obj.location.msg_contents('%s%s|n %s' % (obj.STYLE, obj.key, obj.db.messages[verb]))
+        else:
+            obj.location.msg_contents('%s%s|n responds to %s.' % (obj.STYLE, obj.key, verb))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""
