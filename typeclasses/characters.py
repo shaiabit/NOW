@@ -298,14 +298,15 @@ class Character(DefaultCharacter):
         string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)  # Start building description string.
         string += " |y(%s)|n " % mass_unit(self.get_mass())
         health_attribute_pair = True if self.attributes.has('health') and self.attributes.has('health_max') else False
-        health_trait_gauge = True if self.traits.health.actual else False
+        health_trait_gauge = True if self.traits.health else False
         if health_attribute_pair or health_trait_gauge:  # Add character health bar if character has health attributes.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
             if health_trait_gauge:
                 pass  # TODO: Trait health gauge goes here.
-                health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
+                health = make_bar(self.traits.health, self.traits.health.max, 20, gradient)
             else:
                 health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
+                # Write health into traits here.
             string += " %s\n" % health
         else:
             string += "\n"

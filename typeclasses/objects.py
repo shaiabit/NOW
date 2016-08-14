@@ -193,6 +193,7 @@ class Object(DefaultObject):
         """Resets the object - quietly sends it home or nowhere."""
         self.location = self.home
 
+    @staticmethod
     def junk(self):
         """Tags the object as junk to decay."""
         # TODO: Create a timer for final stage of decay.
@@ -219,9 +220,7 @@ class Object(DefaultObject):
         object that is currently in the room before allowing the move.
         If it is, we do prevent the move by returning False.
         """
-        print('%s is in %s, about to move.' % (self.key, self.location.key if self.location else 'Nothingness'))
         if not self.location:
-            print('Allowed to move from Nothingness. (at_before_move -> True)')
             return True  # Avoids being locked in Nothingness.
         # When self is supporting something, do not move it.
         return False if self.attributes.has('locked') and self.db.locked else True
