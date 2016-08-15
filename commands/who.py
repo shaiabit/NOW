@@ -53,7 +53,7 @@ class CmdWho(MuxPlayerCommand):
                 table.add_header('|wCharacter', '|wOn for', '|wIdle', '|wLocation')
                 table.reformat_column(0, width=25, align='l')
                 table.reformat_column(1, width=8, align='l')
-                table.reformat_column(2, width=7, align='r')
+                table.reformat_column(2, width=7, pad_right=1, align='r')
                 table.reformat_column(3, width=25, align='l')
                 for session in session_list:
                     if not session.logged_in:
