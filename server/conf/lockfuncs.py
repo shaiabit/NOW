@@ -66,6 +66,14 @@ def on_exit(accessing_obj, accessed_obj, *args, **kwargs):
             return False
 
 
+def self(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with self() and returns True
+    when accessing_obj is also the accessed_obj
+    """
+    return accessing_obj == accessed_obj
+
+
 def no_back(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with no_back() and returns True
