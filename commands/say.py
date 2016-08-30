@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
+import re
 from commands.command import MuxCommand
 from evennia.utils import ansi
+from evennia.utils.utils import pad, justify
 
 
 class CmdSay(MuxCommand):
@@ -86,6 +88,9 @@ class CmdSpoof(MuxCommand):
     Usage:
       spoof <message>
     Switches:
+    /center <msg> [ = position ]  Center msg at position
+    /right <msg> [ = position ]   Alighn right at position
+    /news <message> [ = <width> [indent] ]
     /strip <message sent to room with markup stripped>
     /self <message only to you with full markup>
     """
@@ -102,13 +107,58 @@ class CmdSpoof(MuxCommand):
         if not args:
             char.execute_cmd('help spoof')
             return
-        if 'self' in opt:
-            char.msg(args)
-            return
-        stripped = ansi.strip_ansi(args)
-        marked = self.args.replace('|', '||')
-        here.at_say(char, stripped)  # calling the speech hook on the location.
-        if 'strip' in opt:  # Optionally strip any markup or escape it,
-            here.msg_contents(stripped, options={'raw': True})
+        if 'right' in opt:
+            right = 20
+            if self.rhs:
+                args = self.lhs.strip()
+                right = re.sub("[^0123456789]", '', self.rhs) or 20
+                right = int(right)
+            if 'self' in opt:
+                char.msg(pad(args, width=right).rstrip(), align='r')
+            else:
+                here.msg_contents(pad(args, width=right).rstrip(), align='r')
+        elif 'center' in opt:
+            center = 72
+            if self.rhs:
+                args = self.lhs.strip()
+                center = re.sub("[^0123456789]", '', self.rhs) or 72
+                center = int(center)
+            if 'self' in opt:
+                char.msg(pad(args, width=center).rstrip())
+            else:
+                here.msg_contents(pad(args, width=center).rstrip())
+        elif 'news' in opt:
+            if self.rhs is not None:  # Equals sign exists.
+                parameters = '' if not self.rhs else self.rhs.split()
+                args = self.lhs.strip()
+                if len(parameters) > 1:
+                    if len(parameters) == 2:
+                        outside, inside = self.rhs.split()
+                    else:
+                        outside, inside = [parameters[0], parameters[1]]
+                    outside = re.sub("[^0123456789]", '', outside) or 0
+                    inside = re.sub("[^0123456789]", '', inside) or 0
+                    outside, inside = [int(max(outside, inside)), int(min(outside, inside))]
+                else:
+                    outside, inside = [72, 52]
+            else:
+                outside, inside = [72, min(int(self.rhs or 72), 72)]
+            for text in justify(args, width=inside).split('\n'):
+                if 'self' in opt:
+                    char.msg(pad(text, width=outside).rstrip())
+                else:
+                    here.msg_contents(pad(text, width=outside).rstrip())
         else:
-            here.msg_contents(marked)
+            stripped = ansi.strip_ansi(args)
+            marked = self.args.replace('|', '||')
+            here.at_say(char, stripped)  # calling the speech hook on the location.
+            if 'strip' in opt:  # Optionally strip any markup or escape it,
+                if 'self' in opt:
+                    char.msg(stripped.rstrip(), options={'raw': True})
+                else:
+                    here.msg_contents(stripped.rstrip(), options={'raw': True})
+            else:
+                if 'self' in opt:
+                    char.msg(marked.rstrip())
+                else:
+                    here.msg_contents(marked.rstrip())
