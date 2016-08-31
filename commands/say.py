@@ -114,9 +114,9 @@ class CmdSpoof(MuxCommand):
                 right = re.sub("[^0123456789]", '', self.rhs) or 20
                 right = int(right)
             if 'self' in opt:
-                char.msg(pad(args, width=right).rstrip(), align='r')
+                char.msg(args.rstrip().rjust(right, ' '))
             else:
-                here.msg_contents(pad(args, width=right).rstrip(), align='r')
+                here.msg_contents(args.rstrip().rjust(right, ' '))
         elif 'center' in opt:
             center = 72
             if self.rhs:
