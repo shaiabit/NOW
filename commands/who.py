@@ -11,14 +11,15 @@ class CmdWho(MuxPlayerCommand):
     Usage:
       who    - basic view
       where  - includes location
+      what   - includes doing
       ws     - includes species
-      wot    - includes doing
+      wa     - same as 'where'
     Options:
     /f             - shows more info for those with permissions.
     /s or /species - shows species setting for characters in your location.
     """
     key = 'who'
-    aliases = ['ws', 'where', 'wa', 'wot']
+    aliases = ['ws', 'where', 'wa', 'what', 'wot']
     locks = 'cmd:all()'
 
     def func(self):
@@ -96,7 +97,8 @@ class CmdWho(MuxPlayerCommand):
                         continue
                     delta_cmd = time.time() - session.cmd_last_visible
                     character = session.get_puppet()
-                    doing = '%s %s' % (character.get_display_name(you, pose=True), character.attributes.get('pose'))
+                    doing = '%s %s' % (character.get_display_name(you, pose=True),
+                                       character.attributes.get('pose') or '')  # If None, then use empty string.
                     table.add_row(doing, utils.time_format(delta_cmd, 1))
             else:  # unprivileged info - who
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
