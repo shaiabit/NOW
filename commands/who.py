@@ -53,7 +53,7 @@ class CmdWho(MuxPlayerCommand):
                                   isinstance(session.address, tuple) and session.address[0] or session.address)
             else:  # unprivileged info - who/f by player
                 table.add_header('|wCharacter', '|wOn for', '|wIdle', '|wLocation')
-                table.reformat_column(0, width=25, align='l')
+                table.reformat_column(0, width=40, align='l')
                 table.reformat_column(1, width=8, align='l')
                 table.reformat_column(2, width=7, pad_right=1, align='r')
                 table.reformat_column(3, width=25, align='l')
