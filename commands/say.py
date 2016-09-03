@@ -89,7 +89,8 @@ class CmdSpoof(MuxCommand):
       spoof <message>
     Switches:
     /center <msg> [ = position ]  Center msg at position
-    /right <msg> [ = position ]   Alighn right at position
+    /right <msg> [ = position ]   Align right at position
+    /indent <msg> [ = position ]  Begin msg starting at position
     /news <message> [ = <width> [indent] ]
     /strip <message sent to room with markup stripped>
     /self <message only to you with full markup>
@@ -107,11 +108,21 @@ class CmdSpoof(MuxCommand):
         if not args:
             char.execute_cmd('help spoof')
             return
-        if 'right' in opt:
-            right = 20
+        if 'indent' in opt:
+            indent = 20
             if self.rhs:
                 args = self.lhs.strip()
-                right = re.sub("[^0123456789]", '', self.rhs) or 20
+                indent = re.sub("[^0123456789]", '', self.rhs) or 20
+                indent = int(indent)
+            if 'self' in opt:
+                char.msg(' ' * indent + args.rstrip())
+            else:
+                here.msg_contents(' ' * indent + args.rstrip())
+        elif 'right' in opt:
+            right = 72
+            if self.rhs:
+                args = self.lhs.strip()
+                right = re.sub("[^0123456789]", '', self.rhs) or 72
                 right = int(right)
             if 'self' in opt:
                 char.msg(args.rstrip().rjust(right, ' '))
