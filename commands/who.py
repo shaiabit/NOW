@@ -90,7 +90,7 @@ class CmdWho(MuxPlayerCommand):
                                   utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1), species)
             elif self.cmdstring == 'what' or self.cmdstring == 'wot':
                 table.add_header('|wCharacter  - Doing', '|wIdle')
-                table.reformat_column(0, width=75, align='l')
+                table.reformat_column(0, width=72, align='l')
                 table.reformat_column(1, width=7, align='r')
                 for session in session_list:
                     if not session.logged_in:
@@ -102,7 +102,7 @@ class CmdWho(MuxPlayerCommand):
                     table.add_row(doing, utils.time_format(delta_cmd, 1))
             else:  # unprivileged info - who
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
-                table.reformat_column(0, width=25, align='l')
+                table.reformat_column(0, width=40, align='l')
                 table.reformat_column(1, width=8, align='l')
                 table.reformat_column(2, width=7, align='r')
                 for session in session_list:
