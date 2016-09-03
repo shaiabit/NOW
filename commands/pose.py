@@ -23,7 +23,7 @@ class CmdPose(MuxCommand):
       (optional success message if anvil is liftable.)
     """
     key = 'pose'
-    aliases = [':', ';', 'emote']
+    aliases = [':', ';']
     locks = 'cmd:all()'
 
     def func(self):
@@ -48,10 +48,16 @@ class CmdPose(MuxCommand):
         if args:
             emote = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
             emote += "%s%s|n%s%s" % (char.STYLE, char.key, '' if magnet else '|_', pose)
-            if self.rhs:
+            if char.location.tags.get('rp', category='flags'):
+                char.execute_cmd('emote %s' % args)
+                return
+            elif self.rhs:
                 char.ndb.power_pose = emote
                 player.execute_cmd(self.rhs)
             else:
                 here.msg_contents(emote)
         else:
-            player.execute_cmd('help pose')
+            if char.location.tags.get('rp', category='flags'):
+                player.execute_cmd('help emote')
+            else:
+                player.execute_cmd('help pose')

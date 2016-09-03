@@ -36,8 +36,9 @@ class CmdSay(MuxCommand):
             return
         if 'v' in opt or 'verb' in opt:
             char.attributes.add('say-verb', args)
-            emit_string = '%s%s|n warms up vocally with "%s|n"' % (char.STYLE, char.key, args)
-            here.msg_contents(emit_string)
+            contents = here.contents
+            for obj in contents:
+                obj.msg('%s warms up vocally with "%s|n"' % (char.get_display_name(obj), args))
             return
         if 'q' in opt or 'quote' in opt:
             if len(args) > 2:
@@ -47,10 +48,13 @@ class CmdSay(MuxCommand):
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             if 'o' in opt or 'ooc' in opt:
-                emit_string = '[OOC]|n %s%s|n says, "%s"' % (char.STYLE, char, speech)
+                contents = here.contents
+                for obj in contents:
+                    obj.msg('[OOC]|n %s %s, "|w%s|n"' % (char.get_display_name(obj), verb, speech))
             else:
-                emit_string = '%s%s|n %s, "%s|n"' % (char.STYLE, char.key, verb, speech)
-            here.msg_contents(emit_string)
+                contents = here.contents
+                for obj in contents:
+                    obj.msg('%s %s, "|w%s|n"' % (char.get_display_name(obj), verb, speech))
 
 
 class CmdOoc(MuxCommand):
@@ -79,7 +83,9 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             player.execute_cmd('pose/o %s' % args[1:])
         else:
-            here.msg_contents('[OOC %s] %s' % (char.get_display_name(self.session), args))
+            contents = here.contents
+            for obj in contents:
+                obj.msg('[OOC %s] %s' % (char.get_display_name(obj), args))
 
 
 class CmdSpoof(MuxCommand):
