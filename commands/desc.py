@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
 from evennia.utils.eveditor import EvEditor
+from evennia.utils.evmenu import get_input
 
 
 def _desc_load(caller):
@@ -79,8 +80,13 @@ class CmdDesc(MuxCommand):
 
             def desc_callback(caller, prompt, user_input):
                 """"Response to input given after description is set"""
-                msg = "%s's appearance begins to change." % self.full_name(caller.sessions)
-                caller.location.msg_contents(msg)
+                if not user_input.strip():
+                    self.caller.msg('|yNo description given - |wcurrent description unchanged.')
+                    return
+                msg = "%s's appearance begins to change." % self.character.get_display_name(caller.sessions)
+                contents = caller.location.contents
+                for obj in contents:
+                    obj.msg(msg)
                 caller.db.desc = user_input.strip()
 
             get_input(char, "Type your description now, and then |g[enter]|n: ", desc_callback)
