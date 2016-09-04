@@ -50,7 +50,7 @@ class CmdSay(MuxCommand):
             if 'o' in opt or 'ooc' in opt:
                 contents = here.contents
                 for obj in contents:
-                    obj.msg('[OOC]|n %s %s, "|w%s|n"' % (char.get_display_name(obj), verb, speech))
+                    obj.msg('[OOC]|n %s says, "|w%s|n"' % (char.get_display_name(obj), verb, speech))
             else:
                 contents = here.contents
                 for obj in contents:
