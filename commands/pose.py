@@ -49,7 +49,7 @@ class CmdPose(MuxCommand):
             emote = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
             emote += "%s%s|n%s%s" % (char.STYLE, char.key, '' if magnet else '|_', pose)
             if char.location.tags.get('rp', category='flags'):
-                char.execute_cmd('emote %s' % args)
+                char.execute_cmd('emote /me%s%s' % ('' if magnet else '|_', args))
                 return
             elif self.rhs:
                 char.ndb.power_pose = emote
