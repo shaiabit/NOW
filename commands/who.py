@@ -97,8 +97,7 @@ class CmdWho(MuxPlayerCommand):
                         continue
                     delta_cmd = time.time() - session.cmd_last_visible
                     character = session.get_puppet()
-                    doing = '%s %s' % (character.get_display_name(you, pose=True),
-                                       character.attributes.get('pose') or '')  # If None, then use empty string.
+                    doing = '%s %s' % (character.get_display_name(you), character.attributes.get('pose') or '')
                     table.add_row(doing, utils.time_format(delta_cmd, 1))
             else:  # unprivileged info - who
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
