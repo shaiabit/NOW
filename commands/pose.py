@@ -45,17 +45,19 @@ class CmdPose(MuxCommand):
             return
         if 'magnet' in opt or 'm' in opt:
             char.msg("Pose magnet glyphs are %s." % non_space_chars)
+        emote = '' if magnet else '|_'
         if args:
-            emote = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
-            emote += "%s%s|n%s%s" % (char.STYLE, char.key, '' if magnet else '|_', pose)
-            if char.location.tags.get('rp', category='flags'):
+            if char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
                 char.execute_cmd('emote /me%s%s' % ('' if magnet else '|_', args))
                 return
-            elif self.rhs:
+            elif self.rhs and 'o' not in self.switches:
                 char.ndb.power_pose = emote
                 player.execute_cmd(self.rhs)
             else:
-                here.msg_contents(emote)
+                contents = here.contents
+                for obj in contents:
+                    prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
+                    obj.msg('%s%s%s%s' % (prepend_ooc, char.get_display_name(obj), emote, args))
         else:
             if char.location.tags.get('rp', category='flags'):
                 player.execute_cmd('help emote')
