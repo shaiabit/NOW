@@ -54,9 +54,9 @@ class CmdPose(MuxCommand):
                 char.ndb.power_pose = emote
                 player.execute_cmd(self.rhs)
             else:
+                prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
                 contents = here.contents
                 for obj in contents:
-                    prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
                     obj.msg('%s%s%s%s' % (prepend_ooc, char.get_display_name(obj), emote, args))
         else:
             if char.location.tags.get('rp', category='flags'):
