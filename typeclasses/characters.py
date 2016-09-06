@@ -263,7 +263,7 @@ class Character(ContribRPCharacter):
 
     def mxp_name(self, viewer, command, **kwargs):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer, **kwargs)) if viewer and \
+        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
             self.access(viewer, 'view') else ''
 
     def get_pronoun(self, regex_match):
