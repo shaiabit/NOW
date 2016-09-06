@@ -355,7 +355,7 @@ class Character(ContribRPCharacter):
         if self != viewer:
             if not (self.db.settings and 'look notify' in self.db.settings
                     and self.db.settings['look notify'] is False):
-                self.msg("%s just looked at you." % viewer.get_display_name(self))
+                self.msg("%s just looked at you." % viewer.character.get_display_name(self))
         return string
 
     def return_detail(self, detailkey):
