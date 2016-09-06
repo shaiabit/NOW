@@ -1181,12 +1181,28 @@ class ContribRPObject(DefaultObject):
             recog = looker.recog.get(self)
         except AttributeError:
             recog = None
-        if self.location.tags.get('rp', category='flags'):
-            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
+        if self.location:
+            if self.tags.get('rp', category='flags') or self.location.tags.get('rp', category='flags'):
+                sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
+            elif self.tags.get('rp', category='flags'):
+              sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         else:
             sdesc = self.key
         display_name = "%s%s|n" % (self.STYLE, sdesc)
         return '%s|w(#%s)|n' % (display_name, self.id) if self.access(looker, access_type='control') else display_name
+
+    def return_glance(self, viewer):
+        glance = ''
+        if self.location:
+            visible = (con for con in [self] + self.contents if con != viewer and con.access(viewer, 'view'))
+        else:
+            visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
+        for item in visible:
+            if item.attributes.get('pose'):
+                glance += '%s %s\n' % (item.get_display_name(viewer), item.attributes.get('pose') or '')
+            else:
+                glance += '%s is here.\n' % item.get_display_name(viewer)
+        return glance
 
 
 class ContribRPRoom(ContribRPObject):

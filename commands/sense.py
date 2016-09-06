@@ -21,7 +21,7 @@ class CmdSense(MuxCommand):
       versions are interactive and may trigger a notification, response, or cause effects.
     """
     key = 'sense'
-    aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen']
+    aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen', 'glance']
     locks = 'cmd:all()'
     arg_regex = r'\s|$'
 
@@ -31,7 +31,7 @@ class CmdSense(MuxCommand):
         here = char.location if char else None
         player = self.player
         if not (char and here):
-            player.msg('You sense only Nothingness.')
+            player.msg('You sense only |222Nothingness|n.')
             message = '|gback|n or |ghome' if char else '|g@ic'
             player.msg('(Type %s|n to return to the NOW.)' % message)
             return
@@ -48,9 +48,14 @@ class CmdSense(MuxCommand):
         else:
             _AT_SEARCH_RESULT(obj, char, args, quiet=False)
             return  # Trying to sense something that isn't there. "Could not find ''."
-        style = obj.STYLE if obj and hasattr(obj, 'STYLE') else '|c'
-        senses = obj.db.senses
-        details = obj.db.details
+        style = obj.STYLE if obj and hasattr(obj, 'STYLE') else '|g'
+        if cmd == 'glance':
+            if here and not args:
+                obj = here
+            player.msg(obj.return_glance(player))
+            return
+        # senses = obj.db.senses
+        # details = obj.db.details
         if self.rhs is not None:  # Equals sign exists.
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
@@ -166,5 +171,5 @@ class CmdSense(MuxCommand):
         if not obj.access(char, 'view'):
             char.msg("You are unable to sense '%s'." % args)
             return
-        char.msg(obj.return_appearance(char))  # get object's appearance as seen by char
+        player.msg(obj.return_appearance(player))  # get object's appearance as seen by char
         obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.

@@ -125,6 +125,7 @@ class Room(ContribRPRoom):
             item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, 'mxp_name')
                                   else t.get_display_name(viewer) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
+        string += '\n' + self.return_glance(viewer)
         return string
 
     def announce_move_from(self, destination):
