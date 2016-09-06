@@ -5,8 +5,12 @@ Rooms are simple containers that have no location of their own.
 
 """
 
-import random
-from evennia import DefaultRoom
+import random  # Random weather events
+import time  # Check time since last activity
+
+from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active players in room
+
+from world.rpsystem import ContribRPRoom
 from evennia import TICKER_HANDLER
 from evennia.comms.models import ChannelDB, Msg
 from evennia.comms.channelhandler import CHANNELHANDLER
@@ -16,11 +20,11 @@ from evennia.utils import lazy_property
 from traits import TraitHandler
 from effects import EffectHandler
 
-from evennia import CmdSet # For the class Grid
+from evennia import CmdSet  # For the class Grid
 from evennia import default_cmds  # For the class Grid's commands
 
 
-class Room(DefaultRoom):
+class Room(ContribRPRoom):
     """
     Rooms are like any Object, except their location is None
     (which is default). They also use basetype_setup() to
@@ -70,7 +74,7 @@ class Room(DefaultRoom):
         """
         if not viewer:
             return
-        # get and identify all objects
+        # get and identify all objects visible to the viewer, excluding the viewer.
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         exits, ways, users, things = [], [], [], []
 
@@ -99,10 +103,9 @@ class Room(DefaultRoom):
                 users.append(con)
             else:
                 things.append(con)
-        # get description, build string
         command = '%s #%s' % ('sense', self.id)
         string = "\n%s\n" % self.mxp_name(viewer, command)
-        desc = self.db.desc
+        desc = self.db.desc  # get description, build string
         desc_brief = self.db.desc_brief
         if desc:
             string += "%s" % desc
@@ -116,7 +119,7 @@ class Room(DefaultRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.mxp_name(viewer, 'sense #%s' % e.id) if hasattr(e, "mxp_name")
+                exits_complex.append("%s" % e.mxp_name(viewer, 'sense #%s' % e.id) if hasattr(e, 'mxp_name')
                                      else e.get_display_name(viewer))
             if ways and not ways == {}:
                 for w in ways:
@@ -125,10 +128,12 @@ class Room(DefaultRoom):
             string += ", ".join(d for d in sort_exits(exits_simple, exits_complex))
         elif viewer.db.last_room:
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.get_display_name(viewer)
+        if self.ndb.weather_last:
+            string += '|/|*%s|n' % self.ndb.weather_last
         if users or things:
-            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id) for u in users)
+            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id, pose=True) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, "mxp_name")
+            item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, 'mxp_name')
                                   else t.get_display_name(viewer) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
         return string
@@ -191,6 +196,8 @@ class Room(DefaultRoom):
             source_location (Object): the previous location of new_arrival.
 
         """
+        if not hasattr(new_arrival, '_sdesc') and self.obj.location.tags.get('rp', category='flags'):
+            new_arrival.sdesc.add(new_arrival.key)
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
             if self.tags.get('weather', category='flags'):
                 tickers = TICKER_HANDLER.all_display()
@@ -201,20 +208,19 @@ class Room(DefaultRoom):
                         counter += 1
                         show = '20%% chance every %s seconds in ' % tick[3]
                         show += "%s%s" % (tick[0] or "[None]", tick[0] and " (#%s)" %
-                                          (tick[0].id if hasattr(tick[0], "id") else "") or "")
+                                          (tick[0].id if hasattr(tick[0], 'id') else '') or '')
                         if counter > 1:
                             notice = '|rExtra Ticker|n - |yadditional|n '
-                            # Too many weather tickers going, maybe remove extra?
+                            # TODO: Too many weather tickers going, maybe remove extra?
                         channel = ChannelDB.objects.channel_search('MudInfo')
                         if channel[0]:
                             channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show),
                                            keep_log=False)
                 if counter == 0:  # No weather ticker - add one.
-                    interval = random.randint(50, 70)
+                    interval = random.randint(100, 300)
                     TICKER_HANDLER.add(interval=interval, callback=self.update_weather, idstring='Weather')
-
             for obj in self.contents_get(exclude=new_arrival):
-                if hasattr(obj, "at_new_arrival"):
+                if hasattr(obj, 'at_new_arrival'):
                     obj.at_new_arrival(new_arrival)
 
     def return_detail(self, detailkey):
@@ -250,8 +256,7 @@ class Room(DefaultRoom):
 
 # [...] class WeatherRoom(TutorialRoom):
 
-    # def update_weather(self, *args, **kwargs):
-    def update_weather(self):
+    def update_weather(self, *args, **kwargs):
         """
         Called by the tickerhandler at regular intervals. Even so, we
         only update 20% of the time, picking a random weather message
@@ -259,6 +264,15 @@ class Room(DefaultRoom):
         any arguments and keyword arguments (hence the *args, **kwargs
         even though we don't actually use them in this example)
         """
+
+        def attempt_weather_update(odds):  # only update <odds>% of the time and...
+            if random.random() >= odds:
+                return
+            new_weather = random.choice(weather)
+            if self.ndb.weather_last != new_weather:  # ... only update on a new weather condition.
+                self.msg_contents("|w%s|n" % new_weather)
+                self.ndb.weather_last = new_weather
+                self.ndb.weather_time = int(time.time())
 
         weather = self.db.weather or (
             "The rain coming down from the iron-grey sky intensifies.",
@@ -273,9 +287,23 @@ class Room(DefaultRoom):
             "You hear the distant howl of what sounds like some sort of dog or wolf.",
             "Large clouds rush across the sky, throwing their load of rain over the world.")
 
-        if random.random() < 0.2:  # only update 20 % of the time
-            self.msg_contents("|w%s|n" % random.choice(weather))
-            # TODO: Weather channel? Send weather messages to a channel.   
+        slow_room = True
+        empty_room = True
+        session_list = SESSIONS.get_sessions()
+        for session in session_list:
+            character = session.get_puppet()
+            if not session.logged_in or not character or character.location != self:
+                continue
+            empty_room = False
+            if session.cmd_last_visible > self.ndb.weather_time:
+                slow_room = False
+                break
+        if empty_room:
+            return
+        if slow_room:
+            attempt_weather_update(0.1)  # only attempt update 10% of the time
+        else:
+            attempt_weather_update(0.2)
 
 
 class RealmEntry(Room):

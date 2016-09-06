@@ -8,7 +8,7 @@ creation commands.
 
 """
 from world.helpers import make_bar, mass_unit
-from evennia import DefaultCharacter
+from world.rpsystem import ContribRPCharacter
 
 from evennia.utils import lazy_property
 
@@ -16,7 +16,7 @@ from traits import TraitHandler
 from effects import EffectHandler
 
 
-class Character(DefaultCharacter):
+class Character(ContribRPCharacter):
     """
     The Character defaults to implementing some of its hook methods with the
     following standard functionality:
@@ -87,10 +87,11 @@ class Character(DefaultCharacter):
 
     def at_after_move(self, source_location):
         """Store last location and room then trigger the arrival look after a move."""
-        self.ndb.last_location = source_location
-        if not source_location.destination:
-            self.db.last_room = source_location
-        if self.location.access(self, 'view'):
+        if source_location:  # Is "None" when moving from Nothingness. If so, do nothing.
+            self.ndb.last_location = source_location
+            if not source_location.destination:
+                self.db.last_room = source_location
+        if self.location and self.location.access(self, 'view'):  # No need to look if moving into Nothingness
             self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
         return source_location
 
@@ -131,7 +132,7 @@ class Character(DefaultCharacter):
         if not source_location and self.location.has_player:
             # This was created from nowhere and added to a player's
             # inventory; it's probably the result of a create command.
-            string = "You now have %s%s|n in your possession." % (self.STYLE, name)
+            string = "You now have %s in your possession." % (self.get_display_name(here))
             here.msg(string)
             return
         src_name = '|222Nothingness'
@@ -186,7 +187,7 @@ class Character(DefaultCharacter):
         self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
-            self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
+            self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
 
         def message(obj, from_obj):
             obj.msg("|g%s|n fades into view." % self.key, from_obj=from_obj)
@@ -228,16 +229,69 @@ class Character(DefaultCharacter):
                 if self.location != self.home:
                     self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
 
-    def get_display_name(self, looker, **kwargs):
-        """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
-            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
-        else:
-            return "%s%s|n" % (self.STYLE, self.name)
+    def process_sdesc(self, sdesc, obj, **kwargs):
+        """
+        Allows to customize how your sdesc is displayed
+        (primarily by changing colors).
 
-    def mxp_name(self, viewer, command):
+        Args:
+            sdesc (str): The sdesc to display.
+            obj (Object): The object to which the adjoining sdesc
+                belongs (can be yourself).
+
+        Returns:
+            sdesc (str): The processed sdesc ready
+                for display.
+        """
+        if self.check_permstring('Mages'):
+            return '%s%s|n [|[G%s|n]' % (obj.STYLE, sdesc, obj.key)
+        else:
+            return '%s%s|n' % (obj.STYLE, sdesc)
+
+    def process_recog(self, recog, obj, **kwargs):
+        """
+        Allows to customize how a recog string is displayed.
+        Args:
+            recog (str): The recog string. It has already been
+                translated from the original sdesc at this point.
+            obj (Object): The object the recog:ed string belongs to.
+                This is not used by default.
+        Returns:
+            recog (str): The modified recog string.
+        """
+        return self.process_sdesc(recog, obj)
+
+    def get_display_name(self, looker, **kwargs):
+        """
+        Displays the name of the object in a viewer-aware manner.
+
+        Args:
+            looker (TypedObject): The object or player that is looking
+                at/getting inforamtion for this object.
+
+        Kwargs:
+            pose (bool): Include the pose (if available) in the return.
+
+        Returns:
+            name (str): A string of the sdesc containing the name of the object,
+            if this is defined.
+                including the DBREF if this user is privileged to control
+                said object.
+        """
+        try:
+            recog = looker.recog.get(self)
+        except AttributeError:
+            recog = None
+        if self.location.tags.get('rp', category='flags'):
+            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
+        else:
+            sdesc = self.key
+        display_name = "%s%s|n" % (self.STYLE, sdesc)
+        return '%s|w(#%s)|n' % (display_name, self.id) if self.access(looker, access_type='control') else display_name
+
+    def mxp_name(self, viewer, command, **kwargs):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
+        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer, **kwargs)) if viewer and \
             self.access(viewer, 'view') else ''
 
     def get_pronoun(self, regex_match):
@@ -278,7 +332,6 @@ class Character(DefaultCharacter):
 
     def return_appearance(self, viewer):
         """This formats a description. It is the hook a 'look' command should call.
-
         Args:
             viewer (Object): Object doing the looking.
         """
@@ -295,13 +348,15 @@ class Character(DefaultCharacter):
                 users.append(con)
             else:
                 things.append(con)
-        string = "\n%s" % self.mxp_name(viewer, '@verb #%s' % self.id)  # Start building description string.
+        string = "\n%s" % self.mxp_name(viewer, 'sense %s' % self.get_display_name(viewer))
+        if self.location.tags.get('rp', category='flags'):
+            string += ' %s' % self.attributes.get('pose') or ''
         string += " |y(%s)|n " % mass_unit(self.get_mass())
         health_attribute_pair = True if self.attributes.has('health') and self.attributes.has('health_max') else False
         health_trait_gauge = True if self.traits.health else False
         if health_attribute_pair or health_trait_gauge:  # Add character health bar if character has health attributes.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-            if health_trait_gauge:
+            if health_trait_gauge:  # FIXME
                 pass  # TODO: Trait health gauge goes here.
                 health = make_bar(self.traits.health, self.traits.health.max, 20, gradient)
             else:
@@ -326,10 +381,9 @@ class Character(DefaultCharacter):
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
         if self != viewer:
-            if self.db.settings and 'look notify' in self.db.settings and self.db.settings['look notify'] is False:
-                self.msg("|g%s|n just looked at you, but you are not receiving any notification." % viewer.key)
-            else:
-                self.msg("|g%s|n just looked at you." % viewer.key)
+            if not (self.db.settings and 'look notify' in self.db.settings
+                    and self.db.settings['look notify'] is False):
+                self.msg("%s just looked at you." % viewer.get_display_name(self))
         return string
 
     def return_detail(self, detailkey):

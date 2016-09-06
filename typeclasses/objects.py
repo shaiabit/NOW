@@ -10,11 +10,9 @@ the other types, you can do so by adding this as a multiple
 inheritance.
 
 """
-
-from evennia import DefaultObject
+from world.rpsystem import ContribRPObject
 from evennia.utils.evmenu import get_input
 from world.helpers import mass_unit
-# from evennia import CmdSet
 from commands.poll import PollCmdSet
 
 from evennia.utils import lazy_property
@@ -23,7 +21,7 @@ from traits import TraitHandler
 from effects import EffectHandler
 
 
-class Object(DefaultObject):
+class Object(ContribRPObject):
     """
     This is the root typeclass object, implementing an in-game Evennia
     game object, such as having a location, being able to be
@@ -318,16 +316,58 @@ class Object(DefaultObject):
             return True
         return False
 
-    def get_display_name(self, looker, **kwargs):
-        """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
-            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
-        else:
-            return "%s%s|n" % (self.STYLE, self.name)
+    def process_sdesc(self, sdesc, obj, **kwargs):
+        """
+        Allows to customize how your sdesc is displayed (primarily by
+        changing colors).
 
-    def mxp_name(self, viewer, command):
+        Args:
+            sdesc (str): The sdesc to display.
+            obj (Object): The object to which the adjoining sdesc
+                belongs (can be yourself).
+
+        Returns:
+            sdesc (str): The processed sdesc ready
+                for display.
+
+        """
+        return '|g%s|n' % sdesc
+
+    def get_display_name(self, looker, **kwargs):
+        """
+        Displays the name of the object in a viewer-aware manner.
+
+        Args:
+            looker (TypedObject): The object or player that is looking
+                at/getting inforamtion for this object.
+
+        Kwargs:
+            pose (bool): Include the pose (if available) in the return.
+
+        Returns:
+            name (str): A string of the sdesc containing the name of the object,
+            if this is defined.
+                including the DBREF if this user is privileged to control
+                said object.
+        """
+        try:
+            recog = looker.recog.get(self)
+        except AttributeError:
+            recog = None
+        if self.location.tags.get('rp', category='flags'):
+            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
+        else:
+            sdesc = self.key
+        pose = '' if kwargs.get('pose', False) else ' %s' % (self.db.pose or '')
+        display_name = "%s%s|n%s" % (self.STYLE, sdesc, pose)
+        if self.access(looker, access_type='control'):  # if self.locks.check_lockstring(looker, "perm(Builders)"):
+            return "%s|w(#%s)|n" % (display_name, self.id)
+        else:
+            return display_name
+
+    def mxp_name(self, viewer, command, **kwargs):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
+        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
             self.access(viewer, 'view') else ''
 
     def get_mass(self):  # TODO: Add mass of objects on surface, also.
