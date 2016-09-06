@@ -186,7 +186,7 @@ class Room(ContribRPRoom):
             source_location (Object): the previous location of new_arrival.
 
         """
-        if not hasattr(new_arrival, '_sdesc') and self.obj.location.tags.get('rp', category='flags'):
+        if not hasattr(new_arrival, '_sdesc') and self.tags.get('rp', category='flags'):
             new_arrival.sdesc.add(new_arrival.key)
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
             if self.tags.get('weather', category='flags'):
