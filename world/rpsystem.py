@@ -1181,13 +1181,12 @@ class ContribRPObject(DefaultObject):
             recog = looker.recog.get(self)
         except AttributeError:
             recog = None
+        sdesc = self.key
         if self.location:
             if self.tags.get('rp', category='flags') or self.location.tags.get('rp', category='flags'):
                 sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
-            elif self.tags.get('rp', category='flags'):
-              sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
-        else:
-            sdesc = self.key
+        elif self.tags.get('rp', category='flags'):
+            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         display_name = "%s%s|n" % (self.STYLE, sdesc)
         return '%s|w(#%s)|n' % (display_name, self.id) if self.access(looker, access_type='control') else display_name
 
