@@ -74,6 +74,15 @@ def self(accessing_obj, accessed_obj, *args, **kwargs):
     return accessing_obj == accessed_obj
 
 
+def rp(accessing_obj, accessed_obj, *args, **kwargs):
+    """
+    called in lockstring with rp() and returns True
+    when accessing_obj is in an room designated for
+    rollplay and object has sdesc set.
+    """
+    return accessing_obj.attributes.has('_sdesc') and accessing_obj.location.tags.get('rp', category='flags')
+
+
 def no_back(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with no_back() and returns True
