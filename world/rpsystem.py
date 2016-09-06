@@ -1162,6 +1162,32 @@ class ContribRPObject(DefaultObject):
         return _AT_SEARCH_RESULT(results, self, query=searchdata, nofound_string=nofound_string,
                                  multimatch_string=multimatch_string)
 
+    def get_display_name(self, looker):
+        """
+        Displays the name of the object in a viewer-aware manner.
+
+        Args:
+            self (Object, Character, or Room):
+            looker (TypedObject): The object or player that is looking
+                at/getting inforamtion for this object.
+
+        Returns:
+            name (str): A string of the sdesc containing the name of the object,
+            if this is defined.
+                including the DBREF if this user is privileged to control
+                said object.
+        """
+        try:
+            recog = looker.recog.get(self)
+        except AttributeError:
+            recog = None
+        if self.location.tags.get('rp', category='flags'):
+            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
+        else:
+            sdesc = self.key
+        display_name = "%s%s|n" % (self.STYLE, sdesc)
+        return '%s|w(#%s)|n' % (display_name, self.id) if self.access(looker, access_type='control') else display_name
+
 
 class ContribRPRoom(ContribRPObject):
     """Dummy inheritance for rooms."""

@@ -333,38 +333,6 @@ class Object(ContribRPObject):
         """
         return '|g%s|n' % sdesc
 
-    def get_display_name(self, looker, **kwargs):
-        """
-        Displays the name of the object in a viewer-aware manner.
-
-        Args:
-            looker (TypedObject): The object or player that is looking
-                at/getting inforamtion for this object.
-
-        Kwargs:
-            pose (bool): Include the pose (if available) in the return.
-
-        Returns:
-            name (str): A string of the sdesc containing the name of the object,
-            if this is defined.
-                including the DBREF if this user is privileged to control
-                said object.
-        """
-        try:
-            recog = looker.recog.get(self)
-        except AttributeError:
-            recog = None
-        if self.location.tags.get('rp', category='flags'):
-            sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
-        else:
-            sdesc = self.key
-        pose = '' if kwargs.get('pose', False) else ' %s' % (self.db.pose or '')
-        display_name = "%s%s|n%s" % (self.STYLE, sdesc, pose)
-        if self.access(looker, access_type='control'):  # if self.locks.check_lockstring(looker, "perm(Builders)"):
-            return "%s|w(#%s)|n" % (display_name, self.id)
-        else:
-            return display_name
-
     def mxp_name(self, viewer, command, **kwargs):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
         return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \

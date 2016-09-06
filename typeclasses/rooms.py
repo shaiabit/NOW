@@ -48,17 +48,6 @@ class Room(ContribRPRoom):
     def effects(self):
         return EffectHandler(self)
 
-    # @lazy_property
-    # def equipment(self):
-    #     return EquipmentHandler(self)
-
-    def get_display_name(self, looker, **kwargs):
-        """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
-            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
-        else:
-            return "%s%s|n" % (self.STYLE, self.name)
-
     def mxp_name(self, viewer, command):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
         return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
