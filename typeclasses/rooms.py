@@ -120,7 +120,7 @@ class Room(ContribRPRoom):
         if self.ndb.weather_last:
             string += '|/|*%s|n' % self.ndb.weather_last
         if users or things:
-            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id, pose=True) for u in users)
+            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, 'mxp_name')
                                   else t.get_display_name(viewer) for t in things)
