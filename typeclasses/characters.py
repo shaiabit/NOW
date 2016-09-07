@@ -8,7 +8,7 @@ creation commands.
 
 """
 from world.helpers import make_bar, mass_unit
-from world.rpsystem import ContribRPCharacter
+from world.rpsystem import RPCharacter
 
 from evennia.utils import lazy_property
 
@@ -16,7 +16,7 @@ from traits import TraitHandler
 from effects import EffectHandler
 
 
-class Character(ContribRPCharacter):
+class Character(RPCharacter):
     """
     The Character defaults to implementing some of its hook methods with the
     following standard functionality:

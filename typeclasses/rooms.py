@@ -10,7 +10,7 @@ import time  # Check time since last activity
 
 from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active players in room
 
-from world.rpsystem import ContribRPRoom
+from world.rpsystem import RPRoom
 from evennia import TICKER_HANDLER
 from evennia.comms.models import ChannelDB, Msg
 from evennia.comms.channelhandler import CHANNELHANDLER
@@ -24,7 +24,7 @@ from evennia import CmdSet  # For the class Grid
 from evennia import default_cmds  # For the class Grid's commands
 
 
-class Room(ContribRPRoom):
+class Room(RPRoom):
     """
     Rooms are like any Object, except their location is None
     (which is default). They also use basetype_setup() to
@@ -184,13 +184,14 @@ class Room(ContribRPRoom):
         Args:
             new_arrival (Object): the object that just entered this room.
             source_location (Object): the previous location of new_arrival.
-
         """
         if self.tags.get('rp', category='flags') and not new_arrival.attributes.has('_sdesc'):
             sdesc = new_arrival.db.species if new_arrival.attributes.has('species') else new_arrival.key
             new_arrival.sdesc.add(sdesc)
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
             if self.tags.get('weather', category='flags'):
+                if not self.nattributes.has('weather_time'):
+                    self.attempt_weather_update(1.00)  # 100% chance of update on initial arrival.
                 tickers = TICKER_HANDLER.all_display()
                 counter = 0
                 for tick in tickers:
@@ -207,8 +208,7 @@ class Room(ContribRPRoom):
                         if channel[0]:
                             channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show),
                                            keep_log=False)
-                if counter == 0:  # No weather ticker. Update weather, then add a weather ticker.
-                    self.update_weather()
+                if counter == 0:  # No weather ticker! Add a weather ticker.
                     interval = random.randint(12, 30) * 10
                     TICKER_HANDLER.add(interval=interval, callback=self.update_weather, idstring='Weather')
             for obj in self.contents_get(exclude=new_arrival):
@@ -246,26 +246,12 @@ class Room(ContribRPRoom):
         else:
             self.db.details = {detailkey.lower(): description}
 
-# [...] class WeatherRoom(TutorialRoom):
-
-    def update_weather(self, *args, **kwargs):
+    def attempt_weather_update(self, odds):
         """
-        Called by the tickerhandler at regular intervals. Even so, we
-        only update 20% of the time, picking a random weather message
-        when we do. The tickerhandler requires that this hook accepts
-        any arguments and keyword arguments (hence the *args, **kwargs
-        even though we don't actually use them in this example)
+        Called by update_weather
+        Args:
+            odds (float): 0 to 1 - odds of the weather changing.
         """
-
-        def attempt_weather_update(odds):  # only update <odds>% of the time and...
-            if random.random() >= odds:
-                return
-            new_weather = random.choice(weather)
-            if self.ndb.weather_last != new_weather:  # ... only update on a new weather condition.
-                self.msg_contents("|w%s|n" % new_weather)
-                self.ndb.weather_last = new_weather
-                self.ndb.weather_time = int(time.time())
-
         weather = self.db.weather or (
             "The rain coming down from the iron-grey sky intensifies.",
             "A gust of wind throws the rain right in your face. Despite your cloak you shiver.",
@@ -278,7 +264,22 @@ class Room(ContribRPRoom):
             "Lightning strikes in several thundering bolts, striking the trees in the forest to your west.",
             "You hear the distant howl of what sounds like some sort of dog or wolf.",
             "Large clouds rush across the sky, throwing their load of rain over the world.")
+        if random.random() >= odds:
+            return
+        new_weather = random.choice(weather)
+        if self.ndb.weather_last != new_weather:  # ... only update on a new weather condition.
+            self.msg_contents("|w%s|n" % new_weather)
+            self.ndb.weather_last = new_weather
+            self.ndb.weather_time = int(time.time())
 
+    def update_weather(self, *args, **kwargs):
+        """
+        Called by the tickerhandler at regular intervals. Even so, we
+        only update 20% of the time, picking a random weather message
+        when we do. The tickerhandler requires that this hook accepts
+        any arguments and keyword arguments (hence the *args, **kwargs
+        even though we don't actually use them in this example)
+        """
         slow_room = True
         empty_room = True
         session_list = SESSIONS.get_sessions()
@@ -293,9 +294,9 @@ class Room(ContribRPRoom):
         if empty_room:
             return
         if slow_room:
-            attempt_weather_update(0.05)  # only attempt update 5% of the time
+            self.attempt_weather_update(0.05)  # only attempt update 5% of the time
         else:
-            attempt_weather_update(0.20)
+            self.attempt_weather_update(0.20)
 
 
 class RealmEntry(Room):

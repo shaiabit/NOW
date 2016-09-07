@@ -10,7 +10,7 @@ the other types, you can do so by adding this as a multiple
 inheritance.
 
 """
-from world.rpsystem import ContribRPObject
+from world.rpsystem import RPObject
 from evennia.utils.evmenu import get_input
 from world.helpers import mass_unit
 from commands.poll import PollCmdSet
@@ -21,7 +21,7 @@ from traits import TraitHandler
 from effects import EffectHandler
 
 
-class Object(ContribRPObject):
+class Object(RPObject):
     """
     This is the root typeclass object, implementing an in-game Evennia
     game object, such as having a location, being able to be

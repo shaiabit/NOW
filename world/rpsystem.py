@@ -3,10 +3,9 @@ Roleplaying base system for Evennia
 
 Contribution - Griatch, 2015
 
-This module contains the ContribRPObject, ContribRPRoom and
-ContribRPCharacter typeclasses.  If you inherit your
-objects/rooms/character from these (or make them the defaults) from
-these you will get the following features:
+This module contains the RPObject, RPRoom and RPCharacter typeclasses.
+If you inherit your objects/rooms/character from these (or make them
+the defaults) from these you will get the following features:
 
     - Objects/Rooms will get the ability to have poses and will report
     the poses of items inside them (the latter most useful for Rooms).
@@ -1012,7 +1011,7 @@ class RPSystemCmdSet(CmdSet):
 # RP typeclasses
 # -----------------------------------------------------------
 
-class ContribRPObject(DefaultObject):
+class RPObject(DefaultObject):
     """
     This class is meant as a mix-in or parent for objects in an
     rp-heavy game. It implements the base functionality for poses.
@@ -1204,12 +1203,12 @@ class ContribRPObject(DefaultObject):
         return glance
 
 
-class ContribRPRoom(ContribRPObject):
+class RPRoom(RPObject):
     """Dummy inheritance for rooms."""
     pass
 
 
-class ContribRPCharacter(DefaultCharacter, ContribRPObject):
+class RPCharacter(DefaultCharacter, RPObject):
     """This is a character class that has poses, sdesc and recog."""
     # Handlers
     @lazy_property
