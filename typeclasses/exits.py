@@ -120,7 +120,7 @@ class Exit(DefaultExit):
             user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
-            path_view = 'Y' if viewer.location == self else 'Along the way y'
+            path_view = 'Y' if viewer.character.location == self else 'Along the way y'
             string += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
         return string
 
