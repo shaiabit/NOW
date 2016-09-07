@@ -186,8 +186,9 @@ class Room(ContribRPRoom):
             source_location (Object): the previous location of new_arrival.
 
         """
-        if not hasattr(new_arrival, '_sdesc') and self.tags.get('rp', category='flags'):
-            new_arrival.sdesc.add(new_arrival.key)
+        if self.tags.get('rp', category='flags') and not new_arrival.attributes.has('_sdesc'):
+            sdesc = new_arrival.db.species if new_arrival.attributes.has('species') else new_arrival.key
+            new_arrival.sdesc.add(sdesc)
         if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
             if self.tags.get('weather', category='flags'):
                 tickers = TICKER_HANDLER.all_display()
