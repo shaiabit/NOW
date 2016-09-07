@@ -207,8 +207,9 @@ class Room(ContribRPRoom):
                         if channel[0]:
                             channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show),
                                            keep_log=False)
-                if counter == 0:  # No weather ticker - add one.
-                    interval = random.randint(100, 300)
+                if counter == 0:  # No weather ticker. Update weather, then add a weather ticker.
+                    self.update_weather()
+                    interval = random.randint(12, 30) * 10
                     TICKER_HANDLER.add(interval=interval, callback=self.update_weather, idstring='Weather')
             for obj in self.contents_get(exclude=new_arrival):
                 if hasattr(obj, 'at_new_arrival'):
@@ -292,9 +293,9 @@ class Room(ContribRPRoom):
         if empty_room:
             return
         if slow_room:
-            attempt_weather_update(0.1)  # only attempt update 10% of the time
+            attempt_weather_update(0.05)  # only attempt update 5% of the time
         else:
-            attempt_weather_update(0.2)
+            attempt_weather_update(0.20)
 
 
 class RealmEntry(Room):
