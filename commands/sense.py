@@ -80,7 +80,7 @@ class CmdSense(MuxCommand):
             return
         if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
             if 'sense' in cmd:
-                char.msg('|wSensing %s%s|n...' % (obj.STYLE, obj.key))
+                char.msg('|wSensing...')
                 if obj:
                     if obj.db.senses:  # Object must be database object to be sensed.
                         string = '* Senses available for %s: ' % obj.get_display_name(player)
