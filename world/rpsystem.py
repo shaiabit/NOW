@@ -739,7 +739,8 @@ class CmdEmote(RPCommand):  # replaces the main emote
         if not self.args:
             self.caller.player.execute_cmd('help emote')
         else:  # include self in targets
-            emote = self.args
+            emote = self.args.replace('{', '{')  # Escape open curly brace in later formatting.
+            emote = emote.replace('}', '}}')  # Also escape close curly brace.
             targets = self.caller.location.contents
             send_emote(self.caller, targets, emote, anonymous_add='first')
 
