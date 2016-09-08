@@ -103,22 +103,26 @@ class Character(RPCharacter):
         Args:
             destination (Object): The place we are going to.
         """
-        if not self.location:
+        here = self.location
+        if not here:
             return
-        name = self.name
-        loc_name = self.location.name
-        dest_name = destination.name
-        string = '|r%s|n' % name
-        if self.ndb.followers and len(self.ndb.followers) > 0:
-            if len(self.ndb.followers) > 1:
-                string += ', |r' + '%s|n' % '|n, |r'.join(follower.key for follower in self.ndb.followers[:-1])
-                string += ' and |r%s|n are ' % self.ndb.followers[-1].key
+        for viewer in here.contents:
+            if viewer == self:
+                continue
+            name = self.get_display_name(viewer)
+            loc_name = self.location.get_display_name(viewer)
+            dest_name = destination.get_display_name(viewer)
+            string = '|w(|rLeaving|w) %s' % name
+            if self.ndb.followers and len(self.ndb.followers) > 0:
+                if len(self.ndb.followers) > 1:
+                    string += ', |r' + '%s|n' % '|n, |r'.join(follower.key for follower in self.ndb.followers[:-1])
+                    string += ' and |r%s|n are ' % self.ndb.followers[-1].key
+                else:
+                    string += ' and |r%s|n are ' % self.ndb.followers[-1]
             else:
-                string += ' and |r%s|n are ' % self.ndb.followers[-1]
-        else:
-            string += ' is '
-        string += "leaving %s%s|n, heading for %s%s|n." % (self.location.STYLE, loc_name, destination.STYLE, dest_name)
-        self.location.msg_contents(string, exclude=self)
+                string += ' is '
+            string += "leaving %s, heading for %s." % (loc_name, dest_name)
+            viewer.msg(string)
 
     def announce_move_to(self, source_location):
         """
@@ -127,7 +131,6 @@ class Character(RPCharacter):
         Args:
             source_location (Object): The place we came from
         """
-        name = self.name
         here = self.location
         if not source_location and self.location.has_player:
             # This was created from nowhere and added to a player's
@@ -135,25 +138,27 @@ class Character(RPCharacter):
             string = "You now have %s in your possession." % (self.get_display_name(here))
             here.msg(string)
             return
-        src_name = '|222Nothingness'
-        loc_name = here.name
-        if source_location:
-            src_name = source_location.STYLE + source_location.key
-        string = '|g%s|n' % name
-        if self.location:
-            depart_name = '%s%s' % (self.location.STYLE, loc_name)
-        else:
-            depart_name = '|222Nothingness'
-        if self.ndb.followers and len(self.ndb.followers) > 0:
-            if len(self.ndb.followers) > 1:
-                string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
-                string += "|n and |g%s|n arrive " % self.ndb.followers[-1].key
+        for viewer in here.contents:
+            if viewer == self:
+                continue
+            src_name = '|222Nothingness'
+            if source_location:
+                src_name = source_location.get_display_name(viewer)
+            string = '|w(|gArriving|w) %s' % self.get_display_name(viewer)
+            if here:
+                depart_name = here.get_display_name(viewer)
             else:
-                string += ' and |g%s|n arrive ' % self.ndb.followers[-1]
-        else:
-            string += ' arrives '
-        string += "to %s|n from %s|n." % (depart_name, src_name)
-        here.msg_contents(string, exclude=self)
+                depart_name = '|222Nothingness'
+            if self.ndb.followers and len(self.ndb.followers) > 0:
+                if len(self.ndb.followers) > 1:
+                    string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
+                    string += "|n and |g%s|n arrive " % self.ndb.followers[-1].key
+                else:
+                    string += ' and |g%s|n arrive ' % self.ndb.followers[-1]
+            else:
+                string += ' arrives '
+            string += "to %s|n from %s|n." % (depart_name, src_name)
+            viewer.msg(string)
         if self.ndb.followers and len(self.ndb.followers) > 0:
             for each in self.ndb.followers:
                 success = each.move_to(here, quiet=True, emit_to_obj=None, use_destination=False,
