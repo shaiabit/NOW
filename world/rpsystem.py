@@ -80,9 +80,9 @@ from evennia import ansi
 from evennia.utils.utils import lazy_property, make_iter, variable_from_module
 
 _AT_SEARCH_RESULT = variable_from_module(*settings.SEARCH_AT_RESULT.rsplit('.', 1))
-#------------------------------------------------------------
+# -----------------------------------------------------------
 # Emote parser
-#------------------------------------------------------------
+# -----------------------------------------------------------
 
 # Settings
 
@@ -99,16 +99,9 @@ _PREFIX = "/"
 _NUM_SEP = "-"
 
 # Texts
-
-_EMOTE_NOMATCH_ERROR = \
-"""{{RNo match for {{r{ref}{{R.{{n"""
-
-_EMOTE_MULTIMATCH_ERROR = \
-"""{{RMultiple possibilities for {ref}:
-    {{r{reflist}{{n"""
-
+_EMOTE_NOMATCH_ERROR = """{{RNo match for {{r{ref}{{R.{{n"""
+_EMOTE_MULTIMATCH_ERROR = """{{RMultiple possibilities for {ref}: {{r{reflist}{{n"""
 _RE_FLAGS = re.MULTILINE + re.IGNORECASE + re.UNICODE
-
 _RE_PREFIX = re.compile(r"^%s" % _PREFIX, re.UNICODE)
 
 # The num_sep is the (single-character) symbol used to separate the
@@ -122,9 +115,9 @@ _NUM_SEP = '-'
 # separate multimatches from one another and word is the first word in the
 # marker. So entering "/tall man" will return groups ("", "tall")
 # and "/2-tall man" will return groups ("2", "tall").
-_RE_OBJ_REF_START = re.compile(r"%s(?:([0-9]+)%s)*(\w+)" %
-                    (_PREFIX, _NUM_SEP), _RE_FLAGS)
-
+_RE_OBJ_REF_START = re.compile(r"%s(?:([0-9]+)%s)*(\w+)" % (_PREFIX, _NUM_SEP), _RE_FLAGS)
+_RE_LEFT_BRACKETS = re.compile(r"\{+", _RE_FLAGS)
+_RE_RIGHT_BRACKETS = re.compile(r"\}+", _RE_FLAGS)
 # Reference markers are used internally when distributing the emote to
 # all that can see it. They are never seen by players and are on the form {#dbref}.
 _RE_REF = re.compile(r"\{+\#([0-9]+)\}+")
@@ -345,6 +338,9 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
     # escape mapping syntax on the form {#id} if it exists already in emote,
     # if so it is replaced with just "id".
     string = _RE_REF.sub(r"\1", string)
+    # escape loose { } brackets since this will clash with formatting
+    string = _RE_LEFT_BRACKETS.sub("{{", string)
+    string = _RE_RIGHT_BRACKETS.sub("}}", string)
     # we now loop over all references and analyze them
     mapping = {}
     errors = []
@@ -739,8 +735,7 @@ class CmdEmote(RPCommand):  # replaces the main emote
         if not self.args:
             self.caller.player.execute_cmd('help emote')
         else:  # include self in targets
-            emote = self.args.replace('{', '{')  # Escape open curly brace in later formatting.
-            emote = emote.replace('}', '}}')  # Also escape close curly brace.
+            emote = self.args
             targets = self.caller.location.contents
             send_emote(self.caller, targets, emote, anonymous_add='first')
 
@@ -800,7 +795,8 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
     sdesc in the emote, regardless of who is seeing it.
     """
     key = 'rp'
-    locks = 'cmd:rp()'
+    aliases = ['do', 'doing']
+    locks = 'all()'
     help_category = 'Rollplay'
 
     def parse(self):
@@ -829,12 +825,11 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
         target = self.target
         if not pose and not self.reset:
             pose = caller.attributes.get('pose')
-            target_name = caller.attributes.get('_sdesc') if hasattr(caller, '_sdesc') else caller.key
             if pose:
-                caller.msg('Current pose reads \'%s %s\'.' % (target_name, pose))
+                caller.msg('Current pose reads \'%s %s\'.' % (caller.get_display_name(caller), pose))
                 default_pose = target.db.pose_default or None
                 if default_pose:
-                    caller.msg('Default pose is \'%s %s\'.' % (target_name, pose))
+                    caller.msg('Default pose is \'%s %s\'.' % (caller.get_display_name(caller), pose))
                 else:
                     caller.msg('Default pose not set.')
             else:
@@ -864,7 +859,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             target.db.pose = pose
         elif self.default:
             target.db.pose_default = pose
-            caller.msg('Default pose is now \'%s %s\'.' % (target_name, pose))
+            caller.msg('Default pose is now \'%s %s\'.' % (caller.get_display_name(caller), pose))
             return
         else:
             # set the pose. We do one-time ref->sdesc mapping here.
@@ -876,7 +871,9 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
                 caller.msg('Your pose is too long.')
                 return
             target.db.pose = pose
-        caller.msg('Pose will read \'%s %s\'.' % (target_name, pose))
+            if self.args:
+                caller.execute_cmd('emote %s' % pose)
+        caller.msg('Pose now set to \'%s %s\'.' % (caller.get_display_name(caller), pose))
 
 
 class CmdRecog(RPCommand): # assign personal alias to object in room
@@ -1162,14 +1159,14 @@ class RPObject(DefaultObject):
         return _AT_SEARCH_RESULT(results, self, query=searchdata, nofound_string=nofound_string,
                                  multimatch_string=multimatch_string)
 
-    def get_display_name(self, looker):
+    def get_display_name(self, viewer):
         """
         Displays the name of the object in a viewer-aware manner.
 
         Args:
             self (Object, Character, or Room):
-            looker (TypedObject): The object or player that is looking
-                at/getting inforamtion for this object.
+            viewer (TypedObject): The object or player that is looking
+                at/getting information for this object.
 
         Returns:
             name (str): A string of the sdesc containing the name of the object,
@@ -1178,7 +1175,7 @@ class RPObject(DefaultObject):
                 said object.
         """
         try:
-            recog = looker.recog.get(self)
+            recog = viewer.recog.get(self)
         except AttributeError:
             recog = None
         sdesc = self.key
@@ -1188,9 +1185,22 @@ class RPObject(DefaultObject):
         elif self.tags.get('rp', category='flags'):
             sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         display_name = "%s%s|n" % (self.STYLE, sdesc)
-        return '%s|w(#%s)|n' % (display_name, self.id) if self.access(looker, access_type='control') else display_name
+        return '%s|w(#%s)|n' % (display_name, self.id) if self.access(viewer, access_type='control') else display_name
 
     def return_glance(self, viewer):
+        """
+        Displays the name or sdesc of the object with its room pose in a viewer-aware manner.
+
+        Args:
+            self (Object, Character, or Room):
+            viewer (TypedObject): The object or player that is looking
+                at/getting information for this object.
+
+        Returns:
+            name (str): A string of the name or sdesc containing the name of the objects
+            contained within and their poses in the room. If 'self' is a room, the room
+            is omitted from the output. Calls 'get_display_name' - output depends on viewer.
+        """
         glance = ''
         if self.location:
             visible = (con for con in [self] + self.contents if con != viewer and con.access(viewer, 'view'))
