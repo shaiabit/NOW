@@ -333,12 +333,13 @@ class Character(RPCharacter):
         health_trait_gauge = True if self.traits.health else False
         if health_attribute_pair or health_trait_gauge:  # Add character health bar if character has health attributes.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-            if health_trait_gauge:  # FIXME
-                pass  # TODO: Trait health gauge goes here.
-                health = make_bar(self.traits.health, self.traits.health.max, 20, gradient)
+            if health_trait_gauge:
+                health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
+                if health_attribute_pair:  # Write health into traits here.
+                    self.db.health = self.traits.health.actual
+                    self.db.health_max = self.traits.health.max
             else:
                 health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
-                # Write health into traits here.
             string += " %s\n" % health
         else:
             string += "\n"
