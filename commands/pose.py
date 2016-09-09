@@ -14,6 +14,7 @@ class CmdPose(MuxCommand):
     Options:
     /o or /ooc  (Out-of-character to the room or channel.)
     /m or /magnet  (Show which characters remove name/pose space.)
+    /do    (Pose and set room-pose/doing message.)
     Example:
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.
@@ -47,7 +48,9 @@ class CmdPose(MuxCommand):
             char.msg("Pose magnet glyphs are %s." % non_space_chars)
         emote = '' if magnet else '|_'
         if args:
-            if char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
+            if 'do' in self.switches:
+                char.execute_cmd('rp %s' % args)
+            elif char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
                 char.execute_cmd('emote /me%s%s' % ('' if magnet else '|_', args))
                 return
             elif self.rhs and 'o' not in self.switches:
