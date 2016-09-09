@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Traits Module
-By: whitenoise and feend78
 
 `Trait` classes represent modifiable traits on objects or characters. They
 are instantiated by a `TraitHandler` object, which is typically set up
@@ -216,7 +215,7 @@ Example:
 """
 
 from evennia.utils.dbserialize import _SaverDict
-from evennia.utils import logger
+from evennia.utils import logger, lazy_property
 from functools import total_ordering
 
 TRAIT_TYPES = ('static', 'counter', 'gauge')
@@ -291,22 +290,21 @@ class TraitHandler(object):
             self.cache[trait] = Trait(data)
         return self.cache[trait]
 
-    def add(self, key, name, type='static',
-            base=0, mod=0, min=None, max=None, extra={}):
+    def add(self, key, name, new_type='static', base=0, mod=0, new_min=None, new_max=None, extra={}):
         """Create a new Trait and add it to the handler."""
         if key in self.attr_dict:
             raise TraitException("Trait '{}' already exists.".format(key))
 
-        if type in TRAIT_TYPES:
+        if new_type in TRAIT_TYPES:
             trait = dict(name=name,
-                         type=type,
+                         type=new_type,
                          base=base,
                          mod=mod,
                          extra=extra)
-            if min:
-                trait.update(dict(min=min))
-            if max:
-                trait.update(dict(max=max))
+            if new_min:
+                trait.update(dict(new_min=min))
+            if new_max:
+                trait.update(dict(new_max=max))
 
             self.attr_dict[key] = trait
         else:
@@ -374,33 +372,23 @@ class Trait(object):
         return "{}({{{}}})".format(
             type(self).__name__,
             ', '.join(["'{}': {!r}".format(k, self._data[k])
-                      for k in self._keys if k in self._data]))
+                       for k in self._keys if k in self._data]))
 
     def __str__(self):
         """User-friendly string representation of this `Trait`"""
         if self._type == 'gauge':
-            status = "{actual:4} / {base:4}".format(self.actual, self.base)
+            status = "{actual:4} / {base:4}".format(actual=self.actual, base=self.base)
         else:
-            status = "{actual:11}".format(self.actual)
+            status = "{actual:11}".format(actual=self.actual)
 
-        return "{{name}::12} {status} ({mod:+3})".format(
-            ame=self.name,
+        return "{name:12} {status} ({mod:+3})".format(
+            name=self.name,
             status=status,
-            base=self._mod_base(),
             mod=self.mod)
 
     def __unicode__(self):
         """User-friendly unicode representation of this `Trait`"""
-        if self._type == 'gauge':
-            status = "{actual:4} / {base:4}".format(self.actual, self.base)
-        else:
-            status = "{{actual:4}: <11}".format(self.actual)
-
-        return u"{{name}::12} {status} ({mod:+3})".format(
-            ame=self.name,
-            status=status,
-            base=self._mod_base(),
-            mod=self.mod)
+        return unicode(str(self))
 
     # Extra Properties magic
 
@@ -473,7 +461,7 @@ class Trait(object):
             return NotImplemented
 
     def __lt__(self, other):
-        """Support less than comparison between `Trait`s/numerics."""
+        """Support less than comparison between `Trait`s or `Trait` and numeric."""
         if isinstance(other, Trait):
             return self.actual < other.actual
         elif type(other) in (float, int):
