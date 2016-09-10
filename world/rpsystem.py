@@ -774,7 +774,10 @@ class CmdSdesc(RPCommand):  # set/look at own sdesc
             except SdescError, err:
                 caller.msg(err)
                 return
-            caller.msg('You are now seen as "%s".' % sdesc)
+            if caller.location:
+                caller.msg('You are now seen as "%s".' % caller.get_display_name(caller.location))
+            else:
+                caller.msg('You are not visible while in |222Nothingness|n.')
 
 
 class CmdRoomPose(RPCommand):  # set current pose and default pose
