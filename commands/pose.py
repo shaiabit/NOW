@@ -52,7 +52,6 @@ class CmdPose(MuxCommand):
                 char.execute_cmd('rp %s' % args)
             elif char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
                 char.execute_cmd('emote /me%s%s' % ('' if magnet else '|_', args))
-                return
             elif self.rhs and 'o' not in self.switches:
                 char.ndb.power_pose = emote
                 player.execute_cmd(self.rhs)
