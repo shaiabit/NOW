@@ -85,7 +85,7 @@ class CmdWho(MuxPlayerCommand):
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
-                    species = character.attributes.get('species', default='*ghost*')
+                    species = '-masked-' if my_character.location.tags.get('rp', category='flags') and character.db.unmasked_sdesc else character.attributes.get('species', default='*ghost*')
                     table.add_row(character.get_display_name(you) if character else '*ghost*',
                                   utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1), species)
             elif self.cmdstring == 'what' or self.cmdstring == 'wot':
