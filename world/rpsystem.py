@@ -757,7 +757,14 @@ class CmdSdesc(RPCommand):  # set/look at own sdesc
         """Assign the sdesc"""
         caller = self.caller
         if not self.args:
-            caller.msg('Usage: sdesc <sdesc-text>')
+            if caller.location:
+                masked = caller.db.unmasked_sdesc
+                caller.msg('You are %s as "%s".' % ('masked' if masked else 'being seen',
+                                                               caller.get_display_name(caller.location)))
+                if masked:
+                    caller.msg('When unmasked, you would appear as "%s%s|n".' % (caller.STYLE, masked))
+            else:
+                caller.msg('You are not visible while in |222Nothingness|n.')
             return
         else:
             # strip non-alfanum chars from end of sdesc
@@ -767,7 +774,7 @@ class CmdSdesc(RPCommand):  # set/look at own sdesc
             except SdescError, err:
                 caller.msg(err)
                 return
-            caller.msg('%s\'s sdesc was set to \'%s\'.' % (caller.key, sdesc))
+            caller.msg('You are now seen as "%s".' % sdesc)
 
 
 class CmdRoomPose(RPCommand):  # set current pose and default pose
@@ -900,8 +907,7 @@ class CmdRecog(RPCommand): # assign personal alias to object in room
         if ' as ' in self.args:
             self.sdesc, self.alias = [part.strip() for part in self.args.split(' as ', 2)]
         elif self.args:
-            # try to split by space instead
-            try:
+            try:  # try to split by space instead
                 self.sdesc, self.alias = [part.strip() for part in self.args.split(None, 1)]
             except ValueError:
                 self.sdesc, self.alias = self.args.strip(), ''
@@ -935,7 +941,7 @@ class CmdRecog(RPCommand): # assign personal alias to object in room
                 return
             if self.cmdstring == 'forget':  # remove existing recog
                 caller.recog.remove(obj)
-                caller.msg('%s will now only be known as \'%s\'.' % (caller.key, obj.recog.get(obj)))
+                caller.msg('You forget %s, and now only know %s as "%s".' % (self.args, self.args, obj.recog.get(obj)))
             else:
                 sdesc = obj.sdesc.get() if hasattr(obj, 'sdesc') else obj.key
                 try:
@@ -981,7 +987,11 @@ class CmdMask(RPCommand):
             caller.db.unmasked_sdesc = caller.sdesc.get()
             caller.locks.add('enable_recog:false()')
             caller.sdesc.add(sdesc)
-            caller.msg('You disguise yourself as \'%s\'.' % sdesc)
+            if caller.location:
+                caller.msg('You disguise yourself as \'%s\'.' % caller.get_display_name(caller.location))
+            else:
+                caller.msg('You attempt to disguise yourself, but in |222Nothingness|n, '
+                           ' you are not sure it has any effect.')
         else:  # unmask
             old_sdesc = caller.db.unmasked_sdesc
             if not old_sdesc:
@@ -990,7 +1000,7 @@ class CmdMask(RPCommand):
             del caller.db.unmasked_sdesc
             caller.locks.remove('enable_recog')
             caller.sdesc.add(old_sdesc)
-            caller.msg('You remove your disguise and are again "%s".' % old_sdesc)
+            caller.msg('You remove your disguise and are again "%s%s|n".' % (caller.STYLE, old_sdesc))
 
 
 class RPSystemCmdSet(CmdSet):
@@ -1134,7 +1144,7 @@ class RPObject(DefaultObject):
                                                  candidates=candidates,
                                                  exact=exact,
                                                  use_dbref=use_dbref)
-        print('Canidates for searching: %s' % candidates)
+        print('Candidates for searching: %s' % candidates)
         if candidates:
             candidates = parse_sdescs_and_recogs(self, candidates, _PREFIX + searchdata, search_mode=True)
             results = []
