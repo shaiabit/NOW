@@ -17,6 +17,7 @@ class CmdTry(MuxCommand):
     auto_help = False
     locks = 'cmd:all()'
     arg_regex = r'\s|$'
+    player_caller = True
 
     def func(self):
         """Run the try command"""

@@ -727,7 +727,7 @@ class CmdEmote(RPCommand):  # replaces the main emote
     """
     key = 'emote'
     aliases = ['.']
-    locks = 'cmd:rp()'
+    locks = 'all()'
     help_category = 'Rollplay'
 
     def func(self):

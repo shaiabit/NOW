@@ -26,6 +26,7 @@ class CmdPose(MuxCommand):
     key = 'pose'
     aliases = [':', ';']
     locks = 'cmd:all()'
+    player_caller = True
 
     def func(self):
         """Basic pose"""
