@@ -358,7 +358,7 @@ class Character(RPCharacter):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
-        if self != viewer:
+        if self != viewer.character:
             if not (self.db.settings and 'look notify' in self.db.settings
                     and self.db.settings['look notify'] is False):
                 self.msg("%s just looked at you." % viewer.character.get_display_name(self))
