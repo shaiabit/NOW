@@ -92,6 +92,8 @@ class Exit(DefaultExit):
         """
         if not viewer:
             return
+        if not viewer.is_typeclass('typeclasses.players.Player'):
+            viewer = viewer.player  # make viewer reference the player object
         # get and identify all objects
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         exits, users, things = [], [], []
