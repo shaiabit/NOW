@@ -758,6 +758,7 @@ class CmdSdesc(RPCommand):  # set/look at own sdesc
         caller = self.caller
         if not self.args:
             if caller.location:
+                caller.msg('Usage: sdesc <sdesc-text>')
                 masked = caller.db.unmasked_sdesc
                 caller.msg('You are %s as "%s".' % ('masked' if masked else 'being seen',
                                                                caller.get_display_name(caller.location)))
