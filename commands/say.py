@@ -160,11 +160,11 @@ class CmdSpoof(MuxCommand):
                     outside, inside = [72, 52]
             else:
                 outside, inside = [72, min(int(self.rhs or 72), 72)]
-            for text in justify(args, width=inside).split('\n'):
+            for text in justify(args, width=outside, indent=inside).split('\n'):
                 if 'self' in opt:
-                    char.msg(pad(text, width=outside).rstrip())
+                    char.msg(text.rstrip())
                 else:
-                    here.msg_contents(pad(text, width=outside).rstrip())
+                    here.msg_contents(text.rstrip())
         else:
             stripped = ansi.strip_ansi(args)
             marked = self.args.replace('|', '||')
