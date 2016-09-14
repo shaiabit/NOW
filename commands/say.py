@@ -124,27 +124,7 @@ class CmdSpoof(MuxCommand):
                 char.msg(' ' * indent + args.rstrip())
             else:
                 here.msg_contents(' ' * indent + args.rstrip())
-        elif 'right' in opt:
-            right = 72
-            if self.rhs:
-                args = self.lhs.strip()
-                right = re.sub("[^0123456789]", '', self.rhs) or 72
-                right = int(right)
-            if 'self' in opt:
-                char.msg(args.rstrip().rjust(right, ' '))
-            else:
-                here.msg_contents(args.rstrip().rjust(right, ' '))
-        elif 'center' in opt:
-            center = 72
-            if self.rhs:
-                args = self.lhs.strip()
-                center = re.sub("[^0123456789]", '', self.rhs) or 72
-                center = int(center)
-            if 'self' in opt:
-                char.msg(pad(args, width=center).rstrip())
-            else:
-                here.msg_contents(pad(args, width=center).rstrip())
-        elif 'news' in opt:
+        elif 'right' in opt or 'center' in opt or 'news' in opt:
             if self.rhs is not None:  # Equals sign exists.
                 parameters = '' if not self.rhs else self.rhs.split()
                 args = self.lhs.strip()
@@ -157,10 +137,12 @@ class CmdSpoof(MuxCommand):
                     inside = re.sub("[^0123456789]", '', inside) or 0
                     outside, inside = [int(max(outside, inside)), int(min(outside, inside))]
                 else:
-                    outside, inside = [72, 52]
+                    outside, inside = [72, 20]
             else:
-                outside, inside = [72, min(int(self.rhs or 72), 72)]
-            for text in justify(args, width=outside, indent=inside).split('\n'):
+                outside, inside = [72, min(int(self.rhs or 72), 20)]
+            block = 'r' if 'right' in opt else 'f'
+            block = 'c' if 'center' in opt else block
+            for text in justify(args, width=outside, align=block, indent=inside).split('\n'):
                 if 'self' in opt:
                     char.msg(text.rstrip())
                 else:
