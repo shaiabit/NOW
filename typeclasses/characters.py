@@ -109,16 +109,17 @@ class Character(RPCharacter):
         for viewer in here.contents:
             if viewer == self:
                 continue
-            name = self.get_display_name(viewer)
+            name = self.get_display_name(viewer, color=False)
             loc_name = self.location.get_display_name(viewer)
             dest_name = destination.get_display_name(viewer)
-            string = '|w(|rLeaving|w) %s' % name
+            string = '|r%s' % name
             if self.ndb.followers and len(self.ndb.followers) > 0:
                 if len(self.ndb.followers) > 1:
-                    string += ', |r' + '%s|n' % '|n, |r'.join(follower.key for follower in self.ndb.followers[:-1])
-                    string += ' and |r%s|n are ' % self.ndb.followers[-1].key
+                    string += ', |r' + '%s|n' % '|n, |r'.join(follower.get_display_name(viewer, color=False)
+                                                              for follower in self.ndb.followers[:-1])
+                    string += ' and |r%s|n are ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
                 else:
-                    string += ' and |r%s|n are ' % self.ndb.followers[-1]
+                    string += ' and |r%s|n are ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
             else:
                 string += ' is '
             string += "leaving %s, heading for %s." % (loc_name, dest_name)
@@ -144,17 +145,18 @@ class Character(RPCharacter):
             src_name = '|222Nothingness'
             if source_location:
                 src_name = source_location.get_display_name(viewer)
-            string = '|w(|gArriving|w) %s' % self.get_display_name(viewer)
+            string = '|g%s' % self.get_display_name(viewer, color=False)
             if here:
                 depart_name = here.get_display_name(viewer)
             else:
                 depart_name = '|222Nothingness'
             if self.ndb.followers and len(self.ndb.followers) > 0:
                 if len(self.ndb.followers) > 1:
-                    string += ', |g' + '%s' % '|n, |g'.join(follower.key for follower in self.ndb.followers[:-1])
-                    string += "|n and |g%s|n arrive " % self.ndb.followers[-1].key
+                    string += ', |g' + '%s' % '|n, |g'.join(follower.get_display_name(viewer, color=False)
+                                                            for follower in self.ndb.followers[:-1])
+                    string += "|n and |g%s|n arrive " % self.ndb.followers[-1].get_display_name(viewer, color=False)
                 else:
-                    string += ' and |g%s|n arrive ' % self.ndb.followers[-1]
+                    string += ' and |g%s|n arrive ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
             else:
                 string += ' arrives '
             string += "to %s|n from %s|n." % (depart_name, src_name)
@@ -164,7 +166,7 @@ class Character(RPCharacter):
                 success = each.move_to(here, quiet=True, emit_to_obj=None, use_destination=False,
                                        to_none=False, move_hooks=False)
                 if not success:
-                    self.msg('%s%s|n did not arrive.' % (each.STYLE, each.key))
+                    self.msg('|r%s|n did not arrive.' % each.get_display_name(self, color=False))
                     each.nattributes.remove('mover')
                     self.ndb.followers.remove(each)
                     continue
@@ -195,13 +197,13 @@ class Character(RPCharacter):
             self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
 
         def message(obj, from_obj):
-            obj.msg("|g%s|n fades into view." % self.key, from_obj=from_obj)
+            obj.msg("|g%s|n fades into view." % self.get_display_name(obj, color=False), from_obj=from_obj)
 
         if self.location != self.home:
             self.location.for_contents(message, exclude=[self], from_obj=self)
 
         def message(obj, from_obj):
-            obj.msg("|g%s|n awakens." % self.key, from_obj=from_obj)
+            obj.msg("|g%s|n awakens." % self.get_display_name(obj, color=False), from_obj=from_obj)
 
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
@@ -221,18 +223,18 @@ class Character(RPCharacter):
             if self.location:
 
                 def message(obj, from_obj):
-                    obj.msg("|r%s|n sleeps." % self.key, from_obj=from_obj)
+                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)
 
                 self.location.for_contents(message, exclude=[self], from_obj=self)
                 self.db.prelogout_location = self.location
-                if self.location != self.home:  # If not already home, send to Nothingness.
-                    self.location = None
 
                 def message(obj, from_obj):
-                    obj.msg("%s%s|n fades from view." % (self.STYLE, self.key), from_obj=from_obj)
+                    obj.msg("%s fades from view." % self.get_display_name(obj), from_obj=from_obj)
 
                 if self.location != self.home:
                     self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
+                if self.location != self.home:  # If not already home, send to Nothingness.
+                    self.location = None
 
     def process_sdesc(self, sdesc, obj, **kwargs):
         """
@@ -426,13 +428,13 @@ class NPC(Character):
         self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
         self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
-            self.msg('|/You have new mail in your %s%s|n mailbox.|/' % (self.home.STYLE, self.home.key))
+            self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
 
         def message(obj, from_obj):
             if self.sessions.count() > 1:  # Show as pose if NPC already has a player.
-                obj.msg("%s awakens." % self.get_display_name(obj), from_obj=from_obj)
+                obj.msg("%s looks more awake." % self.get_display_name(obj), from_obj=from_obj)
             else:
-                obj.msg("|g%s|n awakens." % self.key, from_obj=from_obj)
+                obj.msg("|g%s|n awakens." % self.get_display_name(obj, color=False), from_obj=from_obj)
 
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
@@ -452,9 +454,9 @@ class NPC(Character):
 
             def message(obj, from_obj):
                 if self.sessions.count():  # Show as pose if NPC still has a player.
-                    obj.msg("%s sleeps." % (self.get_display_name(obj)), from_obj=from_obj)
+                    obj.msg("%s looks sleepier." % (self.get_display_name(obj)), from_obj=from_obj)
                 else:  # Show as gone if NPC has no player now.
-                    obj.msg("|r%s|n sleeps." % self.key, from_obj=from_obj)
+                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)
 
             self.location.for_contents(message, exclude=[self], from_obj=self)
             self.db.prelogout_location = self.location
