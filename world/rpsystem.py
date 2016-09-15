@@ -1173,7 +1173,7 @@ class RPObject(DefaultObject):
         return _AT_SEARCH_RESULT(results, self, query=searchdata, nofound_string=nofound_string,
                                  multimatch_string=multimatch_string)
 
-    def get_display_name(self, viewer):
+    def get_display_name(self, viewer, **kwargs):
         """
         Displays the name of the object in a viewer-aware manner.
 
@@ -1181,13 +1181,15 @@ class RPObject(DefaultObject):
             self (Object, Character, or Room):
             viewer (TypedObject): The object or player that is looking
                 at/getting information for this object.
-
+        Kwargs:
+            pose Return pose appended to name if True
+            color Return includes color style markup prefix if True
         Returns:
             name (str): A string of the sdesc containing the name of the object,
             if this is defined.
-                including the DBREF if this user is privileged to control
-                said object.
+                including the DBREF if viewer is privileged to control this.
         """
+        color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
         try:
             recog = viewer.recog.get(self)
         except AttributeError:
@@ -1198,7 +1200,8 @@ class RPObject(DefaultObject):
                 sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         elif self.tags.get('rp', category='flags'):
             sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
-        display_name = "%s%s|n" % (self.STYLE, sdesc)
+        sdesc += self.attributes.get('pose') if pose else ''
+        display_name = ("%s%s|n" % (self.STYLE, sdesc)) if color else sdesc
         return '%s|w(#%s)|n' % (display_name, self.id) if self.access(viewer, access_type='control') else display_name
 
     def return_glance(self, viewer):
