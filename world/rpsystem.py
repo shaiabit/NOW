@@ -711,10 +711,11 @@ class CmdEmote(RPCommand):  # replaces the main emote
     text in the emote.
 
     Usage:
+      /me text
       emote text
 
     Example:
-      emote /me looks around.
+      /me looks around.
       emote With a flurry /me attacks /tall man with his sword.
       emote "Hello", /me says.
 
@@ -726,7 +727,7 @@ class CmdEmote(RPCommand):  # replaces the main emote
     a different language.
     """
     key = 'emote'
-    aliases = ['.']
+    aliases = ['/me']
     locks = 'all()'
     help_category = 'Rollplay'
 
@@ -734,10 +735,12 @@ class CmdEmote(RPCommand):  # replaces the main emote
         """Perform the emote."""
         if not self.args:
             self.caller.player.execute_cmd('help emote')
-        else:  # include self in targets
+        elif self.caller.location:
             emote = self.args
-            targets = self.caller.location.contents
+            targets = self.caller.location.contents  # include self in targets
             send_emote(self.caller, targets, emote, anonymous_add='first')
+        else:
+            self.caller.msg('You can not emote in |222Nothingness|n.')
 
 
 class CmdSdesc(RPCommand):  # set/look at own sdesc
@@ -1200,9 +1203,12 @@ class RPObject(DefaultObject):
                 sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         elif self.tags.get('rp', category='flags'):
             sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
-        sdesc += self.attributes.get('pose') if pose else ''
         display_name = ("%s%s|n" % (self.STYLE, sdesc)) if color else sdesc
-        return '%s|w(#%s)|n' % (display_name, self.id) if self.access(viewer, access_type='control') else display_name
+        if self.access(viewer, access_type='control'):
+            display_name += '|w(#%s)|n' % self.id
+        if pose and self.attributes.get('pose'):
+            display_name += ('|n ' if color else ' ') + self.attributes.get('pose')
+        return display_name
 
     def return_glance(self, viewer):
         """
@@ -1224,10 +1230,7 @@ class RPObject(DefaultObject):
         else:
             visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         for item in visible:
-            if item.attributes.get('pose'):
-                glance += '%s %s\n' % (item.get_display_name(viewer), item.attributes.get('pose') or '')
-            else:
-                glance += '%s is here.\n' % item.get_display_name(viewer)
+            glance += '%s\n' % item.get_display_name(viewer, pose=True)
         return glance
 
 
