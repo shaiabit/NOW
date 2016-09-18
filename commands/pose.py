@@ -10,7 +10,7 @@ class CmdPose(MuxCommand):
     Usage:
       pose <pose text>
       pose's <pose text>
-      pose <pose text> = <verb> <noun>
+      pp <pose text> = <verb> <noun>
     Options:
     /o or /ooc  (Out-of-character to the room or channel.)
     /m or /magnet  (Show which characters remove name/pose space.)
@@ -19,12 +19,12 @@ class CmdPose(MuxCommand):
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.
 
-      > pose strains to lift the anvil. = get anvil
+      > ppose strains to lift the anvil. = get anvil
       Werewolf strains to lift the anvil. Werewolf takes the anvil.
       (optional success message if anvil is liftable.)
     """
     key = 'pose'
-    aliases = [':', ';']
+    aliases = ['p:', 'pp', 'ppose', ':', ';']
     locks = 'cmd:all()'
     player_caller = True
 
@@ -38,7 +38,8 @@ class CmdPose(MuxCommand):
         here = char.location if char else None
         non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
         magnet = True if args and args[0] in non_space_chars or cmd == ";" else False
-        pose = self.lhs if self.rhs else args
+        power = True if self.cmdstring == 'ppose' or self.cmdstring == 'pp' or self.cmdstring == 'p:' else False
+        pose = self.lhs if power and self.rhs else args
         if not (here and char):
             if args:
                 player.execute_cmd('pub :%s%s' % ('' if magnet else '|_', pose))
@@ -53,7 +54,7 @@ class CmdPose(MuxCommand):
                 char.execute_cmd('rp %s' % args)
             elif char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
                 char.execute_cmd('emote /me%s' % pose)
-            elif self.rhs and 'o' not in self.switches:
+            elif power and self.rhs and 'o' not in self.switches:
                 char.ndb.power_pose = pose
                 player.execute_cmd(self.rhs)
             else:

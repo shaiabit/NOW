@@ -47,12 +47,16 @@ class CmdTry(MuxCommand):
                     obj = good_targets[0] if len(good_targets) == 1 else None
                 player.msg('(%s/%s (%s))' % (verb, noun, obj))
                 if obj and obj in good_targets:
-                    if char.ndb.power_pose:
-                        here.msg_contents('|w* %s' % char.ndb.power_pose)
+                    if char.ndb.power_pose and here:
+                        contents = here.contents
+                        for viewer in contents:
+                            viewer.msg('|w* %s%s' % (char.get_display_name(viewer), char.ndb.power_pose))
                         char.nattributes.remove('power_pose')
                     else:
-                        here.msg_contents('%s%s|n tries to %s %s%s|n.'
-                                          % (char.STYLE, char.key, verb, obj.STYLE, obj.key))
+                        contents = here.contents
+                        for viewer in contents:
+                            viewer.msg('|w* %s tries to %s %s|n.'
+                                       % (char.get_display_name(viewer), verb, obj.get_display_name(viewer)))
                     self.trigger_response(verb, obj)
                 else:
                     if good_targets:
@@ -61,7 +65,7 @@ class CmdTry(MuxCommand):
                         else:
                             player.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets)))
                     else:
-                        player.msg('You can not %s %s%s|n.' % (verb, obj.STYLE, obj.key))
+                        player.msg('You can not %s %s|n.' % (verb, obj.get_display_name(player)))
         else:
             player.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
 
@@ -72,10 +76,14 @@ class CmdTry(MuxCommand):
         Triggers command alias (tabled)
         Triggers message (look for message)
         """
-        if obj.db.messages and verb in obj.db.messages:
-            obj.location.msg_contents('%s%s|n %s' % (obj.STYLE, obj.key, obj.db.messages[verb]))
-        else:
-            obj.location.msg_contents('%s%s|n responds to %s.' % (obj.STYLE, obj.key, verb))
+        if obj.db.messages and verb in obj.db.messages and obj.location:
+            contents = obj.location.contents
+            for viewer in contents:
+                viewer.msg('%s %s' % (obj.get_display_name(viewer), obj.db.messages[verb]))
+        elif obj.location:
+            contents = obj.location.contents
+            for viewer in contents:
+                viewer.msg('%s responds to %s.' % (obj.get_display_name(viewer), verb))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""
