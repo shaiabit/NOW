@@ -48,11 +48,6 @@ class Room(RPRoom):
     def effects(self):
         return EffectHandler(self)
 
-    def mxp_name(self, viewer, command):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
-            self.access(viewer, 'view') else ''
-
     def return_appearance(self, viewer):
         """
         This formats a description. It is the hook a 'look' command
@@ -93,7 +88,7 @@ class Room(RPRoom):
             else:
                 things.append(con)
         command = '%s #%s' % ('sense', self.id)
-        string = "\n%s\n" % self.mxp_name(viewer, command)
+        string = "\n%s\n" % self.get_display_name(viewer, mxp=command)
         desc = self.db.desc  # get description, build string
         desc_brief = self.db.desc_brief
         if desc:
@@ -108,8 +103,7 @@ class Room(RPRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.mxp_name(viewer, 'sense #%s' % e.id) if hasattr(e, 'mxp_name')
-                                     else e.get_display_name(viewer))
+                exits_complex.append("%s" % e.get_display_name(viewer, mxp='sense #%s' % e.id))
             if ways and not ways == {}:
                 for w in ways:
                     exits_simple.append(way_dir[w])
@@ -120,12 +114,10 @@ class Room(RPRoom):
         if self.ndb.weather_last:
             string += '|/|*%s|n' % self.ndb.weather_last
         if users or things:
-            user_list = ", ".join(u.mxp_name(viewer, 'sense #%s' % u.id) for u in users)
+            user_list = ", ".join(u.get_display_name(viewer, mxp='sense #%s' % u.id, pose=True) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.mxp_name(viewer, 'sense #%s' % t.id) if hasattr(t, 'mxp_name')
-                                  else t.get_display_name(viewer) for t in things)
+            item_list = ", ".join(t.get_display_name(viewer, mxp='sense #%s' % t.id, pose=True) for t in things)
             string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
-        string += '\n' + self.return_glance(viewer)
         return string
 
     def announce_move_from(self, destination):

@@ -191,8 +191,11 @@ class Character(RPCharacter):
 # I think it may have originally been defined at a time when an object only ever had one session, so once you were
         # puppeted you could easily retrieve it.
 
-        self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
-        self.msg(self.at_look(self.location))
+        if self.location is None:
+            self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
+        else:
+            self.msg("\nYou assume the role of: %s\n" % self.get_display_name(self, pose=True))
+            self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
             self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
 
@@ -268,11 +271,6 @@ class Character(RPCharacter):
         """
         return self.process_sdesc(recog, obj)
 
-    def mxp_name(self, viewer, command, **kwargs):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
-            self.access(viewer, 'view') else ''
-
     def get_pronoun(self, regex_match):
         """
         Get pronoun from the pronoun marker in the text. This is used as
@@ -327,7 +325,7 @@ class Character(RPCharacter):
                 users.append(con)
             else:
                 things.append(con)
-        string = "\n%s" % self.mxp_name(viewer, 'sense %s' % self.get_display_name(viewer))
+        string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, color=False))
         if self.location.tags.get('rp', category='flags'):
             string += ' %s' % self.attributes.get('pose') or ''
         string += " |y(%s)|n " % mass_unit(self.get_mass())

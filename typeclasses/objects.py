@@ -225,7 +225,7 @@ class Object(RPObject):
 
     def at_get(self, caller):
         """Called after getting an object in the room."""
-        caller.msg("%s is now in your possession." % self.mxp_name(caller, 'sense #%s' % self.id))
+        caller.msg("%s is now in your possession." % self.get_display_name(caller, mxp='sense #%s' % self.id))
 
     def announce_move_from(self, destination):
         """
@@ -333,16 +333,10 @@ class Object(RPObject):
         """
         return '|g%s|n' % sdesc
 
-    def mxp_name(self, viewer, command, **kwargs):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s%s|n|le" % (command, self.STYLE, self.get_display_name(viewer)) if viewer and \
-            self.access(viewer, 'view') else ''
-
     def get_mass(self):  # TODO: Add mass of objects on surface, also.
         if not self.traits.mass:
             mass = 1 if not self.db.mass else self.db.mass
             self.traits.add('mass', 'Mass', type='static', base=mass)
-            print('Mass for %s set to %s.' % (self.key, repr(self.traits.mass)))
         mass = self.traits.mass.actual or 1
         return reduce(lambda x, y: x+y.get_mass(), [mass] + self.contents)
 
@@ -366,7 +360,7 @@ class Object(RPObject):
             else:
                 things.append(con)
         # get description, build string
-        string = self.mxp_name(viewer, 'sense #%s' % self.id)
+        string = self.get_display_name(viewer, mxp='sense #%s' % self.id)
         string += " (%s)" % mass_unit(self.get_mass())
         if self.db.surface:
             string += " -- %s" % self.db.surface

@@ -1187,12 +1187,15 @@ class RPObject(DefaultObject):
         Kwargs:
             pose Return pose appended to name if True
             color Return includes color style markup prefix if True
+            mxp Return includes mxp command markup prefix if provided
+            db_id Return includes database id to privliged viewers if True
         Returns:
             name (str): A string of the sdesc containing the name of the object,
             if this is defined.
                 including the DBREF if viewer is privileged to control this.
         """
         color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
+        mxp, db_id = [kwargs.get('mxp', False), kwargs.get('db_id', True)]
         try:
             recog = viewer.recog.get(self)
         except AttributeError:
@@ -1204,11 +1207,17 @@ class RPObject(DefaultObject):
         elif self.tags.get('rp', category='flags'):
             sdesc = recog or (hasattr(self, 'sdesc') and self.sdesc.get()) or self.key
         display_name = ("%s%s|n" % (self.STYLE, sdesc)) if color else sdesc
-        if self.access(viewer, access_type='control'):
+        if mxp:
+            display_name = "|lc%s|lt%s|le" % (mxp, display_name)
+        if self.access(viewer, access_type='control') and db_id:
             display_name += '|w(#%s)|n' % self.id
         if pose and self.attributes.get('pose'):
             display_name += ('|n ' if color else ' ') + self.attributes.get('pose')
         return display_name
+
+    def mxp_name(self, viewer, command):  # Depreciated. call obj.get_display_name(viewer, mxp=command)
+        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
+        return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
 
     def return_glance(self, viewer):
         """
