@@ -117,7 +117,7 @@ class Room(RPRoom):
             user_list = ", ".join(u.get_display_name(viewer, mxp='sense #%s' % u.id, pose=True) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense #%s' % t.id, pose=True) for t in things)
-            string += "\n|wHere you find:|n " + user_list + ut_joiner + item_list
+            string += ("\n|wHere you find:|n " + user_list + ut_joiner + item_list).replace('.,', ';')
         return string
 
     def announce_move_from(self, destination):
