@@ -158,6 +158,6 @@ class CmdSpoof(MuxCommand):
                     here.msg_contents(stripped.rstrip(), options={'raw': True})
             else:
                 if 'self' in opt:
-                    char.msg(marked.rstrip())
+                    char.msg(args.rstrip())
                 else:
                     here.msg_contents(marked.rstrip())
