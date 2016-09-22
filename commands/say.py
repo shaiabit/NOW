@@ -36,9 +36,7 @@ class CmdSay(MuxCommand):
             return
         if 'v' in opt or 'verb' in opt:
             char.attributes.add('say-verb', args)
-            contents = here.contents
-            for obj in contents:
-                obj.msg('%s warms up vocally with "%s|n"' % (char.get_display_name(obj), args))
+            here.msg_contents('{char} warms up vocally with "%s|n"' % args, from_obj=char, mapping=dict(char=char))
             return
         if 'q' in opt or 'quote' in opt:
             if len(args) > 2:
@@ -48,13 +46,9 @@ class CmdSay(MuxCommand):
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             if 'o' in opt or 'ooc' in opt:
-                contents = here.contents
-                for obj in contents:
-                    obj.msg('[OOC]|n %s %s, "|w%s|n"' % (char.get_display_name(obj), 'says', speech))
+                here.msg_contents('[OOC] {char} says, "|w%s|n"' % speech, from_obj=char, mapping=dict(char=char))
             else:
-                contents = here.contents
-                for obj in contents:
-                    obj.msg('%s %s, "|w%s|n"' % (char.get_display_name(obj), verb, speech))
+                here.msg_contents('{char} %s, "|w%s|n"' % (verb, speech), from_obj=char, mapping=dict(char=char))
 
 
 class CmdOoc(MuxCommand):
@@ -83,9 +77,7 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             player.execute_cmd('pose/o %s' % args[1:])
         else:
-            contents = here.contents
-            for obj in contents:
-                obj.msg('[OOC %s] %s' % (char.get_display_name(obj), args))
+            here.msg_contents('[OOC {char}] %s' % args, from_obj=char, mapping=dict(char=char))
 
 
 class CmdSpoof(MuxCommand):
@@ -114,6 +106,9 @@ class CmdSpoof(MuxCommand):
         if not args:
             char.execute_cmd('help spoof')
             return
+        # Optionally strip any markup /or/ just escape it,
+        stripped = ansi.strip_ansi(args)
+        spoof = stripped if 'strip' in opt else self.args.replace('|', '||')
         if 'indent' in opt:
             indent = 20
             if self.rhs:
@@ -148,16 +143,14 @@ class CmdSpoof(MuxCommand):
                 else:
                     here.msg_contents(text.rstrip())
         else:
-            stripped = ansi.strip_ansi(args)
-            marked = self.args.replace('|', '||')
             here.at_say(char, stripped)  # calling the speech hook on the location.
             if 'strip' in opt:  # Optionally strip any markup or escape it,
                 if 'self' in opt:
-                    char.msg(stripped.rstrip(), options={'raw': True})
+                    char.msg(spoof.rstrip(), options={'raw': True})
                 else:
-                    here.msg_contents(stripped.rstrip(), options={'raw': True})
+                    here.msg_contents(spoof.rstrip(), options={'raw': True})
             else:
                 if 'self' in opt:
                     char.msg(args.rstrip())
                 else:
-                    here.msg_contents(marked.rstrip())
+                    here.msg_contents(spoof.rstrip())

@@ -39,16 +39,15 @@ class CmdPose(MuxCommand):
         non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
         magnet = True if args and args[0] in non_space_chars or cmd == ";" else False
         power = True if self.cmdstring == 'ppose' or self.cmdstring == 'pp' or self.cmdstring == 'p:' else False
-        pose = self.lhs if power and self.rhs else args
+        pose = ('' if magnet else '|_') + (self.lhs if power and self.rhs else args)
+        if 'magnet' in opt or 'm' in opt:
+            char.msg("Pose magnet glyphs are %s." % non_space_chars)
         if not (here and char):
             if args:
-                player.execute_cmd('pub :%s%s' % ('' if magnet else '|_', pose))
+                player.execute_cmd('pub :%s' % pose)
             else:
                 player.msg('Usage: pose <message>   to pose to public channel.')
             return
-        if 'magnet' in opt or 'm' in opt:
-            char.msg("Pose magnet glyphs are %s." % non_space_chars)
-        pose = ('' if magnet else '|_') + pose
         if args:
             if 'do' in self.switches:
                 char.execute_cmd('rp %s' % args)
@@ -59,9 +58,7 @@ class CmdPose(MuxCommand):
                 player.execute_cmd(self.rhs)
             else:
                 prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
-                contents = here.contents
-                for obj in contents:
-                    obj.msg('%s%s%s' % (prepend_ooc, char.get_display_name(obj), pose))
+                here.msg_contents('%s{char}%s' % (prepend_ooc, pose), from_obj=char, mapping=dict(char=char))
         else:
             if char.location.tags.get('rp', category='flags'):
                 player.execute_cmd('help emote')
