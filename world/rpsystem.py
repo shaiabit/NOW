@@ -140,6 +140,7 @@ _RE_LANGUAGE = re.compile(r"(?:\((\w+)\))*(\".+?\")")
 #  2) for every person seeing the emote, parse this
 #     intermediary form into the one valid for that char.
 
+
 class EmoteError(Exception):
     pass
 
@@ -209,7 +210,7 @@ def ordered_permutation_regex(sentence):
             solution.append(_PREFIX + r"[0-9]*%s*%s(?=\W|$)+" % (_NUM_SEP, re_escape(' '.join(comb)).rstrip('\\')))
 
     # combine into a match regex, first matching the longest down to the shortest components
-    regex = r"|".join(sorted(set(solution), key=lambda o:len(o), reverse=True))
+    regex = r"|".join(sorted(set(solution), key=lambda o: len(o), reverse=True))
     return regex
 
 
@@ -326,13 +327,13 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
     """
     # Load all candidate regex tuples [(regex, obj, sdesc/recog),...]
     candidate_regexes = \
-            [(_RE_SELF_REF, sender, sender.sdesc.get())] + \
-            [sender.recog.get_regex_tuple(obj) for obj in candidates] + \
-            [obj.sdesc.get_regex_tuple() for obj in candidates if hasattr(obj, 'sdesc') and
-             sender.location.tags.get('rp', category='flags')] + \
-            [regex_tuple_from_key_alias(obj)  # handle objects without sdescs or outside RP room.
-             for obj in candidates if not sender.location.tags.get('rp', category='flags') or
-             not (hasattr(obj, 'recog') and hasattr(obj, 'sdesc'))]
+        [(_RE_SELF_REF, sender, sender.sdesc.get())] + \
+        [sender.recog.get_regex_tuple(obj) for obj in candidates] + \
+        [obj.sdesc.get_regex_tuple() for obj in candidates if hasattr(obj, 'sdesc') and
+         sender.location.tags.get('rp', category='flags')] + \
+        [regex_tuple_from_key_alias(obj)  # handle objects without sdescs or outside RP room.
+         for obj in candidates if not sender.location.tags.get('rp', category='flags') or
+         not (hasattr(obj, 'recog') and hasattr(obj, 'sdesc'))]
     # filter out non-found data
     candidate_regexes = [tup for tup in candidate_regexes if tup]
     # escape mapping syntax on the form {#id} if it exists already in emote,
@@ -351,7 +352,7 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
         # up later occurrences. Given a marker match, query from
         # start index forward for all candidates.
         # first see if there is a number given (e.g. 1-tall)
-        num_identifier, _ = marker_match.groups("") # return "" if no match, rather than None
+        num_identifier, _ = marker_match.groups("")  # return '' if no match, rather than None
         istart0 = marker_match.start()
         istart = istart0
         # loop over all candidate regexes and match against the string following the match
@@ -394,10 +395,10 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
             mapping[key] = obj
         else:
             refname = marker_match.group()
-            reflist = ["%s%s%s (%s%s)" % (inum+1, _NUM_SEP,
-                    _RE_PREFIX.sub("", refname), text,
-                    " (%s)" % sender.key if sender == obj else "")
-                    for inum, (obj, text) in enumerate(bestmatches) if score == maxscore]
+            reflist = ["%s%s%s (%s%s)"
+                       % (inum+1, _NUM_SEP, _RE_PREFIX.sub("", refname), text,
+                          " (%s)" % sender.key if sender == obj else '')
+                       for inum, (obj, text) in enumerate(bestmatches) if score == maxscore]
             errors.append(_EMOTE_MULTIMATCH_ERROR.format(
                           ref=marker_match.group(), reflist="\n    ".join(reflist)))
     if search_mode:
@@ -763,8 +764,8 @@ class CmdSdesc(RPCommand):  # set/look at own sdesc
             if caller.location:
                 caller.msg('Usage: sdesc <sdesc-text>')
                 masked = caller.db.unmasked_sdesc
-                caller.msg('You are %s as "%s".' % ('masked' if masked else 'being seen',
-                                                               caller.get_display_name(caller.location)))
+                caller.msg('You are %s as "%s".'
+                           % ('masked' if masked else 'being seen', caller.get_display_name(caller.location)))
                 if masked:
                     caller.msg('When unmasked, you would appear as "%s%s|n".' % (caller.STYLE, masked))
             else:
@@ -890,7 +891,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
         caller.msg('Pose now set to \'%s %s\'.' % (caller.get_display_name(caller), pose))
 
 
-class CmdRecog(RPCommand): # assign personal alias to object in room
+class CmdRecog(RPCommand):  # assign personal alias to object in room
     """
     Recognize another person in the same room.
 
@@ -944,7 +945,7 @@ class CmdRecog(RPCommand): # assign personal alias to object in room
             obj = matches[0]
             if not obj.access(self.obj, 'enable_recog', default=True):
                 # don't apply recog if object doesn't allow it (e.g. by being masked).
-                caller.msg('Can\'t recognize someone who is masked.')
+                caller.msg("You can not recognize someone who is masked.")
                 return
             if self.cmdstring == 'forget':  # remove existing recog
                 caller.recog.remove(obj)
@@ -1146,11 +1147,11 @@ class RPObject(DefaultObject):
         is_builder = self.locks.check_lockstring(self, 'perm(Builders)')
         use_dbref = is_builder if use_dbref is None else use_dbref
         search_obj = lambda string: ObjectDB.objects.object_search(string,
-                                                 attribute_name=attribute_name,
-                                                 typeclass=typeclass,
-                                                 candidates=candidates,
-                                                 exact=exact,
-                                                 use_dbref=use_dbref)
+                                                                   attribute_name=attribute_name,
+                                                                   typeclass=typeclass,
+                                                                   candidates=candidates,
+                                                                   exact=exact,
+                                                                   use_dbref=use_dbref)
         print('Candidates for searching: %s' % candidates)
         if candidates:
             candidates = parse_sdescs_and_recogs(self, candidates, _PREFIX + searchdata, search_mode=True)
@@ -1219,7 +1220,7 @@ class RPObject(DefaultObject):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
         return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
 
-    def return_glance(self, viewer):
+    def return_glance(self, viewer):  # FIXME - The format of this view is primitive
         """
         Displays the name or sdesc of the object with its room pose in a viewer-aware manner.
 
