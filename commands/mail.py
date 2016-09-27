@@ -60,7 +60,7 @@ class CmdMail(MuxCommand):
                     self.msg('Your %s%s|n mailbox has no new mail.' % (char.location.STYLE, char.location.key))
         if not self.args or not self.rhs:
             mail = sent_messages + recd_messages
-            mail.sort(lambda x, y: cmp(x.date_sent, y.date_sent))
+            mail.sort(lambda x, y: cmp(x.db_date_created, y.db_date_created))
             number = 5
             if self.args:
                 try:
