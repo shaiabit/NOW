@@ -74,7 +74,7 @@ class CmdMail(MuxCommand):
                 mail_last = mail
             template = "|w%s|n |w%s|n to |w%s|n: %s"
             mail_last = "\n ".join(template %
-                                   (utils.datetime_format(mail.date_sent),
+                                   (utils.datetime_format(mail.date_created),
                                     ', '.join('%s%s|n' % (obj.STYLE, obj.key) for obj in mail.senders),
                                     ', '.join(['%s%s|n' % (obj.STYLE, obj.key) for obj in mail.receivers]),
                                     mail.message) for mail in mail_last)
