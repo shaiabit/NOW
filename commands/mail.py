@@ -35,7 +35,7 @@ class CmdMail(MuxCommand):
     def mail_check(self):
         char = self.character
         if char.ndb.new_mail:
-            self.msg('You have new mail in your %s%s|n mailbox.' % (char.location.STYLE, char.location.key))
+            self.msg('You have new mail in your %s mailbox.' % char.location.get_display_name(self.character))
             return True
         else:
             return False
@@ -57,7 +57,7 @@ class CmdMail(MuxCommand):
         if 'check' in self.switches:
             if not self.mail_check():
                 if not ('silent' in self.switches and 'quiet' in self.switches):
-                    self.msg('Your %s%s|n mailbox has no new mail.' % (char.location.STYLE, char.location.key))
+                    self.msg('Your %s mailbox has no new mail.' % char.location.get_display_name(self.character))
         if not self.args or not self.rhs:
             mail = sent_messages + recd_messages
             mail.sort(lambda x, y: cmp(x.db_date_created, y.db_date_created))
@@ -75,8 +75,8 @@ class CmdMail(MuxCommand):
             template = "|w%s|n |w%s|n to |w%s|n: %s"
             mail_last = "\n ".join(template %
                                    (utils.datetime_format(mail.date_created),
-                                    ', '.join('%s%s|n' % (obj.STYLE, obj.key) for obj in mail.senders),
-                                    ', '.join(['%s%s|n' % (obj.STYLE, obj.key) for obj in mail.receivers]),
+                                    ', '.join('%s' % obj.get_display_name(self.character) for obj in mail.senders),
+                                    ', '.join(['%s' % obj.get_display_name(self.character) for obj in mail.receivers]),
                                     mail.message) for mail in mail_last)
             if mail_last:
                 string = "Your latest letters:\n %s" % mail_last
