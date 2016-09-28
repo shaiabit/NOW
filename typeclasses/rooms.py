@@ -159,12 +159,9 @@ class Room(RPRoom):
                                                             source_location.STYLE, src_name)
         self.location.msg_contents(string, exclude=self)
 
-# [...] class TutorialRoom(DefaultRoom):
-
     def at_object_creation(self):
         """Called when room is first created"""
         self.db.desc_brief = "This is a default room."
-        # self.cmdset.add_default(TutorialRoomCmdSet) # 
         
     def at_object_receive(self, new_arrival, source_location):
         """
