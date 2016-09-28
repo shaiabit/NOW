@@ -28,7 +28,6 @@ class CmdWho(MuxPlayerCommand):
         session_list = SESSIONS.get_sessions()
         cmd = self.cmdstring
         opt = self.switches
-        session_list = sorted(session_list, key=lambda o: o.player.key)
         show_session_data = you.check_permstring('Immortals') if 'f' in opt else False
         player_count = (SESSIONS.player_count())
         table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
@@ -41,6 +40,7 @@ class CmdWho(MuxPlayerCommand):
                 table.reformat_column(3, width=6, pad_right=1, align='r')
                 table.reformat_column(4, width=11, align='l')
                 table.reformat_column(5, width=16, align='r')
+                session_list = sorted(session_list, key=lambda o: o.player.key)
                 for session in session_list:
                     if not session.logged_in:
                         continue
