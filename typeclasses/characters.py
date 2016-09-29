@@ -299,7 +299,7 @@ class Character(RPCharacter):
     def get_mass(self):
         if not self.traits.mass:
             mass = 10 if not self.db.mass else self.db.mass
-            self.traits.add('mass', 'Mass', type='static', base=mass)
+            self.traits.add('mass', 'Mass', 'static', mass)
             print('Mass for %s(%s) set to %s.' % (self.key, self.id, repr(self.traits.mass)))
         mass = self.traits.mass.actual or 10
         return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
