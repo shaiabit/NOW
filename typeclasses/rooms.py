@@ -303,7 +303,8 @@ class RealmEntry(Room):
     def at_object_creation(self):
         """Called when the room is first created."""
         super(Room, self).at_object_creation()
-        self.db.info = "The first room of the realm. This assigns the realm-specific attributes to the character."
+        self.db.desc = "An entry point for the realm, this room checks" \
+                       " the realm-specific requirements before allowing entry."
 
     def at_object_receive(self, character, source_location):
         """Assign properties on characters"""
@@ -317,11 +318,7 @@ class RealmEntry(Room):
                      + "-" * 78
             character.msg("|r%s|n" % string.format(quell="|w@quell|r"))
         else:  # setup character for the particular realm:
-            # Load attributes needed into a dictionary then set the attributes on the character as needed.
-            health = self.db.char_health or 20
-            if character.has_player:
-                character.db.health = health
-                character.db.health_max = health
+            pass
 
 
 class CmdSetGridRoom(CmdSet):
@@ -535,7 +532,7 @@ class Grid(Room):
     """
     Grid Rooms are like any Room, except they have sub locations within
     by default. Objects dropped here are associated with a specific 
-    location prevending them from being picked up unless the character
+    location preventing them from being picked up unless the character
     is next to them.
     """
     STYLE = '|204'

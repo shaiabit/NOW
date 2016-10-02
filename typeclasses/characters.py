@@ -55,20 +55,23 @@ class Character(RPCharacter):
         before allowing the move. If it is, we do prevent the move by
         returning False.
         """
+        if not self.location:  # Always allow moving from Nothingness
+            return True
         if destination == self.location:  # Prevent move into same room character is already in.
             return False
+        if self.nattributes.has('mover'):  # Allow move when being moved by something.
+            return True
         if self.db.locked:  # Prevent leaving a room while still sitting.
             self.msg("\nYou're still sitting.")  # stance, prep, obj
             return False  # Object is supporting something; do not move it
-        elif self.attributes.has('health') and self.db.health <= 0:  # Prevent move while incapacitated.
+        elif self.traits.health and not self.location.tags.get('past', category='realm')\
+                and self.traits.health.actual <= 0:  # Prevent move while incapacitated.
             self.msg("You can't move; you're incapacitated!")  # Type 'home' to TODO:
             # go back home and recover, or wait for a healer to come to you.")
             return False
         if self.db.Combat_TurnHandler:  # Prevent move while in combat.
             self.caller.msg("You can't leave while engaged in combat!")
             return False
-        if self.nattributes.has('mover'):  # Allow move when being moved by something.
-            return True
         if self.attributes.has('followers') and self.db.followers and self.location:  # Test list of followers.
             self.ndb.followers = []
             if self.db.settings and 'lead others' in self.db.settings and self.db.settings['lead others'] is False:
@@ -297,15 +300,11 @@ class Character(RPCharacter):
         return pronoun.capitalize() if typ.isupper() else pronoun
 
     def get_mass(self):
-        if not self.traits.mass:
-            mass = 10 if not self.db.mass else self.db.mass
-            self.traits.add('mass', 'Mass', 'static', mass)
-            print('Mass for %s(%s) set to %s.' % (self.key, self.id, repr(self.traits.mass)))
-        mass = self.traits.mass.actual or 10
+        mass = self.traits.mass.actual if self.traits.mass else 0
         return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
 
     def get_carry_limit(self):
-        return 80 * self.get_attribute_value('health')
+        return 80 * self.traits.health.actual
 
     def return_appearance(self, viewer):
         """This formats a description. It is the hook a 'look' command should call.
@@ -328,18 +327,11 @@ class Character(RPCharacter):
         string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, color=False))
         if self.location.tags.get('rp', category='flags'):
             string += ' %s' % self.attributes.get('pose') or ''
-        string += " |y(%s)|n " % mass_unit(self.get_mass())
-        health_attribute_pair = True if self.attributes.has('health') and self.attributes.has('health_max') else False
-        health_trait_gauge = True if self.traits.health else False
-        if health_attribute_pair or health_trait_gauge:  # Add character health bar if character has health attributes.
+        if self.traits.mass and self.traits.mass.actual > 0:
+            string += " |y(%s)|n " % mass_unit(self.get_mass())
+        if self.traits.health:  # Add character health bar if character has health.
             gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
-            if health_trait_gauge:
-                health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
-                if health_attribute_pair:  # Write health into traits here.
-                    self.db.health = self.traits.health.actual
-                    self.db.health_max = self.traits.health.max
-            else:
-                health = make_bar(self.attributes.get('health'), self.attributes.get('health_max'), 20, gradient)
+            health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
             string += " %s\n" % health
         else:
             string += "\n"

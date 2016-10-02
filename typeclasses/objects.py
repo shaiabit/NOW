@@ -183,10 +183,6 @@ class Object(RPObject):
     def effects(self):
         return EffectHandler(self)
 
-    # @lazy_property
-    # def equipment(self):
-    #     return EquipmentHandler(self)
-
     def reset(self):
         """Resets the object - quietly sends it home or nowhere."""
         self.location = self.home
@@ -424,11 +420,9 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         """
         Use health.
         """
-        if self.attributes.has('health'):
-            self.db.health -= 1
-            if self.db.health < 1:
-                self.db.health = 0
-            return self.db.health
+        if self.traits.health.actual:
+            self.traits.health.current -= 1
+            return self.traits.health.actual
 
     def drink(self, caller):  # TODO: Make this use a more generic def consume
         """Response to drinking the object."""
@@ -437,16 +431,16 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
             caller.msg(msg)
             return False
         finish = ''
-        if self.attributes.has('health'):
-            self.db.health -= 1
-            if self.db.health < 1:
+        if self.traits.health.actual:
+            self.traits.health.current -= 1
+            if self.traits.health.actual < 1:
                 finish = ', finishing it'
                 # self.location = None # Leaves empty container.
         else:
             finish = ', finishing it'
             self.location = None
-        msg = "%s%s|n takes a drink of %s%s|n%s." % (caller.STYLE, caller.key, self.STYLE, self.key, finish)
-        caller.location.msg_contents(msg)
+        caller.location.msg_contents('{caller} takes a drink of {drink}%s.'
+                                     % finish, from_obj=caller, mapping=dict(char=caller, drink=self))
 
         def drink_callback(caller, prompt, user_input):
             """"Response to input given after drink potion"""
@@ -464,9 +458,9 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
             caller.msg(msg)
             return False
         finish = ''
-        if self.attributes.has('health'):
-            self.db.health -= 1
-            if self.db.health < 1:
+        if self.traits.health.actual:
+            self.traits.health.current -= 1
+            if self.traits.health.actual < 1:
                 finish = ', finishing it'
                 self.location = None
         else:

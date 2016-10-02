@@ -21,12 +21,12 @@ class CmdInventory(MuxCommand):
         """check inventory"""
         you = self.character
         items = you.contents
-        if you.traits.mass:
-            mass = you.traits.mass.actual or 10
-        else:
-            mass = 10
+        mass = you.traits.mass.actual if you.traits.mass else 0
         if not items:
-            string = 'You (%s) are not carrying anything.' % mass_unit(mass)
+            if mass:
+                string = 'You (%s) are not carrying anything.' % mass_unit(mass)
+            else:
+                string = 'You are not carrying anything.'
         else:
             table = evtable.EvTable(border='header')
             for item in items:
