@@ -1,72 +1,63 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<trizbort>
+<trizbort version="1.5.9.5">
 	<info />
 	<map>
-		<room id="1" name="F. Avenue" x="-448" y="-64" w="96" h="64" description="" />
-		<room id="2" name="POOF" x="-448" y="-192" w="96" h="64" description="" />
-		<room id="3" name="Shine Street" x="-608" y="-64" w="96" h="64" description="" />
-		<room id="4" name="Shade Street" x="-288" y="-64" w="96" h="64" description="" />
-		<room id="5" name="Sable Suburb" x="-448" y="-320" w="96" h="64" description="" />
-		<line id="6">
-			<dock index="0" id="2" port="n" />
+		<room id="1" name="F. Avenue" subtitle="" x="-416" y="-32" w="64" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="1" cornerTopRight="1" cornerBottomLeft="1" cornerBottomRight="1" borderstyle="Solid" description="This is a $usage() intersection in town. Families, single folks and kids move about the sidewalks. Shops and businesses in all directions are in various states of open and closed. Shine Street is off to the west, and Shade Street is to the east. A curious glossy white stepdisk is set into the pavement here. Curiously there is a hint of everything being a little more |111gray|n here than one would expect." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="2" name="Park Plaza" subtitle="" x="-416" y="-192" w="64" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="1" cornerTopRight="1" cornerBottomLeft="1" cornerBottomRight="1" borderstyle="Solid" description="This community park is expansive and with a glint of familiarty. There is a post, a lake in the center, an expansive field, as well as some shrubby areas and some bleachers along with a bandstand." roomFill="#008040" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="3" name="Shine Street" subtitle="" x="-608" y="-32" w="96" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="1" cornerTopRight="1" cornerBottomLeft="1" cornerBottomRight="1" borderstyle="Solid" description="A warm breeze seems to perpetuate at this particular street and intersection as the sun shines quite brightly off the well kept windows of the buildings. Reflections send warm light everywhere and seem to make the entire block naturally light up. Places here provide the basic businesses one might visit for a wide assortment of needs." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="4" name="Shade Street" subtitle="" x="-248" y="-32" w="96" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="5" name="Sable Suburb" subtitle="" x="-416" y="-352" w="64" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="6" name="" description="">
+			<dock index="0" id="17" port="n" />
 			<dock index="1" id="5" port="s" />
 		</line>
-		<line id="7">
+		<line id="7" name="" description="">
 			<dock index="0" id="1" port="n" />
-			<dock index="1" id="2" port="s" />
+			<dock index="1" id="18" port="s" />
 		</line>
-		<line id="8">
+		<line id="8" name="" description="">
 			<dock index="0" id="1" port="e" />
 			<dock index="1" id="4" port="w" />
 		</line>
-		<line id="9">
+		<line id="9" name="" description="">
 			<dock index="0" id="1" port="w" />
 			<dock index="1" id="3" port="e" />
 		</line>
-		<room id="10" name="Park Other Parts" x="-288" y="-192" w="96" h="64" description="" />
-		<line id="11">
-			<dock index="0" id="2" port="e" />
-			<dock index="1" id="10" port="w" />
-		</line>
-		<room id="12" name="Fox Fairway" x="-128" y="-192" w="96" h="64" description="" />
-		<line id="13">
+		<room id="12" name="Fox Fairway" subtitle="" x="-256" y="-192" w="96" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="13" name="" description="">
 			<dock index="0" id="12" port="w" />
-			<dock index="1" id="10" port="e" />
+			<dock index="1" id="26" port="e" />
 		</line>
-		<room id="14" name="Puma Pass" x="-736" y="-192" w="96" h="64" description="" />
-		<line id="15">
-			<dock index="0" id="2" port="w" />
+		<room id="14" name="Puma Pass" subtitle="" x="-736" y="-192" w="96" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="15" name="" description="">
+			<dock index="0" id="16" port="w" />
 			<dock index="1" id="14" port="e" />
 		</line>
-		<line id="16">
-			<dock index="0" id="2" port="ne" />
-			<dock index="1" id="10" port="nw" />
-		</line>
-		<line id="17">
-			<dock index="0" id="2" port="se" />
-			<dock index="1" id="10" port="sw" />
-		</line>
-		<line id="18">
-			<dock index="0" id="2" port="nw" />
-			<dock index="1" id="10" port="n" />
-		</line>
-		<line id="19">
-			<dock index="0" id="2" port="sw" />
-			<dock index="1" id="10" port="s" />
-		</line>
-		<room id="20" name="Underground" x="-608" y="-128" w="96" h="32" description="" />
-		<line id="21" startText="down" endText="up">
+		<room id="20" name="Underground" subtitle="" x="-616" y="-120" w="96" h="32" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="21" name="" description="" startText="down" endText="up">
 			<dock index="0" id="2" port="wsw" />
 			<dock index="1" id="20" port="ene" />
 		</line>
-		<room id="22" name="Skink Street" x="-128" y="-320" w="96" h="64" description="" />
-		<line id="23">
+		<room id="22" name="Skink Street" subtitle="" x="-256" y="-352" w="96" h="64" region="NoRegion" handDrawn="yes" allcornersequal="no" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="0" cornerTopRight="0" cornerBottomLeft="0" cornerBottomRight="0" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="23" name="" description="">
 			<dock index="0" id="12" port="n" />
 			<dock index="1" id="22" port="s" />
 		</line>
-		<line id="24">
+		<line id="24" name="" description="">
 			<dock index="0" id="22" port="w" />
 			<dock index="1" id="5" port="e" />
+		</line>
+		<room id="25" name="SE" subtitle="" x="-352" y="-128" w="32" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="26" name="E" subtitle="" x="-352" y="-192" w="32" h="64" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="27" name="NE" subtitle="" x="-352" y="-224" w="32" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="10" name="NW" subtitle="" x="-448" y="-224" w="32" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="11" name="SW" subtitle="" x="-448" y="-128" w="32" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="16" name="W" subtitle="" x="-448" y="-192" w="32" h="64" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="17" name="North" subtitle="Loop" x="-416" y="-224" w="64" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="[1] Loop is 8 areas of one room" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<room id="18" name="South" subtitle="" x="-416" y="-128" w="64" h="32" region="NoRegion" handDrawn="yes" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="#C0C0C0" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSmallText="" />
+		<line id="28" name="" description="">
+			<dock index="0" id="18" port="n" />
+			<dock index="1" id="17" port="s" />
 		</line>
 	</map>
 	<settings>
@@ -81,7 +72,11 @@
 			<smallText>MidnightBlue</smallText>
 			<lineText>MidnightBlue</lineText>
 			<grid>#F5F5F5</grid>
+			<startRoom>GreenYellow</startRoom>
 		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
 		<fonts>
 			<room size="13">Comic Sans MS</room>
 			<object size="11">Comic Sans MS</object>
@@ -91,7 +86,7 @@
 			<snapTo>yes</snapTo>
 			<visible>yes</visible>
 			<showOrigin>yes</showOrigin>
-			<size>32</size>
+			<size>8</size>
 		</grid>
 		<lines>
 			<width>2</width>
@@ -104,11 +99,17 @@
 			<objectListOffset>4</objectListOffset>
 			<connectionStalkLength>32</connectionStalkLength>
 			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
 		</rooms>
 		<ui>
 			<handleSize>12</handleSize>
 			<snapToElementSize>16</snapToElementSize>
 		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+		</margins>
 		<keypadNavigation>
 			<creationModifier>control</creationModifier>
 			<unexploredModifier>alt</unexploredModifier>
