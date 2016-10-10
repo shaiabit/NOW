@@ -33,6 +33,7 @@ from commands.mail import CmdMail
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
 from commands.verb import CmdTry
+from commands.time import CmdTime
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
@@ -60,6 +61,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdDrop)
         self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
         self.remove(default_cmds.CmdPose)
+        self.remove(default_cmds.CmdTime)   # Moved to player command
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
@@ -127,6 +129,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdWho)
         self.add(CmdPose)
         self.add(CmdQuit)
+        self.add(CmdTime)
         self.add(CmdAbout)
         self.add(CmdSense)
         self.add(CmdAccess)
