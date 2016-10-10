@@ -33,7 +33,7 @@ from commands.mail import CmdMail
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
 from commands.verb import CmdTry
-from commands.time import CmdTime
+from commands.zeit import CmdTime
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
