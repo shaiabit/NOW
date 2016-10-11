@@ -87,7 +87,7 @@ class Room(RPRoom):
                 users.append(con)
             else:
                 things.append(con)
-        command = '%s #%s' % ('sense', self.id)
+        command = '%s #%s' % ('sense', here)
         string = "\n%s\n" % self.get_display_name(viewer, mxp=command)
         desc = self.db.desc  # get description, build string
         desc_brief = self.db.desc_brief
@@ -103,7 +103,7 @@ class Room(RPRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.get_display_name(viewer, mxp='sense #%s' % e.id))
+                exits_complex.append("%s" % e.get_display_name(viewer, mxp='sense %s' % e.get_display_name(viewer, color=False)))
             if ways and not ways == {}:
                 for w in ways:
                     exits_simple.append(way_dir[w])
@@ -114,9 +114,9 @@ class Room(RPRoom):
         if self.ndb.weather_last:
             string += '|/|*%s|n' % self.ndb.weather_last
         if users or things:
-            user_list = ", ".join(u.get_display_name(viewer, mxp='sense #%s' % u.id, pose=True) for u in users)
+            user_list = ", ".join(u.get_display_name(viewer, mxp='sense %s' % u.get_display_name(viewer, color=False), pose=True) for u in users)
             ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.get_display_name(viewer, mxp='sense #%s' % t.id, pose=True) for t in things)
+            item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(viewer, color=False), pose=True) for t in things)
             string += ("\n|wHere you find:|n " + user_list + ut_joiner + item_list).replace('.,', ';')
         return string
 
