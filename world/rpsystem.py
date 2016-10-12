@@ -1190,6 +1190,7 @@ class RPObject(DefaultObject):
             color Return includes color style markup prefix if True
             mxp Return includes mxp command markup prefix if provided
             db_id Return includes database id to privliged viewers if True
+            plain Return does not include database id or color
         Returns:
             name (str): A string of the sdesc containing the name of the object,
             if this is defined.
@@ -1197,6 +1198,8 @@ class RPObject(DefaultObject):
         """
         color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
         mxp, db_id = [kwargs.get('mxp', False), kwargs.get('db_id', True)]
+        if kwargs.get('plain', False):  # "plain" means "without color, without db_id"
+            color, db_id = [False, False]
         try:
             recog = viewer.recog.get(self)
         except AttributeError:
