@@ -8,7 +8,7 @@ class CmdTry(MuxCommand):
     """
     Actions a character can do to things nearby.
     Usage:
-      pose <pose> = <verb> [noun]
+      ppose <pose> = <verb> [noun]
       try <verb> [noun]
       <verb> [noun]
     """
@@ -20,7 +20,10 @@ class CmdTry(MuxCommand):
     player_caller = True
 
     def func(self):
-        """Run the try command"""
+        """
+        Run the try command
+        TODO: Parse <verb>, <verb> <article> <noun>, <verb> <preposition> <noun>, <verb> <preposition> <article> <noun>.
+        """
         player = self.player
         char = self.character
         args = self.args
@@ -61,9 +64,9 @@ class CmdTry(MuxCommand):
                 else:
                     if good_targets:
                         if obj:
-                            player.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets)))
+                            player.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                         else:
-                            player.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets)))
+                            player.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                     else:
                         player.msg('You can not %s %s|n.' % (verb, obj.get_display_name(player)))
         else:
@@ -110,11 +113,11 @@ class CmdTry(MuxCommand):
         return list(set(collection))
 
     @staticmethod
-    def style_object_list(objects):
+    def style_object_list(objects, viewer):
         """Turn a list of objects into a stylized string for display."""
         collection = []
         for obj in objects:
-            collection.append('%s%s|n' % (obj.STYLE, obj.key))
+            collection.append(obj.get_display_name(viewer))
         return ', '.join(collection)
 
     def suggest_command(self):
