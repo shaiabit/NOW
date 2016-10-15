@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
+from world.helpers import escape_braces
 
 
 class CmdPose(MuxCommand):
@@ -58,7 +59,8 @@ class CmdPose(MuxCommand):
                 player.execute_cmd(self.rhs)
             else:
                 prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
-                here.msg_contents('%s{char}%s' % (prepend_ooc, pose), from_obj=char, mapping=dict(char=char))
+                here.msg_contents('%s{char}%s' % (prepend_ooc, escape_braces(pose)),
+                                  from_obj=char, mapping=dict(char=char))
         else:
             if char.location.tags.get('rp', category='flags'):
                 player.execute_cmd('help emote')

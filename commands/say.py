@@ -3,6 +3,7 @@ import re
 from commands.command import MuxCommand
 from evennia.utils import ansi
 from evennia.utils.utils import pad, justify
+from world.helpers import escape_braces
 
 
 class CmdSay(MuxCommand):
@@ -36,7 +37,8 @@ class CmdSay(MuxCommand):
             return
         if 'v' in opt or 'verb' in opt:
             char.attributes.add('say-verb', args)
-            here.msg_contents('{char} warms up vocally with "%s|n"' % args, from_obj=char, mapping=dict(char=char))
+            here.msg_contents('{char} warms up vocally with "%s|n"' % escape_braces(args),
+                              from_obj=char, mapping=dict(char=char))
             return
         if 'q' in opt or 'quote' in opt:
             if len(args) > 2:
@@ -46,9 +48,11 @@ class CmdSay(MuxCommand):
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             if 'o' in opt or 'ooc' in opt:
-                here.msg_contents('[OOC] {char} says, "|w%s|n"' % speech, from_obj=char, mapping=dict(char=char))
+                here.msg_contents('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
+                                  from_obj=char, mapping=dict(char=char))
             else:
-                here.msg_contents('{char} %s, "|w%s|n"' % (verb, speech), from_obj=char, mapping=dict(char=char))
+                here.msg_contents('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
+                                  from_obj=char, mapping=dict(char=char))
 
 
 class CmdOoc(MuxCommand):

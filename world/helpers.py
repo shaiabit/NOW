@@ -36,3 +36,9 @@ def mass_unit(value):
         return '%s Mt' % str(value / 1000000000000).rstrip('0').rstrip('.')
     else:
         return 'super massive'
+
+
+def escape_braces(text):
+    text = text.replace('{', '{{')
+    text = text.replace('}', '}}')
+    return text
