@@ -441,6 +441,9 @@ def send_emote(sender, receivers, emote, anonymous_add='first'):
         # handle all error messages, don't hide actual coding errors
         sender.msg(err.message)
         return
+    # Escape object mappings, language processing done first.
+    # Allow for text to have nested object mappings.
+    emote = _RE_REF.sub(r"{{#\1}}", emote)
     if anonymous_add and not "#%i" % sender.id in obj_mapping:
         # no self-reference in the emote - add to the end
         key = "#%i" % sender.id
@@ -452,7 +455,18 @@ def send_emote(sender, receivers, emote, anonymous_add='first'):
             emote = "%s [%s]" % (emote, "{%s}" % key)
     # broadcast emote to everyone
     for receiver in receivers:
-        # we make a temporary copy that we can modify
+        # first handle the language mapping, which always produce different keys ##nn
+        receiver_lang_mapping = {}
+        try:
+            process_language = receiver.process_language
+        except AttributeError:
+            process_language = _dummy_process
+        for key, (langname, saytext) in language_mapping.iteritems():
+            receiver_lang_mapping[key] = process_language(saytext, sender, langname)
+            # map the language {##num} markers. This will convert the escaped sdesc markers on
+            # the form {{#num}} to {#num} markers ready to sdescmat in the next step.
+        send_emote = emote.format(**receiver_lang_mapping)
+        # handle sdesc mappings. we make a temporary copy that we can modify
         try:
             process_sdesc = receiver.process_sdesc
         except AttributeError:
@@ -463,21 +477,16 @@ def send_emote(sender, receivers, emote, anonymous_add='first'):
             process_recog = _dummy_process
         try:
             recog_get = receiver.recog.get
-            mapping = dict((ref, process_recog(recog_get(obj), obj)) for ref, obj in obj_mapping.items())
+            receiver_sdesc_mapping = dict((ref, process_recog(recog_get(obj), obj)) for ref, obj in obj_mapping.items())
         except AttributeError:
-            mapping = dict((ref, process_sdesc(obj.sdesc.get(), obj)
+            receiver_sdesc_mapping = dict((ref, process_sdesc(obj.sdesc.get(), obj)
                             if hasattr(obj, 'sdesc') else process_sdesc(obj.key, obj))
                             for ref, obj in obj_mapping.items())
-        # handle the language mapping, which always produce different keys ##nn
-        try:
-            process_language = receiver.process_language
-        except AttributeError:
-            process_language = _dummy_process
-        for key, (langname, saytext) in language_mapping.iteritems():
-            mapping[key] = process_language(saytext, sender, langname)
-        text = emote.format(**mapping)
-        text = '%s%s' % (text[0].upper(), text[1:])
-        receiver.msg(text)  # Send emote to receiver.
+        rkey = "#%i" % receiver.id
+        if rkey in receiver_sdesc_mapping:
+            receiver_sdesc_mapping[rkey] = process_sdesc(receiver.key, receiver)
+            # do the template replacement of the sdesc/recog {#num} markers
+        receiver.msg(send_emote.format(**receiver_sdesc_mapping))
 
 
 # -----------------------------------------------------------
