@@ -36,7 +36,6 @@ Welcome to the Novel Online World (NOW)
 
     HELP for more info.     LOOK will re-show this screen.
 
- If you have spaces or apostrophes in your username, enclose 
- your name in double quotes.  
+   If you have spaces in your username,
+        enclose your name in double quotes.
 =============================================================="""
- # % (settings.SERVERNAME, utils.get_evennia_version())
