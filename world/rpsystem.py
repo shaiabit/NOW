@@ -850,10 +850,10 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
         if not pose and not self.reset:
             pose = caller.attributes.get('pose')
             if pose:
-                caller.msg('Current pose reads \'%s %s\'.' % (caller.get_display_name(caller), pose))
+                caller.msg('Current pose reads \'%s %s\'' % (caller.get_display_name(caller), pose))
                 default_pose = target.db.pose_default or None
                 if default_pose:
-                    caller.msg('Default pose is \'%s %s\'.' % (caller.get_display_name(caller), pose))
+                    caller.msg('Default pose is \'%s %s\'' % (caller.get_display_name(caller), pose))
                 else:
                     caller.msg('Default pose not set.')
             else:
@@ -861,13 +861,13 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             return
 
         if not pose.endswith('.'):
-            pose = '%s.' % pose
+            pose = '%s' % pose
         if target and '=' in self.args:  # affect something else
             target = caller.search(target)
             if not target:
                 return
             if not target.access(caller, 'edit'):
-                caller.msg('You have no permission to edit %s.' % target.get_display_name(caller))
+                caller.msg('You have no permission to edit %s' % target.get_display_name(caller))
                 return
         else:
             target = caller
@@ -883,7 +883,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             target.db.pose = pose
         elif self.default:
             target.db.pose_default = pose
-            caller.msg('Default pose is now \'%s %s\'.' % (caller.get_display_name(caller), pose))
+            caller.msg('Default pose is now \'%s %s\'' % (caller.get_display_name(caller), pose))
             return
         else:
             # set the pose. We do one-time ref->sdesc mapping here.
@@ -897,7 +897,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             target.db.pose = pose
             if self.args:
                 caller.execute_cmd('emote %s' % pose)
-        caller.msg('Pose now set to \'%s %s\'.' % (caller.get_display_name(caller), pose))
+        caller.msg('Pose now set to \'%s %s\'' % (caller.get_display_name(caller), pose))
 
 
 class CmdRecog(RPCommand):  # assign personal alias to object in room
