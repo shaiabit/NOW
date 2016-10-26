@@ -485,7 +485,7 @@ def send_emote(sender, receivers, emote, anonymous_add='first'):
         rkey = "#%i" % receiver.id
         if rkey in receiver_sdesc_mapping:
             receiver_sdesc_mapping[rkey] = process_sdesc(receiver.key, receiver)
-            # do the template replacement of the sdesc/recog {#num} markers
+        # Do the template replacement of the sdesc/recog {#num} markers.
         receiver.msg(send_emote.format(**receiver_sdesc_mapping))
 
 
@@ -850,7 +850,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
         if not pose and not self.reset:
             pose = caller.attributes.get('pose')
             if pose:
-                caller.msg('Current pose reads \'%s %s\'' % (caller.get_display_name(caller), pose))
+                caller.msg("Current pose reads: '%s'" % caller.get_display_name(caller, pose=True))
                 default_pose = target.db.pose_default or None
                 if default_pose:
                     caller.msg('Default pose is \'%s %s\'' % (caller.get_display_name(caller), pose))
@@ -859,23 +859,18 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             else:
                 caller.msg('No pose has been set.|/Usage: rp <pose-text> OR pose obj = <pose-text>')
             return
-
-        if not pose.endswith('.'):
-            pose = '%s' % pose
         if target and '=' in self.args:  # affect something else
             target = caller.search(target)
             if not target:
                 return
             if not target.access(caller, 'edit'):
-                caller.msg('You have no permission to edit %s' % target.get_display_name(caller))
+                caller.msg('You have no permission to edit %s.' % target.get_display_name(caller))
                 return
         else:
             target = caller
-
         if not target.attributes.has('pose'):  # Default emoting/recog data
             caller.db.pose = ''
             caller.db.pose_default = 'is here.'
-
         target_name = target.sdesc.get() if hasattr(target, '_sdesc') else target.key
         # set the pose
         if self.reset:
@@ -883,7 +878,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             target.db.pose = pose
         elif self.default:
             target.db.pose_default = pose
-            caller.msg('Default pose is now \'%s %s\'' % (caller.get_display_name(caller), pose))
+            caller.msg("Default pose is now: '%s %s'" % (caller.get_display_name(caller), pose))
             return
         else:
             # set the pose. We do one-time ref->sdesc mapping here.
@@ -897,7 +892,7 @@ class CmdRoomPose(RPCommand):  # set current pose and default pose
             target.db.pose = pose
             if self.args:
                 caller.execute_cmd('emote %s' % pose)
-        caller.msg('Pose now set to \'%s %s\'' % (caller.get_display_name(caller), pose))
+        caller.msg("Pose now set to: '%s'" % caller.get_display_name(caller, pose=True))
 
 
 class CmdRecog(RPCommand):  # assign personal alias to object in room
