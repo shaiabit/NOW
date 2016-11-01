@@ -450,9 +450,9 @@ def send_emote(sender, receivers, emote, anonymous_add='first'):
         obj_mapping[key] = sender
         if anonymous_add == 'first':
             possessive = '' if emote.startswith('\'') else ' '
-            emote = "%s%s%s" % ("{%s}" % key, possessive, emote)
+            emote = "%s%s%s" % ("{{%s}}" % key, possessive, emote)
         else:
-            emote = "%s [%s]" % (emote, "{%s}" % key)
+            emote = "%s [%s]" % (emote, "{{%s}}" % key)
     # broadcast emote to everyone
     for receiver in receivers:
         # first handle the language mapping, which always produce different keys ##nn
