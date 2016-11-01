@@ -218,6 +218,8 @@ class CmdExit(MuxCommand):
                 if 'go' in switches or not switches:
                     if 'show' in switches:
                         you.msg("Ignoring |g/show|n switch; you must use it separately.")
+                    you.ndb.moving_to = long_dir(direction)
+                    you.ndb.moving_from = long_dir(back_dir(direction))
                     you.move_to(dest)
             else:  # No direction in the room's exit dictionary goes that way. Or direction goes to None.
                 if 'new' in switches:
@@ -252,11 +254,15 @@ class CmdExit(MuxCommand):
                     if 'show' in switches:
                         you.msg("Ignoring |g/show|n switch; you must use it separately.")
                     if 'add' in switches or 'both' in switches:
+                        you.ndb.moving_to = long_dir(direction)
+                        you.ndb.moving_from = long_dir(back_dir(direction))
                         you.move_to(ways[direction])
                     else:
                         if ('tun' in switches or 'both' in switches) and dest:
                             if 'show' in switches:
                                 you.msg("Ignoring |g/show|n switch; you must use it separately.")
+                            you.ndb.moving_to = long_dir(direction)
+                            you.ndb.moving_from = long_dir(back_dir(direction))
                             you.move_to(dest)
                 if not switches:
                     if direction in ways:
@@ -290,6 +296,8 @@ class CmdExit(MuxCommand):
             if 'go' in switches and way:
                 if 'show' in switches:
                     you.msg("No simple exits to |g/show|n in this room.")
+                you.ndb.moving_to = long_dir(direction)
+                you.ndb.moving_from = long_dir(back_dir(direction))
                 you.move_to(dest)
             if not switches:
                 you.msg("You cannot travel %s." % self.key)

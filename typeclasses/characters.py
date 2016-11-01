@@ -109,6 +109,8 @@ class Character(RPCharacter):
         here = self.location
         if not here:
             return
+        direction_name = (' |lc%s|lt|530%s|n|le' % (self.ndb.moving_to,
+                                                    self.ndb.moving_to)) if self.ndb.moving_to else ''
         for viewer in here.contents:
             if viewer == self:
                 continue
@@ -125,7 +127,7 @@ class Character(RPCharacter):
                     string += ' and |r%s|n are ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
             else:
                 string += ' is '
-            string += "leaving %s, heading for %s." % (loc_name, dest_name)
+            string += "leaving %s, heading%s for %s." % (loc_name, direction_name, dest_name)
             viewer.msg(string)
 
     def announce_move_to(self, source_location):
@@ -142,6 +144,8 @@ class Character(RPCharacter):
             string = "You now have %s in your possession." % (self.get_display_name(here))
             here.msg(string)
             return
+        direction_name = ('|lc%s|lt|530%s|n|le' % (self.ndb.moving_from,
+                                                   self.ndb.moving_from)) if self.ndb.moving_from else ''
         for viewer in here.contents:
             if viewer == self:
                 continue
@@ -162,7 +166,10 @@ class Character(RPCharacter):
                     string += ' and |g%s|n arrive ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
             else:
                 string += ' arrives '
-            string += "to %s|n from %s|n." % (depart_name, src_name)
+            if direction_name:
+                string += "to %s|n from the %s from %s|n." % (depart_name, direction_name, src_name)
+            else:
+                string += "to %s|n from %s|n." % (depart_name, src_name)
             viewer.msg(string)
         if self.ndb.followers and len(self.ndb.followers) > 0:
             for each in self.ndb.followers:
@@ -178,6 +185,8 @@ class Character(RPCharacter):
                 each.at_after_move(source_location)
                 each.nattributes.remove('mover')
             self.nattributes.remove('followers')
+        self.nattributes.remove('moving_to')
+        self.nattributes.remove('moving_from')
 
     def at_post_puppet(self):
         """
