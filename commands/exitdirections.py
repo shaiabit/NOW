@@ -121,8 +121,8 @@ class CmdExit(MuxCommand):
                 if loc_add.access(you_add, 'edit'):
                     if ways_add[direction].access(you_add, 'control'):
                         loc_add.db.exits = ways_add
-                        you_add.msg("|gAdded|n exit |530%s|n from %s to %s." %
-                                    (self.key, loc_add.get_display_name(player),
+                        you_add.msg("|gAdded|n exit |lc%s|lt|530%s|n|le from %s to %s." %
+                                    (self.key, self.key, loc_add.get_display_name(player),
                                      ways_add[direction].get_display_name(player)))
                     else:
                         you_add.msg("You do not control the destination, so can not connect an exit to it.")
@@ -153,7 +153,7 @@ class CmdExit(MuxCommand):
                 tun_ways[back_dir(dir_tun)] = loc_tun
                 if dest_tun.access(you_tun, 'control'):
                     dest_tun.db.exits = tun_ways
-                    you_tun.msg("|gAdded|n exit |530%s|n from %s to %s." %
+                    you_tun.msg("|gAdded|n exit |530%s|n back from %s to %s." %
                                 (long_dir(back_dir(dir_tun)), dest_tun.get_display_name(player),
                                  loc_tun.get_display_name(player)))
                 else:
@@ -184,7 +184,7 @@ class CmdExit(MuxCommand):
                 if 'del' in switches or 'none' in switches:  # Can't do both!
                     you.msg("|rThose switches are mutually exclusive; do not do both!")
                     return  # No further action, not even check for /go.
-        if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
+        if you.location.db.exits:  # Does an 'exits' attribute exist (and not None or False)?
             ways = loc.db.exits
             way = ways.get(direction)
             if way:  # Direction in the room's exit dictionary should know room.
@@ -285,7 +285,7 @@ class CmdExit(MuxCommand):
                     pass
                 else:
                     you.msg("No simple exit |530%s|n to delete." % self.key)
-            if ('tun' in switches and 'both' in switches) and ('del' not in switches and 'none' not in switches):
+            if ('tun' in switches or 'both' in switches) and ('del' not in switches and 'none' not in switches):
                 if 'add' in switches or 'both' in switches:
                     dest = ways[direction]
                     tun(you, loc, dest, direction)  # Add is done, now see if tun can be done.
