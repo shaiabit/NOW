@@ -94,20 +94,10 @@ class Character(RPCharacter):
             self.ndb.last_location = source_location
             if not source_location.destination:
                 self.db.last_room = source_location
-        look_setting = True
-        if self.db.settings:
-            look_setting = self.db.settings.get('look after move', default=True)
         # No need to look if moving into Nothingness, locked from looking, or set not to look.
         if self.location and self.location.access(self, 'view'):
-            if look_setting:
+            if not self.db.settings or self.db.settings.get('look arrive', default=True):
                 self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
-            else:
-                awake = (con for con in self.location.contents if con != self
-                         and con.has_player and con.access(self, 'view'))
-                awake_list = ", ".join(a.get_display_name(self, mxp='sense %s' % a.get_display_name(
-                    self, plain=True), pose=True) for a in awake)
-                awake_list = (' Awake here: ' + awake_list) if len(awake_list) > 0 else ''
-                self.msg('|gArriving at %s.%s' % (self.location.get_display_name(self), awake_list))
         return source_location
 
     def announce_move_from(self, destination):
@@ -197,6 +187,14 @@ class Character(RPCharacter):
                 each.at_after_move(source_location)
                 each.nattributes.remove('mover')
             self.nattributes.remove('followers')
+        if self.db.settings and not self.db.settings.get('look arrive', default=True):
+            awake = (con for con in self.location.contents if con != self
+                     and con.has_player and con.access(self, 'view'))
+            awake_list = ", ".join(a.get_display_name(self, mxp='sense %s' % a.get_display_name(
+                self, plain=True), pose=True) for a in awake)
+            awake_list = (' Awake here: ' + awake_list) if len(awake_list) > 0 else ''
+            self.msg('|/|gArriving at %s.%s'
+                     % (self.location.get_display_name(self, mxp='look here'), awake_list.replace('.,', ';')))
         self.nattributes.remove('moving_to')
         self.nattributes.remove('moving_from')
 
