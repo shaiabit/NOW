@@ -1227,9 +1227,10 @@ class RPObject(DefaultObject):
         """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
         return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
 
-    def return_glance(self, viewer):  # FIXME - The format of this view is primitive
+    def return_glance(self, viewer):
         """
         Displays the name or sdesc of the object with its room pose in a viewer-aware manner.
+        If self is in Nothingness, shows inventory contents instead of room contents.
 
         Args:
             self (Object, Character, or Room):
@@ -1241,14 +1242,25 @@ class RPObject(DefaultObject):
             contained within and their poses in the room. If 'self' is a room, the room
             is omitted from the output. Calls 'get_display_name' - output depends on viewer.
         """
-        glance = ''
+        users, things = [], []
         if self.location:
             visible = (con for con in [self] + self.contents if con != viewer and con.access(viewer, 'view'))
         else:
             visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
-        for item in visible:
-            glance += '%s\n' % item.get_display_name(viewer, pose=True)
-        return glance
+        for con in visible:
+            if con.has_player:
+                users.append(con)
+            elif con.destination:
+                continue
+            else:
+                things.append(con)
+        if users or things:
+            user_list = ", ".join(u.get_display_name(viewer, mxp='sense %s' % u.get_display_name(
+                viewer, plain=True), pose=True) for u in users)
+            ut_joiner = ', ' if users and things else ''
+            item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
+                viewer, plain=True), pose=True) for t in things)
+        return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
 
 
 class RPRoom(RPObject):

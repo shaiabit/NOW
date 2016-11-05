@@ -60,7 +60,7 @@ class Room(RPRoom):
             return
         # get and identify all objects visible to the viewer, excluding the viewer.
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
-        exits, ways, users, things = [], [], [], []
+        exits, ways = [], []
 
         way_dir = {'ne': 'northeast', 'n': 'north', 'nw': 'northwest', 'e': 'east',
                    'se': 'southeast', 's': 'south', 'sw': 'southwest', 'w': 'west', 'u': 'up', 'd': 'down'}
@@ -83,12 +83,7 @@ class Room(RPRoom):
         for con in visible:
             if con.destination:
                 exits.append(con)
-            elif con.has_player:
-                users.append(con)
-            else:
-                things.append(con)
-        command = 'sense here'
-        string = "\n%s\n" % self.get_display_name(viewer, mxp=command)
+        string = "\n%s\n" % self.get_display_name(viewer, mxp='sense here')
         desc = self.db.desc  # get description, build string
         desc_brief = self.db.desc_brief
         if desc:
@@ -114,14 +109,7 @@ class Room(RPRoom):
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.get_display_name(viewer)
         if self.ndb.weather_last:
             string += '|/|*%s|n' % self.ndb.weather_last
-        if users or things:
-            user_list = ", ".join(u.get_display_name(viewer, mxp='sense %s' % u.get_display_name(
-                viewer, plain=True), pose=True) for u in users)
-            ut_joiner = ', ' if users and things else ''
-            item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
-                viewer, plain=True), pose=True) for t in things)
-            string += ("\n|wHere you find:|n " + user_list + ut_joiner + item_list).replace('.,', ';')
-        return string
+        return string + ("\n|wHere you find:|n " + self.return_glance(viewer))
 
     def announce_move_from(self, destination):
         """
