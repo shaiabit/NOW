@@ -101,11 +101,11 @@ class Room(RPRoom):
             ways = self.db.exits
         if exits or ways:
             string += "\n|wVisible exits|n: "
-            for e in exits:
+            for e in exits:  # Green or Blue exits
                 exits_simple.append(e.name)
-                exits_complex.append("%s" % e.get_display_name(viewer, mxp='sense %s' % e.get_display_name(
-                    viewer, plain=True)))
-            if ways and not ways == {}:
+                exit_color = '|225' if e.db.is_path else e.STYLE  # Blue if special exit
+                exits_complex.append("|lc%s|lt%s%s|n|le" % (e.key, exit_color, e.key))
+            if ways and not ways == {}:  # Orange exits
                 for w in ways:
                     exits_simple.append(way_dir[w])
                     exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
