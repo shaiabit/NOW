@@ -343,7 +343,7 @@ class Character(RPCharacter):
                 users.append(con)
             else:
                 things.append(con)
-        string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, color=False))
+        string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))
         if self.location.tags.get('rp', category='flags'):
             string += ' %s' % self.attributes.get('pose') or ''
         if self.traits.mass and self.traits.mass.actual > 0:

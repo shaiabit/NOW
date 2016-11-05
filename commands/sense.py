@@ -85,7 +85,8 @@ class CmdSense(MuxCommand):
                 if obj:
                     if obj.db.senses:  # Object must be database object to be sensed.
                         string = '* Senses available for %s: ' % obj.get_display_name(player)
-                        string += ", ".join('|lc%s #%s|lt|g%s|n|le' % (element, obj.id, element)
+                        string += ", ".join('|lc%s %s|lt|g%s|n|le'
+                                            % (element, obj.get_display_name(char, plain=True), element)
                                             for element in obj.db.senses.keys())
                         char.msg(string)
                         string = ''  # list aspects.
@@ -109,7 +110,8 @@ class CmdSense(MuxCommand):
                             continue
                         name = element[2:] if element[:2] == 'v-' else element
                         if obj.access(char, element):  # obj lock checked against actor
-                            collector += "|lctry %s #%s|lt|g%s|n|le " % (name, obj.id, name)
+                            collector += "|lctry %s %s|lt|g%s|n|le " %\
+                                         (name, obj.get_display_name(char, plain=True), name)
                         elif show_red:
                             collector += "|r%s|n " % name
                     char.msg(verb_msg + "%s" % collector)
