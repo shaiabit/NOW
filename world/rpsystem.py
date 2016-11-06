@@ -1260,7 +1260,8 @@ class RPObject(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
-        return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
+            return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
+        return
 
 
 class RPRoom(RPObject):

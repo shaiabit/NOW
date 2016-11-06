@@ -109,7 +109,10 @@ class Room(RPRoom):
             string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.get_display_name(viewer)
         if self.ndb.weather_last:
             string += '|/|*%s|n' % self.ndb.weather_last
-        return string + ("\n|wHere you find:|n " + self.return_glance(viewer))
+        within = self.return_glance(viewer)  # Glance to see what is within the room that can be seen.
+        if within:  # If anything can be seen, list it with the other room details.
+            string += ("\n|wHere you find:|n " + within)
+        return string
 
     def announce_move_from(self, destination):
         """
