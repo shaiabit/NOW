@@ -53,7 +53,7 @@ class CmdSense(MuxCommand):
         if cmd == 'glance':
             if here and not args:
                 obj = here
-            player.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), obj.return_glance(player)))
+            player.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), obj.return_glance(char)))
             return
         # senses = obj.db.senses
         # details = obj.db.details
@@ -174,5 +174,5 @@ class CmdSense(MuxCommand):
         if not obj.access(char, 'view'):
             char.msg("You are unable to sense '%s'." % args)
             return
-        player.msg(obj.return_appearance(player))  # get object's appearance as seen by char
+        player.msg(obj.return_appearance(char))  # get object's appearance as seen by char
         obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.

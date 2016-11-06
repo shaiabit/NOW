@@ -332,6 +332,9 @@ class Character(RPCharacter):
         """
         if not viewer:
             return
+        if not viewer.is_typeclass('typeclasses.players.Player'):
+            viewer = viewer.player  # make viewer reference the player object
+        char = viewer.puppet
         # get and identify all objects
         visible = (con for con in self.contents if con != viewer and
                    con.access(viewer, 'view'))
@@ -369,10 +372,10 @@ class Character(RPCharacter):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
-        if self != viewer.character:
+        if self != char:
             if not (self.db.settings and 'look notify' in self.db.settings
                     and self.db.settings['look notify'] is False):
-                self.msg("%s just looked at you." % viewer.character.get_display_name(self))
+                self.msg("%s just looked at you." % char.get_display_name(self))
         return string
 
     def return_detail(self, detailkey):
