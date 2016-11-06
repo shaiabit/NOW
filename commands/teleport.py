@@ -10,8 +10,9 @@ class CmdTeleport(MuxCommand):
     Options:
     /quiet     don't echo leave/arrive messages to the source/target
                locations for the move.
-    /intoexit  if target is an exit, teleport INTO
+    /into      if target is an exit, teleport INTO
                the exit object instead of to its destination
+    /to        if target is not a room, teleport to its location.
     /vanish    if set, teleport the object into Nothingness. If this
                option is used, <target location> is ignored.
                Note that the only way to retrieve an object from
@@ -100,8 +101,10 @@ class CmdTeleport(MuxCommand):
             player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
             return
         use_loc = True
-        if 'intoexit' in opt:
+        if 'into' in opt:
             use_loc = False
+        if 'to' in opt and loc.location:
+            loc = loc.location
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
         else:
