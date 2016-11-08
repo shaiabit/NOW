@@ -115,6 +115,8 @@ class CmdTeleport(MuxCommand):
             else:
                 player.msg("Teleported %s to %s." % (target.get_display_name(player), loc.get_display_name(player)))
                 target.nattributes.remove('mover')
+            if target.location and target.db.prelogout_location and not target.has_player:
+                target.db.prelogout_location = target.location  # Have Character awaken here.
         else:
             if target.location != loc:
                 player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(player),
