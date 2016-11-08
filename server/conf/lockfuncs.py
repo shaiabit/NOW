@@ -80,7 +80,8 @@ def rp(accessing_obj, accessed_obj, *args, **kwargs):
     when accessing_obj is in an room designated for
     rollplay and object has sdesc set.
     """
-    return accessing_obj.attributes.has('_sdesc') and accessing_obj.location.tags.get('rp', category='flags')
+    return accessing_obj.attributes.has('_sdesc') and accessing_obj.location\
+           and accessing_obj.location.tags.get('rp', category='flags')
 
 
 def no_back(accessing_obj, accessed_obj, *args, **kwargs):
