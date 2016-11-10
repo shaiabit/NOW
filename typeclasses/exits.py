@@ -159,10 +159,7 @@ class Exit(DefaultExit):
                 traversing_object.nattributes.remove('currently_moving')
                 self.at_after_traverse(traversing_object, source_location)
             else:
-                if self.db.err_traverse:  # if exit has a better error message, use it.
-                    self.caller.msg(self.db.err_traverse)
-                else:  # No shorthand error message. Call hook.
-                    self.at_failed_traverse(traversing_object)
+                self.at_failed_traverse(traversing_object)
 
         traversing_object.msg("You start moving %s at a %s." % (self.key, move_speed))
         if traversing_object.location != self:  # If object is not inside exit...
@@ -174,6 +171,23 @@ class Exit(DefaultExit):
         # ndb is used since deferrals cannot be pickled to store in the database.
         deferred = utils.delay(move_delay, callback=move_callback)
         traversing_object.ndb.currently_moving = deferred
+
+    def at_failed_traverse(self, traversing_object):
+        """
+        Overloads the default hook to implement an exit fail.
+        Args:
+            traversing_object (Object): The object that failed traversing us.
+        Notes:
+            Uses custom enter-fail in exit's messages dictionary or default.
+            Sends traversing_object to exit's home if defined.
+        """
+        if self.db.messages and 'enter-fail' in self.db.messages:  # if exit has a better error message, use it.
+            traversing_object.msg(self.db.messages['enter-fail'])
+        else:  # Otherwise, you stay where you are and get a generic fail message.
+            traversing_object.msg("You cannot go there.")
+        if self.home:  # If the exit has a "home" location, it sends you there if you fail the lock.
+            if traversing_object.move_to(self.home):
+                traversing_object.nattributes.remove('currently_moving')
 
     def at_after_traverse(self, traveller, source_loc):
         """called by at_traverse just after traversing."""
