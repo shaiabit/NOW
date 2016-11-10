@@ -57,7 +57,7 @@ class CmdSense(MuxCommand):
             if sights:
                 player.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
             else:
-                player.msg('|/You glance at %s, but see nothing.')
+                player.msg('|/You glance at %s, but see nothing.' % obj.get_display_name(char))
             return
         # senses = obj.db.senses
         # details = obj.db.details
