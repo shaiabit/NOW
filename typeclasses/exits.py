@@ -138,7 +138,7 @@ class Exit(DefaultExit):
             traversing_object.msg("You are already moving toward %s%s|n." %
                                   (target_location.STYLE, target_location.key))
             return
-        is_path = self.db.is_path or False
+        is_path = self.tags.get('path', category='flags') or False
         source_location = traversing_object.location
         move_speed = traversing_object.db.move_speed or 'walk'
         move_delay = MOVE_DELAY.get(move_speed, 8)
