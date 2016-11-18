@@ -48,18 +48,14 @@ and can be used to customize it to each session.
 
 def capitalize(text, *args, **kwargs):
     """Capitalizes the first character of the line."""
-    # session = kwargs.get('session')
     return text.capitalize()
 
 from random import *
 
+
 def usage(text, *args, **kwargs):
     """Verbally describes how busy an area is"""
-    # session = kwargs.get('session')
-
-    text = 'quiet' 
-    if random() > 0.5:
-        text = 'busy'
+    text += ' quiet' if random() > 0.5 else ' busy'
     return text
 
 
@@ -78,10 +74,10 @@ def annotate(text, *args, **kwargs):
     return annotate if session.protocol_flags['SCREENREADER'] else original
 
 
-def unicode(text, *args, **kwargs):
+def uni(text, *args, **kwargs):
     """session sees original, unless session uses unicode.
-    ex. $unicode(original, unicode) or
-        $unicode(original) for no annotation."""
+    ex. $uni(original, unicode) or
+        $uni(original) for no annotation."""
     session = kwargs.get('session')
     nargs = len(args)
     u = ''
@@ -93,9 +89,16 @@ def unicode(text, *args, **kwargs):
     return u if session.protocol_flags['ENCODING'] == 'utf-8' else o
 
 
-def verb(text, *args, **kwargs):
-    """Proccess verb response messages"""
+def affect(text, *args, **kwargs):
+    """Affect in response"""
     session = kwargs.get('session')
-    verb = text
+    target = None
+    if len(args) > 0:
+        target = unicode(args[0])
+    player = session.player
+    character = session.get_puppet()
+    if target == character:
+        pass  # Trait of target(s) are possibly affected.
+    trait = text + player.key + character.key
 
-    return verb
+    return trait

@@ -98,7 +98,7 @@ class Room(RPRoom):
             string += "\n|wVisible exits|n: "
             for e in exits:  # Green or Blue exits
                 exits_simple.append(e.name)
-                exit_color = '|225' if e.db.is_path else e.STYLE  # Blue if special exit
+                exit_color = '|225' if e.tags.get('path', category='flags') or False else e.STYLE  # Blue if path exit
                 exits_complex.append("|lc%s|lt%s%s|n|le" % (e.key, exit_color, e.key))
             if ways and not ways == {}:  # Orange exits
                 for w in ways:
@@ -348,16 +348,44 @@ class CmdGridMotion(default_cmds.MuxCommand):
     def func(self):
         """Command for all simple exit directions."""
         you = self.character
-        session = self.session
         loc = you.location
+        now = int(time.time())
+        coord = you.ndb.grid_loc
+        min = loc.grid('min')
+        max = loc.grid('max')
+        if not coord:
+            coord = loc.grid('current')
+        bound = self.motion(coord)
+        into = loc.point(bound, 'into')
+        empty = loc.point(bound, 'empty')
+        if into:
+            you.move_to(into)
+            return
+        if bound[0] > max[0] or bound[1] > max[1] or bound[0] < min[0] or bound[1] < min[1] or empty:
+            you.msg("You cannot travel %s." % self.key)
+            return
+        name = loc.point(coord, 'name')
+        if not name:
+            name = '%s @ %r' % (loc.get_display_name(you, mxp='sense here'), coord)
+        coord = self.motion(coord)  # Update coord with move
+        new = loc.point(coord, 'name')
+        if not new:
+            new = '%s @ %r' % (loc.get_display_name(you, mxp='sense here'), coord)
+        loc.msg_contents('{you} moves |g%s|n from %s to %s.'
+                         % (self.key, name, new), from_obj=you, mapping=dict(you=you))
+        loc.point(coord, you, now)  # Apply timestamp
+        you.ndb.grid_loc = coord  # Mark location on moving object
+        you.msg(you.at_look(you.location))
 
-        loc.msg_contents("%s chooses to go |g%s|n on the grid." % (you.get_display_name(session), self.key))
-        you.msg(loc.return_appearance(you))  # Show view from location.
+    def motion(self, position=(0, 0)):
+        """
+        Update character's position in room where position is (x, y)
+        TODO: Allow for X and/or Y wrap-around by checking settings,
+        min, max, and returning new location after move.
 
-    def motion(self, position):
-        """Update character's position in room where position is [x, y]"""
+        """
         direction = self.key
-        x_motion, y_motion = [0, 0]
+        x_motion, y_motion = (0, 0)
         if 'north' in direction:
             y_motion = -1
         if 'east' in direction:
@@ -367,7 +395,8 @@ class CmdGridMotion(default_cmds.MuxCommand):
         if 'south' in direction:
             y_motion = 1
         x_pos, y_pos = position
-        return map(lambda x, y: x + y, [x_pos, y_pos], [x_motion, y_motion])
+        x_out, y_out = map(lambda x, y: x + y, (x_pos, y_pos), (x_motion, y_motion))
+        return x_out, y_out  # Defaults to tuple
 
 
 class CmdGrid(CmdGridMotion):
@@ -391,79 +420,164 @@ class CmdGrid(CmdGridMotion):
     def func(self):
         """Command to manage all grid room properties."""
         you = self.character
-        session = self.session
         loc = you.location
-
-        loc.msg_contents("%s examines %s." % (you.get_display_name(session), loc.get_display_name(session)))
-        x, y = (loc.grid.x, loc.grid.y)
+        min = loc.grid('min')
+        max = loc.grid('max')
+        base = loc.grid('base')
+        current = loc.grid('current')
+        x, y = current
+        size = [abs(min[0] - max[0]) + 1, abs(min[1] - max[1]) + 1]
         if 'exits' in self.switches:
             exits = []
             for e in loc.exits:
                 short_name = str(e.key)
-                # loc.grid.exits.short_name = [0,0]
                 exits.append([e, short_name])
             you.msg("Exits: %s" % exits)
         if 'size' in self.switches:
             if not self.args:
-                you.msg("Room: %sx%s as [%s..%s, %s..%s] Current editing position: [%s, %s]" %
-                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.current, y.current))
+                you.msg("Room: %sx%s as %s..%s, %s..%s  Current editing position: (%s, %s)" %
+                        (size[0], size[1], min[0], max[0], min[1], max[1], x.current, y.current))
+                you.msg('|wUse this format to resize: |ggrid/size xmin..xmax, ymin..ymax')
             else:
                 x_y = self.args.split(',')
                 xr, yr = x_y[0], x_y[1] if len(x_y) > 1 else [x_y[0], x_y[0]]
-                xmin, xmax = xr.split('..') if len(xr.split('..')) > 1 else [xr, xr+1]
-                ymin, ymax = yr.split('..') if len(yr.split('..')) > 1 else [yr, yr+1]
+                xmin, xmax = xr.split('..') if len(xr.split('..')) > 1 else [str(xr), str(xr + 1)]
+                ymin, ymax = yr.split('..') if len(yr.split('..')) > 1 else [str(yr), str(yr + 1)]
                 xmin, xmax, ymin, ymax = [int(xmin), int(xmax), int(ymin), int(ymax)]
-                if xmax-xmin < 99 and ymax-ymin < 99 and xmin <= x.base <= xmax and ymin <= y.base <= ymax:
+                if xmax-xmin < 99 and ymax-ymin < 99 and xmin <= base[0] <= xmax and ymin <= base[1] <= ymax:
                     you.msg("Room: %sx%s as [%s..%s, %s..%s]" %
                             (xmax-xmin+1, ymax-ymin+1, xmin, xmax, ymin, ymax))
-                    x.min, x.max, y.min, y.max = [xmin, xmax, ymin, ymax]
+                    min, max, = (xmin, ymin), (xmax, ymax)
+                    loc.grid(min=min, max=max)
                 else:
-                    range_error = "[x0..x1, y0..y1] ranges must be at least 1 and at most 100."
+                    range_error = "x0..x1, y0..y1 ranges must be at least 1 and at most 100."
                     base_error = "Base values [%s, %s] must be within [x0..x1, y0..y1]." \
-                                 "|/Change ranges, or change base values." % (x.base, y.base)
+                                 "|/Change ranges, or change base values." % (base[0], base[1])
                     you.msg(base_error if xmax-xmin < 99 and ymax-ymin < 99 else range_error)
             return
         if 'base' in self.switches:
             x_y = self.args.split(',')
-            xbase, ybase = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
-            if x.min <= xbase <= x.max and y.min <= ybase <= y.max:
-                x.base, y.base = [xbase, ybase]
+            xbase, ybase = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else (0, 0)
+            if min[0] <= xbase <= max[0] and min[1] <= ybase <= max[1]:
+                base = [xbase, ybase]
+                loc.grid(base=base)
                 you.msg("|gRoom base set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" %
-                        (x.base, y.base, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+                        (xbase, ybase, size[0], size[1], min[0], max[0], min[1], max[1]))
             else:
                 you.msg("|rRoom base must be within %sx%s area|n [%s..%s, %s..%s]" %
-                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+                        (size[0], size[1], min[0], max[0], min[1], max[1]))
         if 'current' in self.switches:
-            x_y = self.args.split(',')
-            xcurr, ycurr = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else [0, 0]
-            if x.min <= xcurr <= x.max and y.min <= ycurr <= y.max:
-                x.current, y.current = [xcurr, ycurr]
+            if not self.args:
+                xcurr, ycurr = you.ndb.grid_loc or (0, 0)
+            else:
+                x_y = self.args.split(',')
+                xcurr, ycurr = int(x_y[0]), int(x_y[1]) if len(x_y) > 1 else (0, 0)
+            if min[0] <= xcurr <= max[0] and min[1] <= ycurr <= max[1]:
+                current = (xcurr, ycurr)
+                loc.grid(current=current)
                 you.msg("|gRoom current edit location set|n to [%s, %s] within %sx%s area [%s..%s, %s..%s]" %
-                        (x.current, y.current, x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+                        (xcurr, ycurr, size[0], size[1], min[0], max[0], min[1], max[1]))
             else:
                 you.msg("|rRoom current edit location must be within %sx%s area|n [%s..%s, %s..%s]" %
-                        (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max))
+                        (size[0], size[1], min[0], max[0], min[1], max[1]))
         small = True if 'small' in self.switches else False
         if small or 'large' in self.switches:
             intro = 'Small' if small else 'Large'
             you.msg('%s grid display of room:|/' % intro)
-            for i in range(x.min, x.max+1):
+            for i in range(min[1], max[1] + 1):
                 line = ''
                 if small:
-                    for j in range(y.min, y.max+1):
-                        line += ' x ' if x.base == i and y.base == j else ' . '
+                    for j in range(min[1], max[1] + 1):
+                        line += ' x ' if x == j and y == i else ' . '
                     you.msg("%s|/" % line)
                 else:
                     for k in range(0, 2):
-                        for j in range(y.min, y.max+1):
+                        for j in range(min[0], max[0] + 1):
                             if k == 0:
-                                line += '[ _ ] ' if x.base == i and y.base == j else '[   ] '
+                                line += '[ _ ] ' if x == j and y == i else '[   ] '
                             else:
-                                line += '[___] ' if x.base == i and y.base == j else '[___] '
+                                line += '[___] ' if x == j and y == i else '[___] '
                         line += '|/'
-                    you.msg("%s" % line)
-        you.msg("Room: %sx%s as [%s..%s, %s..%s]|/Base editing position: [%s, %s]|/Current editing position: [%s, %s]" %
-                (x.max-x.min+1, y.max-y.min+1, x.min, x.max, y.min, y.max, x.base, y.base, x.current, y.current))
+                    you.msg('%s' % line)
+        coord = loc.grid('current')
+        if 'name' in self.switches:
+            if self.args:
+                loc.point(coord, 'name', self.args)
+                you.msg('|gAdded |cgrid/name %s|w to |y%r' % (self.args, coord))
+            else:
+                name = loc.point(coord, 'name')
+                if name:
+                    you.msg('%s - %s @ %r' % (loc.get_display_name(you), name, coord))
+                    you.msg('You can change the name to this location with |ggrid/name <new name>')
+                else:
+                    you.msg('You can add a name to this location with |ggrid/name <name>')
+        if 'desc' in self.switches:
+            if self.args:
+                loc.point(coord, 'desc', self.args)
+                you.msg('|gAdded |cgrid/desc %s|w to |y%r' % (self.args, coord))
+            else:
+                you.msg('You can add/change the description of this location with |ggrid/desc <new description>')
+        if 'empty' in self.switches:  # Toggle True/False on current 'empty' entry.
+            setting = loc.point(coord, 'empty')
+            if self.args:
+                if 'on' in self.args.lower() or 'yes' in self.args.lower() or 'true' in self.args.lower():
+                    setting = True
+                elif 'off' in self.args.lower() or 'no' in self.args.lower() or 'false' in self.args.lower():
+                    setting = False
+                loc.point(coord, 'empty', setting)
+                you.msg('|gSet |cgrid/empty @ %r %s|w' % (coord, setting))
+            else:
+                you.msg('|gViewing |cgrid/empty @ %r %s|w' % (coord, setting))
+        if 'exit' in self.switches:
+            if self.args:
+                loc.point(coord, self.args, True)
+                you.msg('|gAdded |cgrid/exit %s|w to |y%r' % (self.args, coord))
+            else:
+                you.msg('You can add the name of the exit leaving this location with |ggrid/exit <exit name>')
+        if 'into' in self.switches:
+            if self.args:
+                into_room = you.search(self.args, global_search=True)
+                if into_room:
+                    loc.point(coord, 'into', into_room)
+                    you.msg('|gAdded |cgrid/into %s|w to |y%r' % (into_room.get_display_name(you), coord))
+                else:
+                    return
+            else:
+                you.msg('You can add the name of a room to move into when'
+                        ' entering this location with |ggrid/into <room name>')
+        if 'here' in self.switches or 'there' in self.switches:
+            here = you.ndb.grid_loc
+            there = loc.grid('current')
+            if here == there:
+                name = '%s - %s' % (loc.get_display_name(you), loc.point(here, 'name'))
+                you.msg('|yYou are already here at Current edit location %s|w @ %r' % (name, coord))
+                return
+            if 'here' in self.switches:
+                if here:
+                    loc.grid('current', here)
+                    coord = here
+                    name = '%s - %s' % (loc.get_display_name(you), loc.point(here, 'name'))
+                    you.msg('|yCurrent edit location moved here at %s|w @ %r' % (name, coord))
+                else:
+                    here = there
+                    name = '%s - %s' % (loc.get_display_name(you), loc.point(here, 'name'))
+                    you.msg('|yYou are already here at Current edit location %s|w @ %r' % (name, coord))
+                return
+            if 'there' in self.switches:
+                if here:
+                    you.ndb.grid_loc = there
+                    name = '%s - %s'% (loc.get_display_name(you), loc.point(here, 'name'))
+                    you.msg('|yYou have been moved to Current edit location at %s|w @ %r' % (name, coord))
+                else:
+                    here = there
+                    name = '%s - %s' % (loc.get_display_name(you), loc.point(here, 'name'))
+                    you.msg('|yYou are already here at Current edit location %s|w @ %r' % (name, coord))
+                return
+        if not self.switches:
+            loc.msg_contents('{you} examines {loc}.', from_obj=you, mapping=dict(you=you, loc=loc))
+            name = loc.point(coord, 'name')
+            you.msg("Room: %sx%s as [%s..%s, %s..%s]|/Base editing position: %r|/Current editing position named %s: %r"
+                    % (size[0], size[1], min[0], max[0], min[1], max[1], base, name, current))
 
 
 class CmdGridNorth(CmdGridMotion):
@@ -531,13 +645,89 @@ class Grid(Room):
     """
     STYLE = '|204'
 
-    @lazy_property
-    def grid(self):
-        return TraitHandler(self, db_attribute='grid')
+    def return_appearance(self, viewer):
+        """
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            viewer (Object): Object doing the looking.
+        """
+        if not viewer:
+            return
+        loc = viewer.location
+        coord = viewer.ndb.grid_loc
+        if not coord:
+            coord = loc.grid('current')
+        name = loc.point(coord, 'name')
+        desc = loc.point(coord, 'desc')
+        if not (name or desc):
+            return super(Grid, self).return_appearance(viewer)
+        else:
+            name = '%s - %s' % (self.get_display_name(viewer, mxp='sense here'), name)
+        within = self.return_glance(viewer)  # What is within the room that can be seen
+        string = ' |/|y%s|n|/%s' % (name, desc or '')
+        string += '|/Nearby you find: %s' % within if within else ''  # If something can be seen, list it
+        return string
+
+    def grid(self, key=None, value=None, **kwargs):
+        """Read/Write dictionary in the grid attribute for persistence.
+        To read keys and values, call with the keys you want by setting
+        the values to None.
+        To write keys and values, call with the keys you want and set their
+        values to anything not None.
+        """
+        if not self.db.grid:
+            self.db.grid = {}
+        results = {}
+        # for k, v in kwargs.items():  # Use this after update to Python 3
+        for k, v in kwargs.iteritems():  # Use this until update to Python 3
+            if v is None:  # Skip setting any entry whose value is set to None
+                results[k] = self.db.grid.get(k, None)
+                continue
+            self.db.grid[k] = v
+        if key:
+            if value:
+                self.db.grid[key] = value
+            else:
+                results = self.db.grid.get(key, None)
+        return results
+
+    def point(self, loc, key=None, value=None, **kwargs):
+        push, pop = [kwargs.get('push', False), kwargs.get('pop', False)]  # Read kwargs, set defaults.
+        entries = self.grid(loc) or {}
+        if value:  # Writing an entry.
+            if pop:  # Deleting the entry
+                entries.pop(key, None)  # popped from entries
+            else:  # Add or push the entry given
+                if push:  # Pushing an entry into a list
+                    if not entries[key]:  # Is this entry empty?
+                        entries[key] = []  # initialize new list
+                    entries[key].append(value)  # Append entries to list
+                else:
+                    if entries is None:  # Is this entry empty?
+                        entries = {}  # If so, start with a blank dictionary
+                    entries[key] = value
+            self.grid(loc, entries)  # Write all entries for loc back to grid.
+            return entries  # Return all loc entries, which could be useful.
+        else:  # Reading an entry.
+            return entries.get(key, None) if key else entries  # return requested entry or all entries
+
+    def at_object_receive(self, new_arrival, source_location):
+        """
+        When an object enters a room we tell other objects in the room
+        about it by trying to call a hook on them.
+
+        An arriving object's location needs to be set if it entered
+        in a specific way, or restored if it is returning via teleport, etc.
+
+        Args:
+            new_arrival (Object): the object that just entered this room.
+            source_location (Object): the previous location of new_arrival.
+        """
+        super(Grid, self).at_object_receive(new_arrival, source_location)
 
     def at_object_creation(self):
         """called when the object is first created"""
         self.cmdset.add_default(CmdSetGridRoom)
-        self.db.grid = {'x': {'name': 'East/West size', 'type': 'counter', 'base': 0, 'current': 0,
-                              'min': 0, 'max': 1}, 'y': {'name': 'North/South size', 'type': 'counter', 'base': 0,
-                                                         'current': 0, 'min': 0, 'max': 1}}
+        self.grid(base=(0, 0), current=(0, 0), min=(0, 0), max=(0, 0))  # Make default 1 x 1 room

@@ -52,18 +52,14 @@ def on_exit(accessing_obj, accessed_obj, *args, **kwargs):
     """
     called in lockstring with on_exit() and returns True
     only when accessing_obj is on an exit within the room.
+    Return True if char's loc contains a key of the same
+    name as arg[0]
     """
-    location = accessing_obj.location
-    reached = accessing_obj.db.reached
-    print("args=%s, reached=%s, in location=%s" % (args[0], reached, location))
-
-    if not location or not reached:
-        return False  # Nowhere is not on an path.
-    else:
-        if args:
-            return True if args[0] in accessing_obj.db.reached else False
-        else:
-            return False
+    if not accessing_obj.location:
+        return False  # Nowhere won't have exits
+    coord = accessing_obj.ndb.grid_loc
+    flag = accessing_obj.location.point(coord, args[0])
+    return True if flag else False
 
 
 def self(accessing_obj, accessed_obj, *args, **kwargs):

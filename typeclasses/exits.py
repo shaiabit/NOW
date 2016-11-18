@@ -36,7 +36,7 @@ class Exit(DefaultExit):
         at_traverse(traveller, target_loc) - called to do the actual traversal and calling of the other hooks.
                                             If overloading this, consider using super() to use the default
                                             movement implementation (and hook-calling).
-        at_after_traverse(traveller, source_loc) - called by at_traverse just after traversing.
+        at_after_traverse(traveller, source_location) - called by at_traverse just after traversing.
         at_failed_traverse(traveller) - called by at_traverse if traversal failed for some reason. Will
                                         not be called if the attribute `err_traverse` is
                                         defined, in which case that will simply be echoed.
@@ -128,70 +128,86 @@ class Exit(DefaultExit):
             string += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
         return string
 
-    def at_traverse(self, traversing_object, target_location):
+    def at_traverse(self, traveller, target_location):
         """
         Implements the actual traversal, using utils.delay to delay the move_to.
         if the exit has an attribute is_path and and traverser has move_speed,
         use that, otherwise default to normal exit behavior and "walk" speed.
         """
-        if traversing_object.ndb.currently_moving:
-            traversing_object.msg("You are already moving toward %s%s|n." %
-                                  (target_location.STYLE, target_location.key))
+        if traveller.ndb.currently_moving:
+            traveller.msg("You are already moving toward %s." % target_location.get_display_name(traveller))
             return
         is_path = self.tags.get('path', category='flags') or False
-        source_location = traversing_object.location
-        move_speed = traversing_object.db.move_speed or 'walk'
+        source_location = traveller.location
+        move_speed = traveller.db.move_speed or 'walk'
         move_delay = MOVE_DELAY.get(move_speed, 8)
-        if not traversing_object.at_before_move(target_location):
+        if not traveller.at_before_move(target_location):
             return False
+        if self.db.grid_loc:
+            entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
+            coord = self.db.grid_loc.get(entry, None) if isinstance(type(self.db.grid_loc), dict) else self.db.grid_loc
+            if coord:
+                grid_loc = traveller.ndb.grid_loc
+                if grid_loc:
+                    traveller.ndb.grid_loc_last = grid_loc
+                traveller.ndb.grid_loc = coord
+                name = target_location.point(coord, 'name') or ''
+                print('%s> %r (%s->%s: %s@%r)' % (traveller, entry, source_location, target_location, name, coord))
         if not is_path:
-            success = traversing_object.move_to(self, quiet=False)
+            success = traveller.move_to(self, quiet=False)
             if success:
-                self.at_after_traverse(traversing_object, source_location)
+                self.at_after_traverse(traveller, source_location)
             return success
-        if traversing_object.location == target_location:  # If object is at destination...
+        if traveller.location == target_location:  # If object is at destination...
             return True
 
         def move_callback():
             """This callback will be called by utils.delay after move_delay seconds."""
-            source_location = traversing_object.location
-            if traversing_object.move_to(target_location):
-                traversing_object.nattributes.remove('currently_moving')
-                self.at_after_traverse(traversing_object, source_location)
+            start_location = traveller.location
+            if traveller.move_to(target_location):
+                traveller.nattributes.remove('currently_moving')
+                self.at_after_traverse(traveller, start_location)
             else:
-                self.at_failed_traverse(traversing_object)
+                self.at_failed_traverse(traveller)
 
-        traversing_object.msg("You start moving %s at a %s." % (self.key, move_speed))
-        if traversing_object.location != self:  # If object is not inside exit...
-            success = traversing_object.move_to(self, quiet=False, use_destination=False)
+        traveller.msg("You start moving %s at a %s." % (self.key, move_speed))
+        if traveller.location != self:  # If object is not inside exit...
+            success = traveller.move_to(self, quiet=False, use_destination=False)
             if not success:
                 return False
-            self.at_after_traverse(traversing_object, source_location)
+            self.at_after_traverse(traveller, source_location)
         # Create a delayed movement and Store the deferred on the moving object.
         # ndb is used since deferrals cannot be pickled to store in the database.
         deferred = utils.delay(move_delay, callback=move_callback)
-        traversing_object.ndb.currently_moving = deferred
+        traveller.ndb.currently_moving = deferred
 
-    def at_failed_traverse(self, traversing_object):
+    def at_failed_traverse(self, traveller):
         """
         Overloads the default hook to implement an exit fail.
         Args:
-            traversing_object (Object): The object that failed traversing us.
+            traveller (Object): The object that failed traversing us.
         Notes:
             Uses custom enter-fail in exit's messages dictionary or default.
-            Sends traversing_object to exit's home if defined.
+            Sends traveller to exit's home if defined.
         """
+        last = traveller.ndb.grid_loc_last
+        if last:
+            traveller.ndb.grid_loc = last
         if self.db.messages and 'enter-fail' in self.db.messages:  # if exit has a better error message, use it.
-            traversing_object.msg(self.db.messages['enter-fail'])
+            traveller.msg(self.db.messages['enter-fail'])
         else:  # Otherwise, you stay where you are and get a generic fail message.
-            traversing_object.msg("You cannot go there.")
+            traveller.msg("You cannot go there.")
         if self.home:  # If the exit has a "home" location, it sends you there if you fail the lock.
-            if traversing_object.move_to(self.home):
-                traversing_object.nattributes.remove('currently_moving')
+            if traveller.move_to(self.home):
+                traveller.nattributes.remove('currently_moving')
+        traveller.nattributes.remove('grid_loc_last')
 
-    def at_after_traverse(self, traveller, source_loc):
+    def at_after_traverse(self, traveller, source_location):
         """called by at_traverse just after traversing."""
-        pass
+        traveller.nattributes.remove('grid_loc_last')
+        entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
+        if not self.db.grid_loc:  # Object exit command display
+            print('%s> %r (%s->%s)' % (traveller, entry, source_location, traveller.location))
 
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
 
