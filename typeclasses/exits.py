@@ -145,7 +145,7 @@ class Exit(DefaultExit):
             return False
         if self.db.grid_loc:
             entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
-            coord = self.db.grid_loc.get(entry, None) if isinstance(type(self.db.grid_loc), dict) else self.db.grid_loc
+            coord = self.db.grid_loc.get(entry, None) if isinstance(coord, dict) else self.db.grid_loc
             if coord:
                 grid_loc = traveller.ndb.grid_loc
                 if grid_loc:

@@ -353,18 +353,22 @@ class CmdGridMotion(default_cmds.MuxCommand):
         coord = you.ndb.grid_loc
         min = loc.grid('min')
         max = loc.grid('max')
-        if not coord:
+        if not coord:  # A default place - this logic should check last footprint instead.
             coord = loc.grid('current')
         bound = self.motion(coord)
         into = loc.point(bound, 'into')
         empty = loc.point(bound, 'empty')
+        carve = loc.tags.get('carve', category='flags')
+        name = loc.point(coord, 'name')
+        desc = loc.point(coord, 'desc')
+        if carve and not empty and not name and not desc:
+            empty = True  # Carve through, empty means impassible if name/desc not set
         if into:
             you.move_to(into)
             return
         if bound[0] > max[0] or bound[1] > max[1] or bound[0] < min[0] or bound[1] < min[1] or empty:
             you.msg("You cannot travel %s." % self.key)
             return
-        name = loc.point(coord, 'name')
         if not name:
             name = '%s @ %r' % (loc.get_display_name(you, mxp='sense here'), coord)
         coord = self.motion(coord)  # Update coord with move
@@ -665,9 +669,18 @@ class Grid(Room):
             return super(Grid, self).return_appearance(viewer)
         else:
             name = '%s - %s' % (self.get_display_name(viewer, mxp='sense here'), name)
-        within = self.return_glance(viewer)  # What is within the room that can be seen
+        visible = [element for element in self.contents if element != viewer and not element.destination
+                   and element.access(viewer, 'view')]
+        here = [element for element in visible if element.ndb.grid_loc == coord]
+        there = [element for element in visible if element not in here]
+        # Contents you can see.  Show here, and then show there (with names).
         string = ' |/|y%s|n|/%s' % (name, desc or '')
-        string += '|/Nearby you find: %s' % within if within else ''  # If something can be seen, list it
+        if here:
+            here_list = ", ".join(each.get_display_name(viewer, pose=True) for each in here).replace('.,', ';')
+            string += '|/Here you find: %s' % here_list  # If something here can be seen, list it
+        if there:
+            there_list = ", ".join(each.get_display_name(viewer, pose=True) for each in there).replace('.,', ';')
+            string += '|/Elsewhere: %s' % there_list  # If something there can be seen, list it
         return string
 
     def grid(self, key=None, value=None, **kwargs):
@@ -712,6 +725,14 @@ class Grid(Room):
             return entries  # Return all loc entries, which could be useful.
         else:  # Reading an entry.
             return entries.get(key, None) if key else entries  # return requested entry or all entries
+
+    def crumbs(self, traveller):
+        """
+
+        Returns:
+            list of breadcrumbs, latest to oldest
+        """
+        pass
 
     def at_object_receive(self, new_arrival, source_location):
         """
