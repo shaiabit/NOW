@@ -34,11 +34,12 @@ class CmdZone(MuxCommand):
         switches_list = [u'search']
 
         if not switches:
-            zones_here = here.tags.all(category='realm')
-            if here and zones_here:
-                room_zones = here.tags.all(category='realm') + here.tags.all(category='region') +\
-                             here.tags.all(category='area') + here.tags.all(category='zone')
-                player.msg('Zone here: |c%s' % "|n, |c".join(a for a in room_zones))
+            zones_here = [here.tags.get(category='realm')]
+            if here and zones_here[0]:
+                zones_here.append(here.tags.get(category='region'))
+                zones_here.append(here.tags.get(category='area'))
+                zones_here.append(here.tags.get(category='zone'))
+                player.msg('Zone here: |c%s' % "|n, |c".join(a for a in [x for x in zones_here if x is not None]))
             else:
                 player.msg("No realm zone found here. You are not in any realm.")
                 return
