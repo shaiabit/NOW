@@ -40,7 +40,8 @@ class CmdSense(MuxCommand):
         lhs = self.lhs.strip()
         rhs = self.rhs
         obj_string, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
-        print('Searching for: %s' % obj_string)
+        if obj_string:
+            print('Searching for: %s' % obj_string)
         obj = char.search(obj_string, quiet=True,
                           candidates=[here] + here.contents + char.contents) if args else [char]
         if obj:

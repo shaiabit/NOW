@@ -143,9 +143,9 @@ class Exit(DefaultExit):
         move_delay = MOVE_DELAY.get(move_speed, 8)
         if not traveller.at_before_move(target_location):
             return False
-        if self.db.grid_loc:
+        if self.db.grid_loc or self.db.grid_locs:
             entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
-            coord = self.db.grid_loc.get(entry, None) if isinstance(coord, dict) else self.db.grid_loc
+            coord = self.db.grid_loc if not self.db.grid_locs else self.db.grid_locs.get(entry, None)
             if coord:
                 grid_loc = traveller.ndb.grid_loc
                 if grid_loc:
@@ -206,7 +206,7 @@ class Exit(DefaultExit):
         """called by at_traverse just after traversing."""
         traveller.nattributes.remove('grid_loc_last')
         entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
-        if not self.db.grid_loc:  # Object exit command display
+        if not self.db.grid_loc or not self.db.grid_locs:  # Object exit command display
             print('%s> %r (%s->%s)' % (traveller, entry, source_location, traveller.location))
 
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
