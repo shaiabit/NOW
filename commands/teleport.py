@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
 
+
 class CmdTeleport(MuxCommand):
     """
     Change object's location - IC component-aware.
