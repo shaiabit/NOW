@@ -137,6 +137,8 @@ class Exit(DefaultExit):
         if traveller.ndb.currently_moving:
             traveller.msg("You are already moving toward %s." % target_location.get_display_name(traveller))
             return
+        entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
+        traveller.ndb.exit_used = entry
         is_path = self.tags.get('path', category='flags') or False
         source_location = traveller.location
         move_speed = traveller.db.move_speed or 'walk'
@@ -144,7 +146,6 @@ class Exit(DefaultExit):
         if not traveller.at_before_move(target_location):
             return False
         if self.db.grid_loc or self.db.grid_locs:
-            entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
             coord = self.db.grid_loc if not self.db.grid_locs else self.db.grid_locs.get(entry, None)
             if coord:
                 grid_loc = traveller.ndb.grid_loc
