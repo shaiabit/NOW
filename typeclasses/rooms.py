@@ -353,7 +353,7 @@ class CmdGridMotion(default_cmds.MuxCommand):
         coord = you.ndb.grid_loc
         min = loc.grid('min')
         max = loc.grid('max')
-        if not coord:  # A default place - this logic should check last footprint instead.
+        if not coord:  # A default place - this logic should check last crumbs instead.
             coord = loc.grid('current')
         bound = self.motion(coord)
         into = loc.point(bound, 'into')
@@ -371,15 +371,39 @@ class CmdGridMotion(default_cmds.MuxCommand):
             return
         if not name:
             name = '%s @ %r' % (loc.get_display_name(you, mxp='sense here'), coord)
-        coord = self.motion(coord)  # Update coord with move
+        last, coord = coord, self.motion(coord)  # Update coord with move, save last for later use
         new = loc.point(coord, 'name')
         if not new:
             new = '%s @ %r' % (loc.get_display_name(you, mxp='sense here'), coord)
-        loc.msg_contents('{you} moves |g%s|n from %s to %s.'
-                         % (self.key, name, new), from_obj=you, mapping=dict(you=you))
+        # Check for riders/followers to bring them along
+        # If rider/follower, add to lists. Riders move with mounts; followers move later
+        # r_list = you.db.riders if you.db.riders and len(you.db.riders) > 0 else False  # FIXME temporary hack
+        f_list = you.db.followers if you.db.followers and len(you.db.followers) > 0 else False
+        r_list = f_list  # <- FIXME temporary hack (Remove this line when updated)
+        riders, followers = [], []
+        if r_list:
+            for each in r_list:
+                if each.location != loc:
+                    continue
+                if each.ndb.grid_loc == last and each not in riders:
+                    riders.append(each)  # Add this one to the list, it will ride with you
+                    loc.point(coord, each, now)  # Apply timestamp
+                    each.ndb.grid_loc = coord  # Mark location on moving object's followers/riders
+        if len(riders) > 0:
+            bringing = ", ".join(each.get_display_name(you) for each in riders)
+            loc.msg_contents('{you} takes %s |g%s|n from %s to %s.'
+                             % (bringing, self.key, name, new), from_obj=you, mapping=dict(you=you))
+        else:
+            loc.msg_contents('{you} moves |g%s|n from %s to %s.'
+                             % (self.key, name, new), from_obj=you, mapping=dict(you=you))
         loc.point(coord, you, now)  # Apply timestamp
-        you.ndb.grid_loc = coord  # Mark location on moving object
+        you.ndb.grid_loc = coord  # Mark location on moving object and its riders
         you.msg(you.at_look(you.location))
+        if r_list:  # All the riders look upon arrival
+            for each in riders:
+                each.msg(each.at_look(each.location))
+        if f_list:
+            pass  # Command the followers here
 
     def motion(self, position=(0, 0)):
         """

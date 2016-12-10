@@ -11,6 +11,7 @@ from world.helpers import make_bar, mass_unit
 from world.rpsystem import RPCharacter
 
 from evennia.utils import lazy_property
+# from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 
 from traits import TraitHandler
 from effects import EffectHandler
@@ -72,32 +73,39 @@ class Character(RPCharacter):
         if self.db.Combat_TurnHandler:  # Prevent move while in combat.
             self.caller.msg("You can't leave while engaged in combat!")
             return False
-        if self.attributes.has('followers') and self.db.followers and self.location:  # Test list of followers.
-            self.ndb.followers = []
-            if self.db.settings and 'lead others' in self.db.settings and self.db.settings['lead others'] is False:
-                return True  # Character has followers, but does not want to lead others.
-            for each in self.db.followers:
+        if self.attributes.has('riders') and self.db.riders and self.location:  # Test list of riders.
+            self.ndb.riders = []
+            if self.db.settings and 'carry others' in self.db.settings and self.db.settings['carry others'] is False:
+                return True  # Character has riders, but does not want to carry them.
+            for each in self.db.riders:
                 if each.location == self.location:
                     each.ndb.mover = self
                     if not (each.has_player and each.at_before_move(destination)):
                         continue
-                    if each.db.settings and 'follow others' in each.db.settings and each.db.settings['follow others']\
+                    if each.db.settings and 'carry others' in each.db.settings and each.db.settings['carry others']\
                             is False:
                             continue
-                    self.ndb.followers.append(each)
+                    self.ndb.riders.append(each)
                     self.location.at_object_leave(each, destination)
         return True
 
     def at_after_move(self, source_location):
-        """Store last location and room then trigger the arrival look after a move."""
+        """Store last location and room then trigger the arrival look after a move. Reset doing to default."""
         if source_location:  # Is "None" when moving from Nothingness. If so, do nothing.
             self.ndb.last_location = source_location
             if not source_location.destination:
                 self.db.last_room = source_location
-        # No need to look if moving into Nothingness, locked from looking, or set not to look.
-        if self.location and self.location.access(self, 'view'):
-            if not self.db.settings or self.db.settings.get('look arrive', default=True):
-                self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
+        if self.location:  # Things to do after the character moved somewhere
+            self.db.pose = self.db.pose_default  # Reset room pose when moving to new location
+            if self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
+                for each in source_location.contents:
+                    if not each.has_player or each not in self.db.followers or not self.access(each, 'view'):
+                        continue  # no player, not on follow list, or can't see character to follow, then do not follow
+                    print('Send %s %s' % (each, self.ndb.exit_used))
+                    each.execute_cmd(self.ndb.exit_used)
+            if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
+                if not self.db.settings or self.db.settings.get('look arrive', default=True):
+                    self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
         return source_location
 
     def announce_move_from(self, destination):
@@ -113,6 +121,8 @@ class Character(RPCharacter):
             return
         direction_name = (' |lc%s|lt|530%s|n|le' % (self.ndb.moving_to,
                                                     self.ndb.moving_to)) if self.ndb.moving_to else ''
+        # TODO - if character leaving is invisible to viewer and all riders are invisible, then no message sent
+        # to viewer, otherwise anyone invisible is listed as "Someone"
         for viewer in here.contents:
             if viewer == self:
                 continue
@@ -120,14 +130,12 @@ class Character(RPCharacter):
             loc_name = self.location.get_display_name(viewer)
             dest_name = destination.get_display_name(viewer)
             string = '|r%s' % name
-            if self.ndb.followers and len(self.ndb.followers) > 0:
-                if len(self.ndb.followers) > 1:
-                    string += ', |r' + '%s|n' % '|n, |r'.join(follower.get_display_name(viewer, color=False)
-                                                              for follower in self.ndb.followers[:-1])
-                    string += ' and |r%s|n are ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
-                else:
-                    string += ' and |r%s|n are ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
-            else:
+            if self.ndb.riders and len(self.ndb.riders) > 0:  # Plural exit message: Riders
+                if len(self.ndb.riders) > 1:
+                    string += ', |r' + '%s|n' % '|n, |r'.join(rider.get_display_name(viewer, color=False)
+                                                              for rider in self.ndb.riders[:-1])
+                string += ' and |r%s|n are ' % self.ndb.riders[-1].get_display_name(viewer, color=False)
+            else:  # Singular exit message: no riders
                 string += ' is '
             string += "leaving %s, heading%s for %s." % (loc_name, direction_name, dest_name)
             viewer.msg(string)
@@ -159,13 +167,13 @@ class Character(RPCharacter):
                 depart_name = here.get_display_name(viewer)
             else:
                 depart_name = '|222Nothingness'
-            if self.ndb.followers and len(self.ndb.followers) > 0:
-                if len(self.ndb.followers) > 1:
-                    string += ', |g' + '%s' % '|n, |g'.join(follower.get_display_name(viewer, color=False)
-                                                            for follower in self.ndb.followers[:-1])
-                    string += "|n and |g%s|n arrive " % self.ndb.followers[-1].get_display_name(viewer, color=False)
+            if self.ndb.riders and len(self.ndb.riders) > 0:
+                if len(self.ndb.riders) > 1:
+                    string += ', |g' + '%s' % '|n, |g'.join(rider.get_display_name(viewer, color=False)
+                                                            for rider in self.ndb.riders[:-1])
+                    string += "|n and |g%s|n arrive " % self.ndb.riders[-1].get_display_name(viewer, color=False)
                 else:
-                    string += ' and |g%s|n arrive ' % self.ndb.followers[-1].get_display_name(viewer, color=False)
+                    string += ' and |g%s|n arrive ' % self.ndb.riders[-1].get_display_name(viewer, color=False)
             else:
                 string += ' arrives '
             if direction_name:
@@ -173,20 +181,26 @@ class Character(RPCharacter):
             else:
                 string += "to %s|n from %s|n." % (depart_name, src_name)
             viewer.msg(string)
-        if self.ndb.followers and len(self.ndb.followers) > 0:
-            for each in self.ndb.followers:
+        if self.ndb.riders and len(self.ndb.riders) > 0:
+            for each in self.ndb.riders:
                 success = each.move_to(here, quiet=True, emit_to_obj=None, use_destination=False,
                                        to_none=False, move_hooks=False)
+                # If moved to grid room, write location onto character here
+                # If moved from grid room, save old location for possible return
+                each.ndb.grid_loc, last = self.ndb.grid_loc, each.ndb.grid_loc
                 if not success:
                     self.msg('|r%s|n did not arrive.' % each.get_display_name(self, color=False))
+                    # If failed move to grid room, re-write location, last location used for going back.
+                    if last:
+                        self.ndb.grid_loc = last
                     each.nattributes.remove('mover')
-                    self.ndb.followers.remove(each)
+                    self.ndb.riders.remove(each)
                     continue
-            for each in self.ndb.followers:
+            for each in self.ndb.riders:
                 here.at_object_receive(each, source_location)
                 each.at_after_move(source_location)
                 each.nattributes.remove('mover')
-            self.nattributes.remove('followers')
+            self.nattributes.remove('riders')
         if self.db.settings and not self.db.settings.get('look arrive', default=True):
             awake = (con for con in self.location.contents if con != self
                      and con.has_player and con.access(self, 'view'))
@@ -408,7 +422,7 @@ class Character(RPCharacter):
             self.db.details = {detailkey.lower(): description}
 
     def follow(self, caller):
-        """Set following agreement"""
+        """Set following agreement - caller follows character"""
         if self == caller:
             self.msg('You decide to follow your heart.')
             return
@@ -419,8 +433,22 @@ class Character(RPCharacter):
             self.db.followers.append(caller)
         else:
             self.db.followers = [caller]
-        msg = "|g%s|n decides to follow %s%s|n." % (caller.key, self.STYLE, self.key)
-        caller.location.msg_contents(msg)
+        caller.location.msg_contents('|g%s|n decides to follow {follower}.'
+                                     % caller.key, from_obj=caller, mapping=dict(follower=self))
+
+    def mount(self, caller):
+        """Set riding agreement - caller rides character"""
+        if self == caller:
+            return
+        if self.attributes.has('riders') and self.db.riders:
+            if caller in self.db.riders:
+                caller.msg("You are already riding %s." % self.get_display_name(caller))
+                return
+            self.db.riders.append(caller)
+        else:
+            self.db.riders = [caller]
+        caller.location.msg_contents('|g%s|n decides to ride {mount}.'
+                                     % caller.key, from_obj=caller, mapping=dict(mount=self))
 
 
 class NPC(Character):
