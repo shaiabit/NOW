@@ -97,15 +97,15 @@ class Character(RPCharacter):
                 self.db.last_room = source_location
         if self.location:  # Things to do after the character moved somewhere
             self.db.pose = self.db.pose_default  # Reset room pose when moving to new location
+            if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
+                if not self.db.settings or self.db.settings.get('look arrive', default=True):
+                    self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
             if self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
                 for each in source_location.contents:
                     if not each.has_player or each not in self.db.followers or not self.access(each, 'view'):
                         continue  # no player, not on follow list, or can't see character to follow, then do not follow
-                    print('Send %s %s' % (each, self.ndb.exit_used))
+                    print('<%s> %s' % (each, self.ndb.exit_used))
                     each.execute_cmd(self.ndb.exit_used)
-            if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
-                if not self.db.settings or self.db.settings.get('look arrive', default=True):
-                    self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
         return source_location
 
     def announce_move_from(self, destination):
@@ -426,29 +426,35 @@ class Character(RPCharacter):
         if self == caller:
             self.msg('You decide to follow your heart.')
             return
+        action = 'follow'
         if self.attributes.has('followers') and self.db.followers:
             if caller in self.db.followers:
-                caller.msg("You are already following %s%s|n." % (self.STYLE, self.key))
-                return
-            self.db.followers.append(caller)
+                self.db.followers.remove(caller)
+                action = 'stop following'
+            else:
+                self.db.followers.append(caller)
         else:
             self.db.followers = [caller]
-        caller.location.msg_contents('|g%s|n decides to follow {follower}.'
-                                     % caller.key, from_obj=caller, mapping=dict(follower=self))
+            color = 'g' if action == 'follow' else 'r'
+        caller.location.msg_contents('|%s%s|n decides to %s {follower}.'
+                                     % (color, caller.key, action), from_obj=caller, mapping=dict(follower=self))
 
     def mount(self, caller):
         """Set riding agreement - caller rides character"""
         if self == caller:
             return
+        action = 'ride'
         if self.attributes.has('riders') and self.db.riders:
             if caller in self.db.riders:
-                caller.msg("You are already riding %s." % self.get_display_name(caller))
-                return
-            self.db.riders.append(caller)
+                self.db.riders.remove(caller)
+                action = 'stop riding'
+            else:
+                self.db.riders.append(caller)
         else:
             self.db.riders = [caller]
-        caller.location.msg_contents('|g%s|n decides to ride {mount}.'
-                                     % caller.key, from_obj=caller, mapping=dict(mount=self))
+            color = 'g' if action == 'ride' else 'r'
+        caller.location.msg_contents('|%s%s|n decides to %s {mount}.'
+                                     % (color, caller.key, action), from_obj=caller, mapping=dict(mount=self))
 
 
 class NPC(Character):
