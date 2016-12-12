@@ -108,6 +108,7 @@ class CmdTeleport(MuxCommand):
             loc = loc.location
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
+            target.nattributes.remove('exit_used')  # Remove reference to using exit when not using exit to leave
         else:
             target.ndb.mover = char or player
         if target.move_to(loc, quiet=tel_quietly, emit_to_obj=char, use_destination=use_loc):
