@@ -435,7 +435,7 @@ class Character(RPCharacter):
                 self.db.followers.append(caller)
         else:
             self.db.followers = [caller]
-            color = 'g' if action == 'follow' else 'r'
+        color = 'g' if action == 'follow' else 'r'
         caller.location.msg_contents('|%s%s|n decides to %s {follower}.'
                                      % (color, caller.key, action), from_obj=caller, mapping=dict(follower=self))
 
@@ -452,7 +452,7 @@ class Character(RPCharacter):
                 self.db.riders.append(caller)
         else:
             self.db.riders = [caller]
-            color = 'g' if action == 'ride' else 'r'
+        color = 'g' if action == 'ride' else 'r'
         caller.location.msg_contents('|%s%s|n decides to %s {mount}.'
                                      % (color, caller.key, action), from_obj=caller, mapping=dict(mount=self))
 
