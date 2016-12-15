@@ -104,8 +104,15 @@ class Character(RPCharacter):
                 for each in source_location.contents:
                     if not each.has_player or each not in self.db.followers or not self.access(each, 'view'):
                         continue  # no player, not on follow list, or can't see character to follow, then do not follow
-                    print('<%s> %s' % (each, self.ndb.exit_used))
-                    each.execute_cmd(self.ndb.exit_used)
+                    # About to follow - check if follower is riding something:
+                    riding = False
+                    for thing in source_location.contents:
+                        if thing == each or not thing.db.riders or each not in thing.db.riders:
+                            continue
+                        riding = True
+                    if not riding:
+                        print('<%s> %s' % (each, self.ndb.exit_used))
+                        each.execute_cmd(self.ndb.exit_used)
         return source_location
 
     def announce_move_from(self, destination):
@@ -452,6 +459,11 @@ class Character(RPCharacter):
                 self.db.riders.append(caller)
         else:
             self.db.riders = [caller]
+        # caller is/was riding self invalidate caller riding anyone else in the room.
+        for each in caller.location.contents:
+            if each == caller or each == self or not each.db.riders or caller not in each.db.riders:
+                continue
+            each.db.riders.remove(caller)
         color = 'g' if action == 'ride' else 'r'
         caller.location.msg_contents('|%s%s|n decides to %s {mount}.'
                                      % (color, caller.key, action), from_obj=caller, mapping=dict(mount=self))
