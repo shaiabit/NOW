@@ -50,16 +50,8 @@ class Exit(DefaultExit):
         return TraitHandler(self)
 
     @lazy_property
-    def skills(self):
-        return TraitHandler(self, db_attribute='skills')
-
-    @lazy_property
     def effects(self):
         return EffectHandler(self)
-
-    # @lazy_property
-    # def equipment(self):
-    #     return EquipmentHandler(self)
 
     def at_desc(self, looker=None):
         """
@@ -285,7 +277,7 @@ class CmdContinue(Command):
             caller.msg("You have not yet decided which way to go.")
             return
         if caller.ndb.currently_moving:
-            caller.msg("You are already moving toward %s%s|n." % (destination.STYLE, destination.key))
+            caller.msg("You are already moving toward %s." % destination.get_display_name(caller))
         else:
             caller.location.msg_contents("%s is going to %s." %
                                          (caller.get_display_name(caller.sessions),
@@ -318,7 +310,10 @@ class CmdBack(Command):
         here = char.location
         if not here:
             safe_place = char.ndb.last_location or char.db.last_room or char.home
-            char.move_to(safe_place)  # TODO: Add a "Fades into view' message.
+            char.move_to(safe_place)
+            visible = (con for con in safe_place.contents if con != char and con.access(viewer, 'view'))
+            for each in visible:
+                each.msg('|g%s fades into view.' % caller.get_display_name(each, plain=True))
             return
         destination = here.destination  # Where char is going.
         start = here.location  # Where char came from.
