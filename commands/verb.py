@@ -50,17 +50,17 @@ class CmdTry(MuxCommand):
                     obj = good_targets[0] if len(good_targets) == 1 else None
                 player.msg('(%s/%s (%s))' % (verb, noun, obj))
                 if obj and obj in good_targets:
-                    if char.ndb.power_pose and here:
-                        contents = here.contents
-                        for viewer in contents:
-                            viewer.msg('|w* %s%s' % (char.get_display_name(viewer), char.ndb.power_pose))
-                        char.nattributes.remove('power_pose')
-                    else:
-                        contents = here.contents
-                        for viewer in contents:
-                            viewer.msg('|w* %s tries to %s %s|n.'
-                                       % (char.get_display_name(viewer), verb, obj.get_display_name(viewer)))
-                    self.trigger_response(verb, obj)
+                    # if char.ndb.power_pose and here:
+                    #     contents = here.contents
+                    #     for viewer in contents:
+                    #         viewer.msg('|w* %s%s' % (char.get_display_name(viewer), char.ndb.power_pose))
+                    #     char.nattributes.remove('power_pose')
+                    # else:
+                    #     contents = here.contents
+                    #     for viewer in contents:
+                    #         viewer.msg('|w* %s tries to %s %s|n.'
+                    #                    % (char.get_display_name(viewer), verb, obj.get_display_name(viewer)))
+                    self.trigger_response(char, verb, obj)
                 else:
                     if good_targets:
                         if obj:
@@ -73,20 +73,37 @@ class CmdTry(MuxCommand):
             player.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
 
     @staticmethod
-    def trigger_response(verb, obj):
+    def trigger_response(char, verb, obj):
         """
         Triggers object method (check for method on object - check against forbidden list.)
         Triggers command alias (tabled)
         Triggers message (look for message)
         """
-        if obj.db.messages and verb in obj.db.messages and obj.location:
+        if verb == 'get':
+            obj.get('', char)
+        elif verb == 'drop':
+            obj.drop('', char)
+        elif verb == 'read':
+            obj.read('', char)
+        elif verb == 'ride':
+            obj.mount(char)
+        elif verb == 'follow':
+            obj.follow(char)
+        elif verb == 'view':
+            char.player.execute_cmd('look %s' % obj.get_display_name(char, plain=True))
+        elif verb == 'examine':
+            char.player.execute_cmd('examine %s' % obj.get_display_name(char, plain=True))
+        elif verb == 'puppet':
+            char.player.execute_cmd('@ic %s' % obj.get_display_name(char, plain=True))
+
+        if obj.location and obj.db.messages and verb in obj.db.messages:
             contents = obj.location.contents
             for viewer in contents:
                 viewer.msg('%s %s' % (obj.get_display_name(viewer), obj.db.messages[verb]))
-        elif obj.location:
-            contents = obj.location.contents
-            for viewer in contents:
-                viewer.msg('%s responds to %s.' % (obj.get_display_name(viewer), verb))
+        # elif obj.location:
+        #     contents = obj.location.contents
+        #     for viewer in contents:
+        #         viewer.msg('%s responds to %s.' % (obj.get_display_name(viewer), verb))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""
