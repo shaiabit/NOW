@@ -37,6 +37,7 @@ from commands.zeit import CmdTime
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
+from commands.summon import CmdSummon
 from commands.access import CmdAccess
 from commands.channel import CmdChannels
 from commands.teleport import CmdTeleport
@@ -76,6 +77,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdMail)
         self.add(CmdZone)
         self.add(CmdSpoof)
+        self.add(CmdSummon)
         self.add(CmdInventory)
 # [...]
         self.add(CmdEmote)
