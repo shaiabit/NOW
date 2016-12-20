@@ -202,6 +202,13 @@ class Exit(DefaultExit):
         if not self.db.grid_loc or not self.db.grid_locs:  # Object exit command display
             print('%s> %r (%s->%s)' % (traveller, entry, source_location, traveller.location))
 
+    def at_msg_receive(self, text=None, **kwargs):
+        """!"""
+        # Anything heard by self (this exit) as character speech will be sent to its destination's contents,
+        if text and self.tags.get('pool') and 'Portal' not in text:  # TODO: excluding send to exits to avoid loops.
+            self.destination.msg_contents('|b%s|n: %s' % (self.key, text))
+        return True
+
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
 
 
