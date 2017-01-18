@@ -39,6 +39,7 @@ from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.summon import CmdSummon
 from commands.access import CmdAccess
+from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
@@ -78,6 +79,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdZone)
         self.add(CmdSpoof)
         self.add(CmdSummon)
+        self.add(CmdWhisper)
         self.add(CmdInventory)
 # [...]
         self.add(CmdEmote)
@@ -138,7 +140,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdChannels)
         self.add(CmdSettings)
         self.add(CmdTeleport)
-        # self.add(CmdChannelWizard) # TODO: Too dangerous to add without testing.
+        # self.add(CmdChannelWizard) # TODO: Still under development.
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
