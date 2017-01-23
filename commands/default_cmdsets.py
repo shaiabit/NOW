@@ -15,7 +15,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 
-from world.rpsystem import CmdSdesc, CmdEmote, CmdRoomPose, CmdRecog, CmdMask
+# from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
 
 # [Traversal of path-exits]
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
@@ -82,11 +82,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdWhisper)
         self.add(CmdInventory)
 # [...]
-        self.add(CmdEmote)
-        self.add(CmdSdesc)
-        self.add(CmdRoomPose)
-        self.add(CmdRecog)
-        self.add(CmdMask)
+        # RP commands used to be here.
 # [...]
         self.add(CmdStop)
         self.add(CmdBack)
