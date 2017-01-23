@@ -133,20 +133,20 @@ class CmdSense(MuxCommand):
                             char.msg('%sYou|n sense %s from %s.' % (char.STYLE, entry, obj.get_display_name(player)))
                         else:
                             if aspect:
-                                char.msg("%sYou|n try to sense %s's %s, but can not."
-                                         % (char.STYLE, obj.get_display_name(player), aspect))
+                                char.msg("%sYou|n try to %s %s's %s, but can not."
+                                         % (char.STYLE, cmd, obj.get_display_name(player), aspect))
                             else:
-                                char.msg("%sYou|n try to sense %s, but can not."
-                                         % (char.STYLE, obj.get_display_name(player)))
+                                char.msg("%sYou|n try to %s %s, but can not."
+                                         % (char.STYLE, cmd, obj.get_display_name(player)))
                     else:
                         if aspect:
-                            char.msg("%sYou|n try to sense %s's %s, but can not."
-                                     % (char.STYLE, obj.get_display_name(player), aspect))
+                            char.msg("%sYou|n try to %s %s's %s, but can not."
+                                     % (char.STYLE, cmd, obj.get_display_name(player), aspect))
                         else:
-                            char.msg("%sYou|n try to sense %s, but can not."
-                                     % (char.STYLE, obj.get_display_name(player)))
+                            char.msg("%sYou|n try to %s %s, but can not."
+                                     % (char.STYLE, cmd, obj.get_display_name(player)))
                 else:
-                    char.msg('%sYou|n try to sense %s, but can not.' % (char.STYLE, obj.get_display_name(player)))
+                    char.msg('%sYou|n try to %s %s, but can not.' % (char.STYLE, cmd, obj.get_display_name(player)))
                 # First case: look for an object in room, inventory, room contents, their contents,
                 # and their contents contents with tagged restrictions, then if no match is found
                 # in their name or alias, look at the senses tables in each of these objects: The
