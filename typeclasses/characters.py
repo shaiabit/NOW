@@ -1,23 +1,19 @@
+# -*- coding: UTF-8 -*-
 """
-Characters
-
 Characters are (by default) Objects setup to be puppeted by Players.
 They are what you "see" in game. The Character class in this module
 is setup to be the "default" character type created by the default
 creation commands.
-
 """
+from evennia import DefaultCharacter
+from typeclasses.tangibles import Tangible
+from evennia.utils.utils import lazy_property
+from traits import TraitHandler
 from world.helpers import make_bar, mass_unit
-from world.rpsystem import RPCharacter
-
-from evennia.utils import lazy_property
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 
-from traits import TraitHandler
-from effects import EffectHandler
 
-
-class Character(RPCharacter):
+class Character(DefaultCharacter, Tangible):
     """
     The Character defaults to implementing some of its hook methods with the
     following standard functionality:
@@ -36,18 +32,6 @@ class Character(RPCharacter):
                     has connected" message echoed to the room
     """
     STYLE = '|c'
-
-    @lazy_property
-    def traits(self):
-        return TraitHandler(self)
-
-    @lazy_property
-    def skills(self):
-        return TraitHandler(self, db_attribute='skills')
-
-    @lazy_property
-    def effects(self):
-        return EffectHandler(self)
 
     def at_before_move(self, destination):
         """
@@ -100,7 +84,7 @@ class Character(RPCharacter):
             if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
                 if not self.db.settings or self.db.settings.get('look arrive', default=True):
                     self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
-            if self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
+            if source_location and self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
                 for each in source_location.contents:
                     if not each.has_player or each not in self.db.followers or not self.access(each, 'view'):
                         continue  # no player, not on follow list, or can't see character to follow, then do not follow
@@ -267,6 +251,7 @@ class Character(RPCharacter):
         """
         if not self.sessions.count():  # Only remove this char from grid if no sessions control it anymore.
             if self.location:
+                # reason = ['Idle Timeout', 'QUIT', 'BOOTED', 'Lost Connection']  # TODO
 
                 def message(obj, from_obj):
                     obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)

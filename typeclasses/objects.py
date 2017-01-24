@@ -1,27 +1,21 @@
+# -*- coding: UTF-8 -*-
 """
-Object
+Objects are the base class for items in-world.
 
-The Object is the "naked" base class for items in the game world.
-
-Note that the default Character, Room and Exit does not inherit from
-this Object, but from their respective default implementations in the
-evennia library. If you want to use this class as a parent to change
-the other types, you can do so by adding this as a multiple
-inheritance.
-
+The default Character, Room and Exit does not inherit from this Object,
+but from their respective default implementations in the evennia library.
+If you want a class as a parent to change all tangible types, you can do
+so by editing the Tangible class in tangibles.py.
 """
-from world.rpsystem import RPObject
+from typeclasses.tangibles import Tangible
+from evennia.utils.utils import lazy_property
+from traits import TraitHandler
 from evennia.utils.evmenu import get_input
 from world.helpers import mass_unit
 from commands.poll import PollCmdSet
 
-from evennia.utils import lazy_property
 
-from traits import TraitHandler
-from effects import EffectHandler
-
-
-class Object(RPObject):
+class Object(Tangible):
     """
     This is the root typeclass object, implementing an in-game Evennia
     game object, such as having a location, being able to be
@@ -167,21 +161,8 @@ class Object(RPObject):
      at_say(speaker, message)  - by default, called if an object inside this
                                  object speaks
 
-     """
-
+    """
     STYLE = '|334'
-
-    @lazy_property
-    def traits(self):
-        return TraitHandler(self)
-
-    @lazy_property
-    def skills(self):
-        return TraitHandler(self, db_attribute='skills')
-
-    @lazy_property
-    def effects(self):
-        return EffectHandler(self)
 
     def reset(self):
         """Resets the object - quietly sends it home or nowhere."""
@@ -198,12 +179,11 @@ class Object(RPObject):
         Implements the read command. This simply looks for an
         Attribute "readable_text" on the object and displays that.
         """
-        readtext = self.db.readable_text
+        read_text = self.db.readable_text or self.db.desc or self.db.desc_brief
         obj_name = self.get_display_name(caller.sessions)
-        if readtext:  # Attribute read_text is defined.
-            string = "You read %s:\n  %s" % (obj_name, readtext)
-            caller.location.msg_contents("%s |g%s|n reads %s." %
-                                         (pose, caller.get_display_name(caller), obj_name))  # , exclude=caller)
+        if read_text:  # Attribute read_text is defined.
+            caller.location.msg_contents("%s |g%s|n reads %s." % (pose, caller.get_display_name(caller), obj_name))
+            string = read_text
         else:
             string = "There is nothing to read on %s." % obj_name
         caller.msg(string)

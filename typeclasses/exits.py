@@ -1,22 +1,22 @@
+# -*- coding: UTF-8 -*-
 """
-Exits
-
 Exits are connectors between Rooms. An exit always has a destination property
 set and has a single command defined on itself with the same name as its key,
-for allowing Characters to traverse the exit to its destination.
-
+for allowing Characters to traverse the exit to its destination, or if the
+Character fails to pass the traverse lock, and the exit has a home set, the
+traversing Character it is sent to the Exit's home, instead.
 """
-from evennia import DefaultExit, utils, Command
-
-from evennia.utils import lazy_property
-
+from evennia import utils, Command
+from evennia import DefaultExit
+from typeclasses.tangibles import Tangible
+from evennia.utils.utils import lazy_property
 from traits import TraitHandler
-from effects import EffectHandler
+
 
 MOVE_DELAY = dict(stroll=16, walk=8, run=4, sprint=2, scamper=1)
 
 
-class Exit(DefaultExit):
+class Exit(DefaultExit, Tangible):
     """
     Exits are paths between rooms. Exits are normal Objects except
     they defines the `destination` property. It also does work in the
@@ -41,17 +41,8 @@ class Exit(DefaultExit):
                                         not be called if the attribute `err_traverse` is
                                         defined, in which case that will simply be echoed.
     """
-
     STYLE = '|g'
     STYLE_PATH = '|252'
-
-    @lazy_property
-    def traits(self):
-        return TraitHandler(self)
-
-    @lazy_property
-    def effects(self):
-        return EffectHandler(self)
 
     def at_desc(self, looker=None):
         """

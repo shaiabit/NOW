@@ -1,30 +1,21 @@
+# -*- coding: UTF-8 -*-
 """
-Room
-
-Rooms are simple containers that have no location of their own.
-
+Rooms are simple containers that need no location of their own.
 """
-
 import random  # Random weather events
 import time  # Check time since last activity
-
 from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active players in room
-
-from world.rpsystem import RPRoom
+from typeclasses.tangibles import Tangible
+from evennia.utils.utils import lazy_property
+from traits import TraitHandler
 from evennia import TICKER_HANDLER
 from evennia.comms.models import ChannelDB, Msg
 from evennia.comms.channelhandler import CHANNELHANDLER
-
-from evennia.utils import lazy_property
-
-from traits import TraitHandler
-from effects import EffectHandler
-
 from evennia import CmdSet  # For the class Grid
 from evennia import default_cmds  # For the class Grid's commands
 
 
-class Room(RPRoom):
+class Room(Tangible):
     """
     Rooms are like any Object, except their location is None
     (which is default). They also use basetype_setup() to
@@ -35,18 +26,6 @@ class Room(RPRoom):
     properties and methods available on all Objects.
     """
     STYLE = '|y'
-
-    @lazy_property
-    def traits(self):
-        return TraitHandler(self)
-
-    @lazy_property
-    def skills(self):
-        return TraitHandler(self, db_attribute='skills')
-
-    @lazy_property
-    def effects(self):
-        return EffectHandler(self)
 
     def return_appearance(self, viewer):
         """
