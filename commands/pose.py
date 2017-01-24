@@ -64,9 +64,9 @@ class CmdPose(MuxCommand):
                     return
             else:
                 target = char
-            if not target.attributes.has('pose'):  # Default emoting/recog data
+            if not target.attributes.has('pose'):  # Check to see if any pose message is available, set Default if so
                 char.db.pose = ''  # TODO: Replace use of .db.pose with db.message['pose']
-                char.db.pose_default = ' is here.'  # TODO: depreciate .db.pose_default, use db.message['pose default']
+                char.db.pose_default = '|_is here.'  # TODO: depreciate .db.pose_default, use db.message['pose default']
             target_name = target.sdesc.get() if hasattr(target, '_sdesc') else target.key
             # set the pose
             if 'reset' in opt:
@@ -84,7 +84,7 @@ class CmdPose(MuxCommand):
                 if self.args:
                     player.execute_cmd(';%s' % pose)
             char.msg("Pose now set to: '%s'" % char.get_display_name(char, pose=True))
-        else:  # Normal pose, not static Room Pose.
+        else:  # Action pose, not static Room Pose.
             if 'magnet' in opt or 'm' in opt:
                 char.msg("Pose magnet glyphs are %s." % non_space_chars)
             if not (here and char):
