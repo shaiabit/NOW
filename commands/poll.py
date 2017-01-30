@@ -20,12 +20,11 @@ class CmdPoll(MuxCommand):
       poll   (Yet to be determined)
       survey (Yet to be determined)
       vote   (Yet to be determined)
-      quiz   (Yet to be determined)
       test   (Yet to be determined)
       trivia (Yet to be determined)
     """
     key = 'poll'
-    aliases = ['survey', 'vote', 'quiz', 'test', 'trivia']  # Support different types of question-asking.
+    aliases = ['survey', 'vote', 'test', 'trivia']  # Support different types of question-asking.
     locks = 'cmd:all()'
     arg_regex = r'\s|$'
     player_caller = True
@@ -63,7 +62,6 @@ class CmdPoll(MuxCommand):
         elif 'trivia' in cmd:
             look_ready("answer %s trivia" % where.get_display_name(player))
             player.msg("No trivia is available from %s." % where.get_display_name(player))
-        pass
 
 
 class CmdSuggest(MuxCommand):
@@ -120,3 +118,30 @@ class CmdSuggest(MuxCommand):
         here.msg_contents(msg)
         get_input(char, "|wSuggestion?|n (Type your suggestion now (300 characters or less),"
                         " and then |g[enter]|n) ", suggest_callback)
+
+
+class CmdQuiz(MuxCommand):
+    """
+    Poll player or characters with questions.
+    Usage:
+      quiz   (Yet to be determined)
+    """
+    key = 'quiz'
+    locks = 'cmd:all()'
+    arg_regex = r'\s|$'
+    player_caller = True
+
+    def func(self):
+        """Allow player or character to submit short and/or long suggestions."""
+        char = self.character
+        EvMenu(char, 'commands.poll', startnode='quiz_start', cmd_on_exit=None, persistent=False)
+
+
+def quiz_start(caller):
+    text = "Q. Quiz me, let's see how I do!"
+    options = ({'desc': 'New,but I am here to learn.', 'goto': 'quiz_main'},
+               {'desc': 'Some Experience with Playing and Coding', 'goto': 'quiz_main'},
+               {'desc': 'Comfortable with Text based environments (years of experience)', 'goto': 'quiz_main'},
+               {'desc': "I want to help; Let's get coding right away.", 'goto': 'quiz_main'},
+               {'key': '_default', 'goto': 'quiz_main'})
+    return text, options

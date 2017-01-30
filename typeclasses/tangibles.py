@@ -82,10 +82,13 @@ class Tangible(DefaultObject):
             message (string) text of private message.
               self will see "You privately " prepended to message.
         """
-        print('%s-(%s)-> %s "%s"' % (source.key, category, self.key, message))
+        print('%s-(%s)-> %s "%s"' % (source.key, category, self.key, text))
+        message = '%sYou|n privately ' % self.STYLE
         if category == 'whisper':
-            message = 'hear %s whisper "|w%s|n".' % (source.get_display_name(self), message)
-        self.msg(('%sYou|n privately ' % self.STYLE) + message)
+            message = text + 'hear %s whisper "|w%s|n".' % (source.get_display_name(self), message)
+        elif category == 'NOW':
+            message = text
+        self.msg(message)
 
     def return_glance(self, viewer):
         """

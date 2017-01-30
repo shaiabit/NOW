@@ -208,17 +208,17 @@ class Character(DefaultCharacter, Tangible):
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
         """
-# Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
-# That will go only to the session actually triggering the command. You can then do player.sessions.all()
+        # Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
+        # That will go only to the session actually triggering the command. You can then do player.sessions.all()
         # and send to all but the current session.
-# There is no way to know that unless the session sends themself as an argument to said method.
-# The session has to be in an argument to that method, like you said.
-# I see that the session is indeed available in the puppet_object method (which calls at_post_puppet)
+        # There is no way to know that unless the session sends themself as an argument to said method.
+        # The session has to be in an argument to that method, like you said.
+        # I see that the session is indeed available in the puppet_object method (which calls at_post_puppet)
         # so I suppose we could extend that hook with a session argument.
-# I think it may have originally been defined at a time when an object only ever had one session, so once you were
-        # puppeted you could easily retrieve it.
+        # I think it may have originally been defined at a time when an object only ever had one session,
+        # so once you were puppeted you could easily retrieve it.
 
-        self.msg('\nYou assume the role of %s.\n' % self.get_display_name(self, pose=self.location is None))
+        self.msg('\nYou assume the role of %s.\n' % self.get_display_name(self, pose=self.location is not None))
         if self.location:
             self.msg(self.at_look(self.location))
         if self.ndb.new_mail:

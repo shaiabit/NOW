@@ -40,7 +40,7 @@ class CmdSettings(CmdSettingsDefault):
         args = self.args.strip()
         lhs, rhs = [self.lhs, self.rhs]
         char = self.character
-        where = self.obj
+        # where = self.obj
         player = self.player
         setting = char.db.settings or {}
         message = char.db.messages or {}

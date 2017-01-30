@@ -13,40 +13,40 @@ affect uptime).
 
 """
 
-MSSPTable =  {
+MSSPTable = {
 
-    # Required fieldss
+    # Required fields
 
     "NAME":               "Evennia",
 
     # Generic
 
-    "CRAWL DELAY":        "-1",     # limit how often crawler updates the listing. -1 for no limit
+    "CRAWL DELAY":        "-1",      # limit how often crawler updates the listing. -1 for no limit
 
-    "HOSTNAME":           "",       # current or new hostname
-    "PORT":               ["4000"], # most important port should be last in list
+    "HOSTNAME":           "",        # current or new hostname
+    "PORT":               ["4000"],  # most important port should be last in list
     "CODEBASE":           "Evennia",
-    "CONTACT":            "",       # email for contacting the mud
-    "CREATED":            "",       # year MUD was created
-    "ICON":               "",       # url to icon 32x32 or larger; <32kb.
-    "IP":                 "",       # current or new IP address
-    "LANGUAGE":           "",       # name of language used, e.g. English
-    "LOCATION":           "",       # full English name of server country
-    "MINIMUM AGE":        "0",      # set to 0 if not applicable
+    "CONTACT":            "",        # email for contacting the mud
+    "CREATED":            "",        # year MUD was created
+    "ICON":               "",        # url to icon 32x32 or larger; <32kb.
+    "IP":                 "",        # current or new IP address
+    "LANGUAGE":           "",        # name of language used, e.g. English
+    "LOCATION":           "",        # full English name of server country
+    "MINIMUM AGE":        "0",       # set to 0 if not applicable
     "WEBSITE":            "www.evennia.com",
 
     # Categorisation
 
-    "FAMILY":             "Custom", # evennia goes under 'Custom'
-    "GENRE":              "None",   # Adult, Fantasy, Historical, Horror, Modern, None, or Science Fiction
-    "GAMEPLAY":           "",       # Adventure, Educational, Hack and Slash, None,
-                                      # Player versus Player, Player versus Environment,
-                                      # Roleplaying, Simulation, Social or Strategy
+    "FAMILY":             "Custom",  # evennia goes under 'Custom'
+    "GENRE":              "None",    # Adult, Fantasy, Historical, Horror, Modern, None, or Science Fiction
+    "GAMEPLAY":           "",        # Adventure, Educational, Hack and Slash, None,
+                                     # Player versus Player, Player versus Environment,
+                                     # Roleplaying, Simulation, Social or Strategy
     "STATUS":             "Open Beta",  # Alpha, Closed Beta, Open Beta, Live
-    "GAMESYSTEM":         "Custom", # D&D, d20 System, World of Darkness, etc. Use Custom if homebrew
-    "INTERMUD":           "IMC2",   # evennia supports IMC2.
-    "SUBGENRE":           "None",   # LASG, Medieval Fantasy, World War II, Frankenstein,
-                                      # Cyberpunk, Dragonlance, etc. Or None if not available.
+    "GAMESYSTEM":         "Custom",  # D&D, d20 System, World of Darkness, etc. Use Custom if homebrew
+    "INTERMUD":           "IMC2",    # evennia supports IMC2.
+    "SUBGENRE":           "None",    # LASG, Medieval Fantasy, World War II, Frankenstein,
+                                     # Cyberpunk, Dragonlance, etc. Or None if not available.
 
     # World
 
@@ -64,15 +64,15 @@ MSSPTable =  {
 
     "ANSI":               "1",
     "GMCP":               "0",
-    "MCCP":               "0",
+    # "MCCP":               "0",
     "MCP":                "0",
-    "MSDP":               "0",
+    # "MSDP":               "0",
     "MSP":                "0",
     "MXP":                "0",
     "PUEBLO":             "0",
-    "UTF-8":              "1",
+    # "UTF-8":              "1",
     "VT100":              "0",
-    "XTERM 256 COLORS":   "0",
+    # "XTERM 256 COLORS":   "0",
 
     # Commercial set to 1 or 0)
 

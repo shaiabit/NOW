@@ -42,7 +42,7 @@ class CmdSummon(MuxCommand):
             player.msg("You can not summon while moving. (|rstop|n, then try again.)")
             return
         if not args:
-            char.msg("Could not find character to summon. Usage: summon <character>")
+            char.msg("Could not find target to summon. Usage: summon <character or NPC>")
             return
         session_list = SESSIONS.get_sessions()
         target = []

@@ -505,7 +505,8 @@ class Dispenser(Consumable):
     """
     STYLE = '|350'
 
-    def produce_weapon(self, caller):
+    @staticmethod
+    def produce_weapon(caller):
         """
         This will produce a new weapon from the rack,
         assuming the caller hasn't already gotten one. When
@@ -513,15 +514,4 @@ class Dispenser(Consumable):
         of this rack, to make sure they cannot keep
         pulling weapons from it indefinitely.
         """
-        rack_id = self.db.rack_id
-        # if caller.tags.get(rack_id, category="tutorial_world"):
-        if True:
-            caller.msg(self.db.no_more_weapons_msg)
-        else:
-            # prototype = random.choice(self.db.available_weapons)
-            # use the spawner to create a new Weapon from the
-            # spawner dictionary, tag the caller
-            # wpn = spawn(WEAPON_PROTOTYPES[prototype], prototype_parents=WEAPON_PROTOTYPES)[0]
-            caller.tags.add(rack_id, category='tutorial_world')
-            # wpn.location = caller
-            # caller.msg(self.db.get_weapon_msg % wpn.key)
+        pass

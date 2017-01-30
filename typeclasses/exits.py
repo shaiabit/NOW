@@ -309,9 +309,9 @@ class CmdBack(Command):
         if not here:
             safe_place = char.ndb.last_location or char.db.last_room or char.home
             char.move_to(safe_place)
-            visible = (con for con in safe_place.contents if con != char and con.access(viewer, 'view'))
+            visible = (con for con in safe_place.contents if con != char and con.access(char, 'view'))
             for each in visible:
-                each.msg('|g%s fades into view.' % caller.get_display_name(each, plain=True))
+                each.msg('|g%s fades into view.' % char.get_display_name(each, plain=True))
             return
         destination = here.destination  # Where char is going.
         start = here.location  # Where char came from.
