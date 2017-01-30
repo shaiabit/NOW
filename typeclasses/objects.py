@@ -11,7 +11,7 @@ from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
 from evennia.utils.evmenu import get_input
-from world.helpers import mass_unit
+from world.helpers import mass_unit, escape_braces
 from commands.poll import PollCmdSet
 
 
@@ -199,10 +199,6 @@ class Object(Tangible):
         # When self is supporting something, do not move it.
         return False if self.attributes.has('locked') and self.db.locked else True
 
-    def at_get(self, caller):
-        """Called after getting an object in the room."""
-        caller.msg("%s is now in your possession." % self.get_display_name(caller, mxp='sense #%s' % self.id))
-
     def announce_move_from(self, destination):
         """
         Called if the move is to be announced. This is
@@ -252,19 +248,37 @@ class Object(Tangible):
         if self.location != caller:  # If caller is not holding object,
             caller.msg("You do not have %s." % self.get_display_name(caller))
             return False
-        self.move_to(caller.location, quiet=True, use_destination=False)
-        caller.location.msg_contents("%s|g%s|n drops %s%s|n." % (pose, caller.key, self.STYLE, self.key))
-        self.at_drop(caller)  # Call at_drop() method.
+        if self.move_to(caller.location, quiet=True, use_destination=False):
+            caller.location.msg_contents('%s|g%s|n drops {it}.' % (escape_braces(pose), caller.key),
+                                         from_obj=caller, mapping=dict(it=self))
+            self.at_drop(caller)  # Call at_drop() method.
+
+    def at_drop(self, caller):
+        """Implements what the dropped object does when dropped by caller."""
+        # TODO: Look for odrop or pose message, have self pose it to the room
+        pass
 
     def get(self, pose, caller):
         """Implements the attempt to get this object."""
+        too_heavy, too_large = False, False
         if caller == self:
-            caller.msg("You can't get yourself.")
+            caller.msg("%sYou|n can't get yourself." % STYLE.caller)
         elif self.location == caller:
-            caller.msg("You already have %s." % self.get_display_name(caller))
+            caller.msg("%sYou|n already have %s." % (STYLE.caller, self.get_display_name(caller)))
+        elif too_heavy:
+            caller.msg("%sYou|n can't lift %s; it is too heavy." % (STYLE.caller, self.get_display_name(caller)))
+        elif too_large:
+            caller.msg("%sYou|n can lift %s, but it is too large to carry." %
+                       (STYLE.caller, self.get_display_name(caller)))
         elif self.move_to(caller, quiet=True):
-            caller.location.msg_contents("%s|g%s|n takes %s%s|n." % (pose, caller.key, self.STYLE, self.key))
+            caller.location.msg_contents('%s|g%s|n takes {it}.' % (escape_braces(pose), caller.key),
+                                         from_obj=caller, mapping=dict(it=self))
             self.at_get(caller)  # calling hook method
+
+    def at_get(self, caller):
+        """Implements what the dropped object does when taken by caller."""
+        # TODO: Look for take message, have self pose to caller
+        caller.msg("%s is now in your possession." % self.get_display_name(caller, mxp='sense %s' % self.key))
 
     def surface_put(self, pose, caller, connection):
         """Implements the surface connection of object by caller."""

@@ -218,60 +218,46 @@ class Character(DefaultCharacter, Tangible):
 # I think it may have originally been defined at a time when an object only ever had one session, so once you were
         # puppeted you could easily retrieve it.
 
-        if self.location is None:
-            self.msg("\nYou assume the role of %s.\n" % self.get_display_name(self))
-        else:
-            self.msg("\nYou assume the role of: %s\n" % self.get_display_name(self, pose=True))
+        self.msg('\nYou assume the role of %s.\n' % self.get_display_name(self, pose=self.location is None))
+        if self.location:
             self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
-            self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
+            self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
 
         def message(obj, from_obj):
-            obj.msg("|g%s|n fades into view." % self.get_display_name(obj, color=False), from_obj=from_obj)
-
-        if self.location != self.home:
-            self.location.for_contents(message, exclude=[self], from_obj=self)
-
-        def message(obj, from_obj):
-            obj.msg("|g%s|n awakens." % self.get_display_name(obj, color=False), from_obj=from_obj)
+            text = 'fades into view' if self.location != self.home else 'awakens'
+            obj.msg("|g%s|n %s." % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
 
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
         """
-        We store the character when the player goes ooc/logs off,
-        when the character is left in a public or semi-public room.
-        Otherwise the character object will remain in the room after
-        the player logged off ("headless", so to say).
+        Store characters in Nothingness when the player goes ooc/logs off,
+        when characters are left in a room that is not home. Otherwise
+        character objects remain in the room after players leave.
         Args:
             player (Player): The player object that just disconnected
                 from this object.
             session (Session): Session controlling the connection that
                 just disconnected.
         """
-        if not self.sessions.count():  # Only remove this char from grid if no sessions control it anymore.
-            if self.location:
-                # reason = ['Idle Timeout', 'QUIT', 'BOOTED', 'Lost Connection']  # TODO
+        if self.location:
+            # reason = ['Idle Timeout', 'QUIT', 'BOOTED', 'Lost Connection']  # TODO
+            at_home = self.location == self.home
 
-                def message(obj, from_obj):
-                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)
+            def message(obj, from_obj):
+                text = 'sleeps' if at_home else 'fades from view'
+                obj.msg('|r%s|n %s.' % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
 
-                self.location.for_contents(message, exclude=[self], from_obj=self)
-                self.db.prelogout_location = self.location
+            self.location.for_contents(message, exclude=[self], from_obj=self)
+            self.db.prelogout_location = self.location
 
-                def message(obj, from_obj):
-                    obj.msg("%s fades from view." % self.get_display_name(obj), from_obj=from_obj)
-
-                if self.location != self.home:
-                    self.db.prelogout_location.for_contents(message, exclude=[self], from_obj=self)
-                if self.location != self.home:  # If not already home, send to Nothingness.
-                    self.location = None
+            if not (at_home or self.has_player):  # if no sessions control it anymore, and its not home...
+                self.location = None  # store in Nothingness.
 
     def process_sdesc(self, sdesc, obj, **kwargs):
         """
-        Allows to customize how your sdesc is displayed
-        (primarily by changing colors).
-
+        Allows to customize how your sdesc is displayed (primarily by changing colors).
         Args:
             sdesc (str): The sdesc to display.
             obj (Object): The object to which the adjoining sdesc
@@ -496,7 +482,7 @@ class NPC(Character):
         if self.location:
 
             def message(obj, from_obj):
-                if self.sessions.count():  # Show as pose if NPC still has a player.
+                if self.has_player:  # Show as pose if NPC still has a player.
                     obj.msg("%s looks sleepier." % (self.get_display_name(obj)), from_obj=from_obj)
                 else:  # Show as gone if NPC has no player now.
                     obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)
