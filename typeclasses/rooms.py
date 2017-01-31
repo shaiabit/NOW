@@ -36,7 +36,7 @@ class Room(Tangible):
             viewer (Object): Object doing the looking.
         """
         if not viewer:
-            return
+            return ''
         # get and identify all objects visible to the viewer, excluding the viewer.
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         exits, ways = [], []
@@ -187,9 +187,7 @@ class Room(Tangible):
                 case-insensitive.
 
         """
-        details = self.db.details
-        if details:
-            return details.get(detailkey.lower(), None)
+        return details.get(detailkey.lower(), None) if self.db.details else None
 
     def set_detail(self, detailkey, description):
         """
@@ -275,7 +273,7 @@ class RealmEntry(Room):
 
     def at_object_creation(self):
         """Called when the room is first created."""
-        super(Room, self).at_object_creation()
+        super(RealmEntry, self).at_object_creation()
         self.db.desc = "An entry point for the realm, this room checks" \
                        " the realm-specific requirements before allowing entry."
 
@@ -661,7 +659,7 @@ class Grid(Room):
             viewer (Object): Object doing the looking.
         """
         if not viewer:
-            return
+            return ''
         loc = viewer.location
         coord = viewer.ndb.grid_loc
         if not coord:

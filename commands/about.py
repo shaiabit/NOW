@@ -15,18 +15,21 @@ class CmdAbout(MuxCommand):
       about [target]
     """
     key = 'about'
+    help_category = 'Information'
     locks = 'cmd:all()'
-    help_category = 'System'
+    player_caller = True
 
     def func(self):
         """Display information about server or target"""
+        char = self.character
+        player = self.player
         opt = self.switches
         args = unicode(self.args).strip()
         if 'last' in opt:
             if args:
                 return
             recent_users = PlayerDB.objects.get_recently_connected_players()[:10]
-            self.caller.msg(recent_users)
+            player.msg(recent_users)
             return
         string = """
          |cEvennia|n %s|n
@@ -45,5 +48,5 @@ class CmdAbout(MuxCommand):
                os.name,
                sys.version.split()[0],
                twisted.version.short(),
-               django.get_version()) if args else 'Target information not available.'
-        self.caller.private('NOW', 'info', string)
+               django.get_version()) if not args else 'Target information not available.'
+        char.private(None, 'info', string)

@@ -252,8 +252,10 @@ class Object(Tangible):
             caller.location.msg_contents('%s|g%s|n drops {it}.' % (escape_braces(pose), caller.key),
                                          from_obj=caller, mapping=dict(it=self))
             self.at_drop(caller)  # Call at_drop() method.
+        return True
 
-    def at_drop(self, caller):
+    @staticmethod
+    def at_drop(caller):
         """Implements what the dropped object does when dropped by caller."""
         # TODO: Look for odrop or pose message, have self pose it to the room
         pass
@@ -484,7 +486,7 @@ class Vehicle(Tool):
 
     def at_object_creation(self):
         """Called after object is created."""
-        super(Object, self).at_object_creation()
+        super(Vehicle, self).at_object_creation()
         self.cmdset.add('commands.vehicle.VehicleCmdSet', permanent=True)
 
     # Vehicle needs command set that may include speed and direction control,

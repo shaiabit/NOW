@@ -217,8 +217,8 @@ class Character(DefaultCharacter, Tangible):
         # so I suppose we could extend that hook with a session argument.
         # I think it may have originally been defined at a time when an object only ever had one session,
         # so once you were puppeted you could easily retrieve it.
-
-        self.msg('\nYou assume the role of %s.\n' % self.get_display_name(self, pose=self.location is not None))
+        show_pose = self.location is not None
+        self.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=show_pose))
         if self.location:
             self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
@@ -226,7 +226,7 @@ class Character(DefaultCharacter, Tangible):
 
         def message(obj, from_obj):
             text = 'fades into view' if self.location != self.home else 'awakens'
-            obj.msg("|g%s|n %s." % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
+            obj.msg('|g%s|n %s.' % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
 
         self.location.for_contents(message, exclude=[self], from_obj=self)
 
@@ -323,7 +323,7 @@ class Character(DefaultCharacter, Tangible):
             viewer (Object): Object doing the looking.
         """
         if not viewer:
-            return
+            return ''
         if not viewer.is_typeclass('typeclasses.players.Player'):
             viewer = viewer.player  # make viewer reference the player object
         char = viewer.puppet
@@ -379,9 +379,7 @@ class Character(DefaultCharacter, Tangible):
             detailkey (str): The detail being looked at. This is
                 case-insensitive.
         """
-        details = self.db.details
-        if details:
-            return details.get(detailkey.lower(), None)
+        return details.get(detailkey.lower(), None) if self.db.details else None
 
     def set_detail(self, detailkey, description):
         """
@@ -446,7 +444,7 @@ class NPC(Character):
 
     def at_object_creation(self):
         """Initialize a newly-created NPC"""
-        super(Character, self).at_object_creation()
+        super(NPC, self).at_object_creation()
         self.cmdset.add('commands.battle.BattleCmdSet', permanent=True)
 
     def at_post_puppet(self):
