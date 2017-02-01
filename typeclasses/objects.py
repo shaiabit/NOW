@@ -264,14 +264,14 @@ class Object(Tangible):
         """Implements the attempt to get this object."""
         too_heavy, too_large = False, False
         if caller == self:
-            caller.msg("%sYou|n can't get yourself." % STYLE.caller)
+            caller.msg("%sYou|n can't get yourself." % caller.STYLE)
         elif self.location == caller:
-            caller.msg("%sYou|n already have %s." % (STYLE.caller, self.get_display_name(caller)))
+            caller.msg("%sYou|n already have %s." % (caller.STYLE, self.get_display_name(caller)))
         elif too_heavy:
-            caller.msg("%sYou|n can't lift %s; it is too heavy." % (STYLE.caller, self.get_display_name(caller)))
+            caller.msg("%sYou|n can't lift %s; it is too heavy." % (caller.STYLE, self.get_display_name(caller)))
         elif too_large:
             caller.msg("%sYou|n can lift %s, but it is too large to carry." %
-                       (STYLE.caller, self.get_display_name(caller)))
+                       (caller.STYLE, self.get_display_name(caller)))
         elif self.move_to(caller, quiet=True):
             caller.location.msg_contents('%s|g%s|n takes {it}.' % (escape_braces(pose), caller.key),
                                          from_obj=caller, mapping=dict(it=self))
@@ -340,7 +340,7 @@ class Object(Tangible):
             viewer (Object): Object doing the looking.
         """
         if not viewer:
-            return
+            return None
         # get and identify all objects
         visible = (con for con in self.contents if con != viewer and con.access(viewer, "view"))
         exits, users, things = [], [], []
@@ -383,9 +383,7 @@ class Object(Tangible):
             detailkey (str): The detail being looked at. This is
                 case-insensitive.
         """
-        details = self.db.details
-        if details:
-            return details.get(detailkey.lower(), None)
+        return details.get(detailkey.lower(), None) if self.db.details else None
 
     def set_detail(self, detailkey, description):
         """
@@ -418,7 +416,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
         """
         if self.traits.health.actual:
             self.traits.health.current -= 1
-            return self.traits.health.actual
+        return self.traits.health.actual
 
     def drink(self, caller):  # TODO: Make this use a more generic def consume
         """Response to drinking the object."""
@@ -446,6 +444,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
             caller.db.species = user_input[0:20].strip()
 
         get_input(caller, "Species? (Type your species setting now, and then [enter]) ", drink_callback)
+        return True
 
     def eat(self, caller):  # TODO: Make this use a more generic def consume
         """Response to eating the object."""
@@ -464,6 +463,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
             self.location = None
         msg = "%s%s|n takes a bite of %s%s|n%s." % (caller.STYLE, caller.key, self.STYLE, self.key, finish)
         caller.location.msg_contents(msg)
+        return None
 
 
 class Tool(Consumable):

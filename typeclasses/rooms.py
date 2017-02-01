@@ -187,7 +187,7 @@ class Room(Tangible):
                 case-insensitive.
 
         """
-        return details.get(detailkey.lower(), None) if self.db.details else None
+        return self.details.get(detailkey.lower(), None) if self.db.details else None
 
     def set_detail(self, detailkey, description):
         """
