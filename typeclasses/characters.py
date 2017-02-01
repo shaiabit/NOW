@@ -379,7 +379,7 @@ class Character(DefaultCharacter, Tangible):
             detailkey (str): The detail being looked at. This is
                 case-insensitive.
         """
-        return details.get(detailkey.lower(), None) if self.db.details else None
+        return self.db.details.get(detailkey.lower(), None) if self.db.details else None
 
     def set_detail(self, detailkey, description):
         """

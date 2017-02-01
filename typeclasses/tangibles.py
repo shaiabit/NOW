@@ -20,14 +20,6 @@ class Tangible(DefaultObject):
     def traits(self):
         return TraitHandler(self)
 
-    # @lazy_property
-    # def skills(self):
-    #     return TraitHandler(self, db_attribute='skills')
-
-    # @lazy_property
-    # def effects(self):
-    #     return EffectHandler(self)
-
     def get_display_name(self, viewer, **kwargs):
         """
         Displays the name of the object in a viewer-aware manner.
@@ -72,22 +64,24 @@ class Tangible(DefaultObject):
         print('%s / %s /%s' % (self.key, viewer.key, command))
         return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
 
-    def private(self, source, category, message):
+    def private(self, source, category, text):
         """
         Displays a private message to self from source of a certain category
         Args:
             self (Object, Character, Exit or Room to receive message)
             source (Object, Character, Exit or Room)
             category (string) type of private message.
-            message (string) text of private message.
+            text (string) text of private message.
               self will see "You privately " prepended to message.
         """
-        print('%s-(%s)-> %s "%s"' % (source.key, category, self.key, text))
+        print('%s-(%s)-> %s "%s"' % (source.key if source else 'NOW', category, self.key, text))
         message = '%sYou|n privately ' % self.STYLE
         if category == 'whisper':
-            message = text + 'hear %s whisper "|w%s|n".' % (source.get_display_name(self), message)
-        elif category == 'NOW':
+            message += 'hear %s whisper "|w%s|n".' % (source.get_display_name(self), text)
+        elif source is None:
             message = text
+        else:
+            message += text
         self.msg(message)
 
     def return_glance(self, viewer):
@@ -124,4 +118,4 @@ class Tangible(DefaultObject):
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
             return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
-        return
+        return '%sYou|n see nothing here.' % STYLE.viewer

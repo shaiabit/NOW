@@ -41,8 +41,9 @@ class CmdWhisper(MuxCommand):
         """Run the whisper command"""
         char = self.character
         who = self.lhs.strip()
-        message = self.rhs.strip() if self.rhs else ''
-        last = self.character.ndb.last_whispered
+        opt = self.switches
+        message = self.args.strip() if not self.rhs else self.rhs.strip()  # If no equals sign, use args for message
+        last = self.character.ndb.last_whispered or []
         all_present = [each.key for each in self.character.location.contents] +\
                       [each.key for each in self.character.contents]
         result, new_last = self.whisper(who, message, last, all_present)
@@ -52,6 +53,8 @@ class CmdWhisper(MuxCommand):
                 target[0].private(char, 'whisper', message)
         char.msg(result)
         char.ndb.last_whispered = new_last
+        if 'ver' in opt:
+            char.msg('Whisper version 14, Tuesday 31 Jan 2017')
 
     @staticmethod
     def whisper(who, message, last, all_present):
@@ -73,6 +76,12 @@ class CmdWhisper(MuxCommand):
 
         # is_present, is_awake, is_unlocked, is_available.
 
+        def is_available(object):  # Test if object is present in room
+            return True
+
+        def is_unlocked(object):  # Test if object is present in room
+            return True
+
         def is_present(object):  # Test if object is present in room
             return True if object in all_present else False
 
@@ -84,26 +93,34 @@ class CmdWhisper(MuxCommand):
             This converts a comma-delimited string, returning
             a list with duplicates and whitespace removed.
             """
-            return list(set([each_who.strip() for each_who in who_string.split(',')])) if who_string else []
+            return list(set([each_who.strip() for each_who in who_string.split(',')]))
 
         who_present, who_success, failed_whisper = [], [], []
-        whisper_list = convert_who_list(who if who else last)
+        whisper_list = convert_who_list(who) if who else last
         whisper_success = False
+
         for each in whisper_list:
-            if is_present(each):
-                who_present.append(each)
+            if is_available(each):
+                if is_unlocked(each):
+                    if is_present(each):
+                        if is_awake(each):
+                            who_success.append(each)
+                            whisper_success = True
+                        else:
+                            who_success.append(each)
+                            whisper_success = True
+                            failed_whisper.append(each + " (is asleep)")
+                    else:
+                        failed_whisper.append(each + " (is not present)")
+                else:
+                    failed_whisper.append(each + " (is uninterested)")
             else:
-                failed_whisper.append(each + "(not in room)")
-        for each in who_present:
-            if is_awake(each):
-                who_success.append(each)
-                whisper_success = True
-            else:
-                failed_whisper.append(each + "(not awake)")
+                failed_whisper.append(each + " (is not available/unreachable)")
+
         if whisper_success:
             result_message = 'You whispered "' + message + '" to ' + ', '.join(who_success) + '.'
         else:
             result_message = 'The names provided were unable to be whispered to.'
         if len(failed_whisper) > 0:
-            result_message += '\n  You failed to whisper to ' + ', '.join(failed_whisper) + '.'
+            result_message += '\n  Your whisper was not heard by ' + ', '.join(failed_whisper) + '.'
         return result_message, who_success  # String displayed to self showing whisper results.
