@@ -217,10 +217,10 @@ class Character(DefaultCharacter, Tangible):
         # so I suppose we could extend that hook with a session argument.
         # I think it may have originally been defined at a time when an object only ever had one session,
         # so once you were puppeted you could easily retrieve it.
-        show_pose = self.location is not None
-        self.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=show_pose))
-        if self.location:
-            self.msg(self.at_look(self.location))
+        is_somewhere = self.location is not None
+        self.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
+        if is_somewhere:  # if puppet is somewhere
+            self.msg(self.at_look(self.location))  # look to see surroundings
         if self.ndb.new_mail:
             self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
 
@@ -369,33 +369,6 @@ class Character(DefaultCharacter, Tangible):
                     and self.db.settings['look notify'] is False):
                 self.msg("%s just looked at you." % char.get_display_name(self))
         return string
-
-    def return_detail(self, detailkey):
-        """
-        This looks for an Attribute "obj_details" and possibly
-        returns the value of it.
-
-        Args:
-            detailkey (str): The detail being looked at. This is
-                case-insensitive.
-        """
-        return self.db.details.get(detailkey.lower(), None) if self.db.details else None
-
-    def set_detail(self, detailkey, description):
-        """
-        This sets a new detail, using an Attribute "details".
-
-        Args:
-            detailkey (str): The detail identifier to add (for
-                aliases you need to add multiple keys to the
-                same description). Case-insensitive.
-            description (str): The text to return when looking
-                at the given detailkey.
-        """
-        if self.db.details:
-            self.db.details[detailkey.lower()] = description
-        else:
-            self.db.details = {detailkey.lower(): description}
 
     def follow(self, caller):
         """Set following agreement - caller follows character"""

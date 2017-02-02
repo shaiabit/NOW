@@ -374,33 +374,6 @@ class Object(Tangible):
             string += "\n|wContains:|n " + user_list + ut_joiner + item_list
         return string
 
-    def return_detail(self, detailkey):
-        """
-        This looks for an Attribute "obj_details" and possibly
-        returns the value of it.
-
-        Args:
-            detailkey (str): The detail being looked at. This is
-                case-insensitive.
-        """
-        return details.get(detailkey.lower(), None) if self.db.details else None
-
-    def set_detail(self, detailkey, description):
-        """
-        This sets a new detail, using an Attribute "details".
-
-        Args:
-            detailkey (str): The detail identifier to add (for
-                aliases you need to add multiple keys to the
-                same description). Case-insensitive.
-            description (str): The text to return when looking
-                at the given detailkey.
-        """
-        if self.db.details:
-            self.db.details[detailkey.lower()] = description
-        else:
-            self.db.details = {detailkey.lower(): description}
-
 
 class Consumable(Object):  # TODO: State and analog decay. (State could be discrete analaog?)
     """
