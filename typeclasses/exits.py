@@ -74,7 +74,7 @@ class Exit(DefaultExit, Tangible):
             viewer (Object): Object doing the looking.
         """
         if not viewer:
-            return
+            return ''
         if not viewer.is_typeclass('typeclasses.players.Player'):
             viewer = viewer.player  # make viewer reference the player object
         char = viewer.puppet
