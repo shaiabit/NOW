@@ -50,16 +50,6 @@ class CmdTry(MuxCommand):
                     obj = good_targets[0] if len(good_targets) == 1 else None
                 player.msg('(%s/%s (%s))' % (verb, noun, obj))
                 if obj and obj in good_targets:
-                    # if char.ndb.power_pose and here:
-                    #     contents = here.contents
-                    #     for viewer in contents:
-                    #         viewer.msg('|w* %s%s' % (char.get_display_name(viewer), char.ndb.power_pose))
-                    #     char.nattributes.remove('power_pose')
-                    # else:
-                    #     contents = here.contents
-                    #     for viewer in contents:
-                    #         viewer.msg('|w* %s tries to %s %s|n.'
-                    #                    % (char.get_display_name(viewer), verb, obj.get_display_name(viewer)))
                     self.trigger_response(char, verb, obj)
                 else:
                     if good_targets:
@@ -100,10 +90,6 @@ class CmdTry(MuxCommand):
             contents = obj.location.contents
             for viewer in contents:
                 viewer.msg('%s %s' % (obj.get_display_name(viewer), obj.db.messages[verb]))
-        # elif obj.location:
-        #     contents = obj.location.contents
-        #     for viewer in contents:
-        #         viewer.msg('%s responds to %s.' % (obj.get_display_name(viewer), verb))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""

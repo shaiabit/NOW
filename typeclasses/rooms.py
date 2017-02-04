@@ -461,20 +461,20 @@ class CmdGrid(CmdGridMotion):
             intro = 'Small' if small else 'Large'
             you.msg('%s grid display of room:|/' % intro)
             for i in range(min[1], max[1] + 1):
-                line = ''
+                line_list = []
                 if small:
                     for j in range(min[1], max[1] + 1):
-                        line += ' x ' if x == j and y == i else ' . '
-                    you.msg("%s|/" % line)
+                        line_list.append(' x ' if x == j and y == i else ' . ')
+                    you.msg(''.join(line_list) + '|/')
                 else:
                     for k in range(0, 2):
                         for j in range(min[0], max[0] + 1):
                             if k == 0:
-                                line += '[ _ ] ' if x == j and y == i else '[   ] '
+                                line_list.append('[ _ ] ' if x == j and y == i else '[   ] ')
                             else:
-                                line += '[___] ' if x == j and y == i else '[___] '
-                        line += '|/'
-                    you.msg('%s' % line)
+                                line_list.append('[___] ' if x == j and y == i else '[___] ')
+                        line_list.append('|/')
+                    you.msg(''.join(line_list))
         coord = loc.grid('current')
         if 'name' in self.switches:
             if self.args:

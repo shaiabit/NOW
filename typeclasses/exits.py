@@ -119,7 +119,7 @@ class Exit(DefaultExit, Tangible):
         """
         if traveller.ndb.currently_moving:
             traveller.msg("You are already moving toward %s." % target_location.get_display_name(traveller))
-            return
+            return False
         entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
         traveller.ndb.exit_used = entry
         is_path = self.tags.get('path', category='flags') or False
