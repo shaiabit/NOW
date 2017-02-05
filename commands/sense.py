@@ -94,20 +94,20 @@ class CmdSense(MuxCommand):
                                             % (element, obj.get_display_name(char, plain=True), element)
                                             for element in obj.db.senses.keys())
                         char.msg(string)
-                        string = ''  # list aspects.
+                        aspect_list = []  # list aspects.
                         for element in obj.db.senses.keys():
                             for aspect in obj.db.senses[element].keys():
-                                string += "|lc%s %s's %s|lt|g%s|n|le " % (element, obj.key, aspect, aspect)\
-                                    if aspect else ''
-                        if len(string) > 0:
+                                aspect_list.append("|lc%s %s's %s|lt|g%s|n|le " % (element, obj.key, aspect, aspect)
+                                                   if aspect else '')
+                        if len(aspect_list) > 0:
                             char.msg(obj.get_display_name(player) + ' has the following aspects that can be sensed: ' +
-                                     string)
+                                     ''.join(aspect_list))
                     if obj != char:
                         verb_msg = "%s responds to: " % obj.get_display_name(player)
                     else:
                         verb_msg = "%sYou|n respond to: " % char.STYLE
                     verbs = obj.locks
-                    collector = ''
+                    collector_list = []
                     show_red = True if obj.access(char, 'examine') else False
                     for verb in ("%s" % verbs).split(';'):
                         element = verb.split(':')[0]
@@ -115,11 +115,11 @@ class CmdSense(MuxCommand):
                             continue
                         name = element[2:] if element[:2] == 'v-' else element
                         if obj.access(char, element):  # obj lock checked against actor
-                            collector += "|lctry %s %s|lt|g%s|n|le " %\
-                                         (name, obj.get_display_name(char, plain=True), name)
+                            collector_list.append("|lctry %s %s|lt|g%s|n|le " %\
+                                         (name, obj.get_display_name(char, plain=True), name))
                         elif show_red:
-                            collector += "|r%s|n " % name
-                    char.msg(verb_msg + "%s" % collector)
+                            collector_list.append("|r%s|n " % name)
+                    char.msg(verb_msg + ''.join(collector_list))
             elif 'taste' in cmd or 'touch' in cmd or 'smell' in cmd or 'listen' in cmd:  # Specific sense (not look)
                 if not obj:
                     return

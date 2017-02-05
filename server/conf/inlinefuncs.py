@@ -44,13 +44,12 @@ the function; this is the session of the object viewing the string
 and can be used to customize it to each session.
 
 """
+from random import *  # For the usage, using random
 
 
 def capitalize(text, *args, **kwargs):
     """Capitalizes the first character of the line."""
     return text.capitalize()
-
-from random import *
 
 
 def usage(text, *args, **kwargs):
@@ -65,13 +64,13 @@ def annotate(text, *args, **kwargs):
         $annotate(original) for no annotation."""
     session = kwargs.get('session')
     nargs = len(args)
-    annotate = ''
+    note = ''
     original = ''
 
     if nargs > 0:
-        annotate = args[0]
+        note = args[0]
         original = text
-    return annotate if session.protocol_flags['SCREENREADER'] else original
+    return note if session.protocol_flags['SCREENREADER'] else original
 
 
 def uni(text, *args, **kwargs):
