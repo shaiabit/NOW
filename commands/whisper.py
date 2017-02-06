@@ -76,16 +76,16 @@ class CmdWhisper(MuxCommand):
 
         # is_present, is_awake, is_unlocked, is_available.
 
-        def is_available(object):  # Test if object is present in room
+        def is_available(obj):  # Test if object is present in room
             return True
 
-        def is_unlocked(object):  # Test if object is present in room
+        def is_unlocked(obj):  # Test if object is present in room
             return True
 
-        def is_present(object):  # Test if object is present in room
-            return True if object in all_present else False
+        def is_present(obj):  # Test if object is present in room
+            return True if obj in all_present else False
 
-        def is_awake(object):  # To be altered after testing phase.
+        def is_awake(obj):  # To be altered after testing phase.
             return True  # Tests if character is awake.
 
         def convert_who_list(who_string):

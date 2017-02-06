@@ -290,14 +290,14 @@ class TraitHandler(object):
             self.cache[trait] = Trait(data)
         return self.cache[trait]
 
-    def add(self, key, name, type='static', base=0, mod=0, min=None, max=None, extra={}):
+    def add(self, key, name, trait_type='static', base=0, mod=0, min=None, max=None, extra={}):
         """Create a new Trait and add it to the handler."""
         if key in self.attr_dict:
             raise TraitException("Trait '{}' already exists.".format(key))
 
-        if type in TRAIT_TYPES:
+        if trait_type in TRAIT_TYPES:
             trait = dict(name=name,
-                         type=type,
+                         type=trait_type,
                          base=base,
                          mod=mod,
                          extra=extra)
