@@ -118,31 +118,31 @@ class Tangible(DefaultObject):
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
             return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
-        return '%sYou|n see nothing here.' % STYLE.viewer
+        return '%sYou|n see nothing here.' % viewer.STYLE
 
-    def return_detail(self, detailkey):
+    def return_detail(self, detail_key):
         """
         This looks for an Attribute "obj_details" and possibly
         returns the value of it.
 
         Args:
-            detailkey (str): The detail being looked at. This is
+            detail_key (str): The detail being looked at. This is
                 case-insensitive.
         """
-        return self.db.details.get(detailkey.lower(), None) if self.db.details else None
+        return self.db.details.get(detail_key.lower(), None) if self.db.details else None
 
-    def set_detail(self, detailkey, description):
+    def set_detail(self, detail_key, description):
         """
         This sets a new detail, using an Attribute "details".
 
         Args:
-            detailkey (str): The detail identifier to add (for
+            detail_key (str): The detail identifier to add (for
                 aliases you need to add multiple keys to the
                 same description). Case-insensitive.
             description (str): The text to return when looking
-                at the given detailkey.
+                at the given detail_key.
         """
         if self.db.details:
-            self.db.details[detailkey.lower()] = description
+            self.db.details[detail_key.lower()] = description
         else:
-            self.db.details = {detailkey.lower(): description}
+            self.db.details = {detail_key.lower(): description}
