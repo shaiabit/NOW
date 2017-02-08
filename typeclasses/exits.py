@@ -53,18 +53,6 @@ class Exit(DefaultExit, Tangible):
         if not looker.location == self:
             looker.msg("You gaze into the distance.")
 
-    def get_display_name(self, looker, **kwargs):
-        """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
-            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
-        else:
-            return "%s%s|n" % (self.STYLE, self.name)
-
-    def mxp_name(self, viewer, command):
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        return "|lc%s|lt%s|le" % (command, self.get_display_name(viewer)) if viewer and \
-            self.access(viewer, 'view') else ''
-
     def return_appearance(self, viewer):
         """
         This formats a description. It is the hook a 'look' command
@@ -89,36 +77,34 @@ class Exit(DefaultExit, Tangible):
                 users.append(con)
             else:
                 things.append(con)
-        # get description, build string
-        string = "%s " % (self.mxp_name(viewer, '@verb #%s' % self.id) if hasattr(self, 'mxp_name')
-                          else self.get_display_name(viewer))
+        # get description, build description string seen (desc_seen) for the visible contents
+        desc_seen = "%s " % (self.get_display_name(viewer, mxp='sense ' + self.key))
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc and here == self:
-            string += "%s" % desc
+            desc_seen += "%s" % desc
         elif desc_brief:
-            string += "%s" % desc_brief
+            desc_seen += "%s" % desc_brief
         else:
-            string += "leads to %s" % self.destination.mxp_name(viewer, '@verb #%s' % self.destination.id)\
-                if hasattr(self.destination, "mxp_name") else self.destination.get_display_name(viewer)
+            desc_seen += "leads to %s" % self.destination.get_display_name(viewer, mxp='sense ' + self.destination.key)
         if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.get_display_name(viewer) for e in exits)
+            desc_seen += "\n|wExits: " + ", ".join(e.get_display_name(viewer) for e in exits)
         if users or things:
             user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             path_view = 'Y' if here == self else 'Along the way y'
-            string += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
-        return string
+            desc_seen += "\n|w%sou see:|n " % path_view + user_list + ut_joiner + item_list
+        return desc_seen
 
-    def at_traverse(self, traveller, target_location):
+    def at_traverse(self, traveller, destination):
         """
         Implements the actual traversal, using utils.delay to delay the move_to.
-        if the exit has an attribute is_path and and traverser has move_speed,
+        if the exit has an attribute is_path and and traveller has move_speed,
         use that, otherwise default to normal exit behavior and "walk" speed.
         """
         if traveller.ndb.currently_moving:
-            traveller.msg("You are already moving toward %s." % target_location.get_display_name(traveller))
+            traveller.msg("You are already moving toward %s." % destination.get_display_name(traveller))
             return False
         entry = self.cmdset.current.commands[0].cmdstring  # The name/alias of the exit used to initiate traversal
         traveller.ndb.exit_used = entry
@@ -126,7 +112,7 @@ class Exit(DefaultExit, Tangible):
         source_location = traveller.location
         move_speed = traveller.db.move_speed or 'walk'
         move_delay = MOVE_DELAY.get(move_speed, 8)
-        if not traveller.at_before_move(target_location):
+        if not traveller.at_before_move(destination):
             return False
         if self.db.grid_loc or self.db.grid_locs:
             coord = self.db.grid_loc if not self.db.grid_locs else self.db.grid_locs.get(entry, None)
@@ -135,20 +121,20 @@ class Exit(DefaultExit, Tangible):
                 if grid_loc:
                     traveller.ndb.grid_loc_last = grid_loc
                 traveller.ndb.grid_loc = coord
-                name = target_location.point(coord, 'name') or ''
-                print('%s> %r (%s->%s: %s@%r)' % (traveller, entry, source_location, target_location, name, coord))
+                name = destination.point(coord, 'name') or ''
+                print('%s> %r (%s->%s: %s@%r)' % (traveller, entry, source_location, destination, name, coord))
         if not is_path:
             success = traveller.move_to(self, quiet=False)
             if success:
                 self.at_after_traverse(traveller, source_location)
             return success
-        if traveller.location == target_location:  # If object is at destination...
+        if traveller.location == destination:  # If object is at destination...
             return True
 
         def move_callback():
             """This callback will be called by utils.delay after move_delay seconds."""
             start_location = traveller.location
-            if traveller.move_to(target_location):
+            if traveller.move_to(destination):
                 traveller.nattributes.remove('currently_moving')
                 self.at_after_traverse(traveller, start_location)
             else:
