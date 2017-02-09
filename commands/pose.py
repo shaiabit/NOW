@@ -49,7 +49,7 @@ class CmdPose(MuxCommand):
                     char.msg("Current pose reads: '%s'" % char.get_display_name(char, pose=True))
                     default_pose = target.db.pose_default or None
                     if default_pose:
-                        char.msg('Default pose is \'%s%s\'' % (char.get_display_name(char), pose))
+                        char.msg('Default pose is \'%s%s\'' % (char.get_display_name(char), default_pose))
                     else:
                         char.msg('Default pose not set.')
                 else:
