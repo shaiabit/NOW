@@ -15,7 +15,6 @@ class CmdWho(MuxPlayerCommand):
       ws     - includes species
       wa     - same as 'where'
     Options:
-    /f             - shows more info for those with permissions.
     /s or /species - shows species setting for characters in your location.
     """
     key = 'who'
@@ -28,7 +27,8 @@ class CmdWho(MuxPlayerCommand):
         session_list = SESSIONS.get_sessions()
         cmd = self.cmdstring
         opt = self.switches
-        show_session_data = you.check_permstring('Immortals') if 'f' in opt else False
+        quelled = you.attributes.has('_quell')
+        show_session_data = you.check_permstring('Immortals') and not quelled
         player_count = (SESSIONS.player_count())
         table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
         if 'f' in opt or 'full' in opt or cmd == 'wa' or cmd == 'where':
