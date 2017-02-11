@@ -150,6 +150,7 @@ class Exit(DefaultExit, Tangible):
         # ndb is used since deferrals cannot be pickled to store in the database.
         deferred = utils.delay(move_delay, callback=move_callback)
         traveller.ndb.currently_moving = deferred
+        return True
 
     def at_failed_traverse(self, traveller):
         """
