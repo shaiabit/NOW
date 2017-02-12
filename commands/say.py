@@ -81,7 +81,7 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             player.execute_cmd('pose/o %s' % args[1:])
         else:
-            here.msg_contents('[OOC {char}] %s' % args, from_obj=char, mapping=dict(char=char))
+            here.msg_contents('[OOC {char}] %s' % escape_braces(args), from_obj=char, mapping=dict(char=char))
 
 
 class CmdSpoof(MuxCommand):
@@ -122,7 +122,7 @@ class CmdSpoof(MuxCommand):
             if 'self' in opt:
                 char.msg(' ' * indent + args.rstrip())
             else:
-                here.msg_contents(' ' * indent + args.rstrip())
+                here.msg_contents(' ' * indent + escape_braces(args.rstrip()))
         elif 'right' in opt or 'center' in opt or 'news' in opt:
             if self.rhs is not None:  # Equals sign exists.
                 parameters = '' if not self.rhs else self.rhs.split()
@@ -145,16 +145,16 @@ class CmdSpoof(MuxCommand):
                 if 'self' in opt:
                     char.msg(text.rstrip())
                 else:
-                    here.msg_contents(text.rstrip())
+                    here.msg_contents(escape_braces(text.rstrip()))
         else:
             here.at_say(char, stripped)  # calling the speech hook on the location.
             if 'strip' in opt:  # Optionally strip any markup or escape it,
                 if 'self' in opt:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
-                    here.msg_contents(spoof.rstrip(), options={'raw': True})
+                    here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
             else:
                 if 'self' in opt:
                     char.msg(args.rstrip())
                 else:
-                    here.msg_contents(spoof.rstrip())
+                    here.msg_contents(escape_braces(spoof.rstrip()))
