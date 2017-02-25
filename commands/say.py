@@ -108,7 +108,7 @@ class CmdSpoof(MuxCommand):
         opt = self.switches
         args = self.args.strip()
         if not args:
-            char.execute_cmd('help spoof')
+            self.player.execute_cmd('help spoof')
             return
         # Optionally strip any markup /or/ just escape it,
         stripped = ansi.strip_ansi(args)
