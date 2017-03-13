@@ -23,15 +23,16 @@ class CmdQuit(MuxPlayerCommand):
         player = self.player
         bye = '|RDisconnecting|n'
         exit_msg = 'Hope to see you again, soon.'
+        reason = self.args.strip()
 
-        if self.args.strip():
+        if reason:
             bye += " ( |w%s ) " % self.args.strip()
 
         if 'all' in self.switches:
             msg = bye + ' all sessions. ' + exit_msg
             player.msg(msg, session=self.session)
             for session in player.sessions.all():
-                player.disconnect_session_from_player(session)
+                player.disconnect_session_from_player(session, reason=reason)
         else:
             session_count = len(player.sessions.all())
             if session_count == 2:
@@ -45,4 +46,4 @@ class CmdQuit(MuxPlayerCommand):
                 online = utils.time_format(time.time() - self.session.conn_time, 1)
                 msg = bye + ' after ' + online + ' online. ' + exit_msg
                 player.msg(msg, session=self.session)
-            player.disconnect_session_from_player(self.session)
+            player.disconnect_session_from_player(self.session, reason=reason)
