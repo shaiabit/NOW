@@ -90,6 +90,7 @@ class CmdSpoof(MuxCommand):
     Usage:
       spoof <message>
     Switches:
+    /dot . <msg>  Remove leading dot, but preserve leading spaces after it
     /center <msg> [ = position ]  Center msg at position
     /right <msg> [ = position ]   Align right at position
     /indent <msg> [ = position ]  Begin msg starting at position
@@ -106,13 +107,13 @@ class CmdSpoof(MuxCommand):
         char = self.character
         here = char.location
         opt = self.switches
-        args = self.args.strip()
+        args = self.args
         if not args:
             self.player.execute_cmd('help spoof')
             return
         # Optionally strip any markup /or/ just escape it,
         stripped = ansi.strip_ansi(args)
-        spoof = stripped if 'strip' in opt else self.args.replace('|', '||')
+        spoof = stripped if 'strip' in opt else args.replace('|', '||')
         if 'indent' in opt:
             indent = 20
             if self.rhs:
@@ -149,6 +150,12 @@ class CmdSpoof(MuxCommand):
         else:
             here.at_say(char, stripped)  # calling the speech hook on the location.
             if 'strip' in opt:  # Optionally strip any markup or escape it,
+                if 'self' in opt:
+                    char.msg(spoof.rstrip(), options={'raw': True})
+                else:
+                    here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
+            elif 'dot' in opt:  # Leave leading spacing intact, remove leading dot.
+                spoof = args.lstrip('.')
                 if 'self' in opt:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
