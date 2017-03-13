@@ -49,4 +49,6 @@ class CmdAbout(MuxCommand):
                sys.version.split()[0],
                twisted.version.short(),
                django.get_version()) if not args else 'Target information not available.'
+        char.msg(image=['https://raw.githubusercontent.com/evennia/evennia/'
+                        'master/evennia/web/website/static/website/images/evennia_logo.png'])
         char.private(None, 'info', string)
