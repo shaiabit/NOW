@@ -108,6 +108,7 @@ class CmdSpoof(MuxCommand):
         here = char.location
         opt = self.switches
         args = self.args
+        to_self = 'self' in opt or not here
         if not args:
             self.player.execute_cmd('help spoof')
             return
@@ -120,7 +121,7 @@ class CmdSpoof(MuxCommand):
                 args = self.lhs.strip()
                 indent = re.sub("[^0123456789]", '', self.rhs) or 20
                 indent = int(indent)
-            if 'self' in opt:
+            if to_self:
                 char.msg(' ' * indent + args.rstrip())
             else:
                 here.msg_contents(' ' * indent + escape_braces(args.rstrip()))
@@ -143,25 +144,26 @@ class CmdSpoof(MuxCommand):
             block = 'r' if 'right' in opt else 'f'
             block = 'c' if 'center' in opt else block
             for text in justify(args, width=outside, align=block, indent=inside).split('\n'):
-                if 'self' in opt:
+                if to_self:
                     char.msg(text.rstrip())
                 else:
                     here.msg_contents(escape_braces(text.rstrip()))
         else:
-            here.at_say(char, stripped)  # calling the speech hook on the location.
+            if not to_self:
+                here.at_say(char, stripped)  # calling the speech hook on the location if applies
             if 'strip' in opt:  # Optionally strip any markup or escape it,
-                if 'self' in opt:
+                if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
                     here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
             elif 'dot' in opt:  # Leave leading spacing intact, remove leading dot.
                 spoof = args.lstrip('.')
-                if 'self' in opt:
+                if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
                     here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
             else:
-                if 'self' in opt:
+                if to_self:
                     char.msg(args.rstrip())
                 else:
                     here.msg_contents(escape_braces(spoof.rstrip()))
