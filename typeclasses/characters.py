@@ -339,7 +339,7 @@ class Character(DefaultCharacter, Tangible):
             else:
                 things.append(con)
         string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))
-        if self.location.tags.get('rp', category='flags'):
+        if self.location and self.location.tags.get('rp', category='flags'):
             string += ' %s' % self.attributes.get('pose') or ''
         if self.traits.mass and self.traits.mass.actual > 0:
             string += " |y(%s)|n " % mass_unit(self.get_mass())
