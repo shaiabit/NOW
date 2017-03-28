@@ -69,7 +69,7 @@ class CmdWho(MuxPlayerCommand):
             table.reformat_column(0, width=72, align='l')
             table.reformat_column(1, width=7, align='r')
             for session in session_list:
-                if not session.logged_in:
+                if not session.logged_in or not session.get_puppet():
                     continue
                 delta_cmd = time.time() - session.cmd_last_visible
                 character = session.get_puppet()
