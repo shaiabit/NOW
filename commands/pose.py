@@ -23,7 +23,7 @@ class CmdPose(MuxCommand):
     # > ppose strains to lift the anvil. = get anvil
     # > Werewolf strains to lift the anvil.
     # ==> Werewolf takes the anvil.
-    # (optional success message if anvil is liftable.)
+    # (optional success message if anvil can be lifted.)
     key = 'pose'
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
     locks = 'cmd:all()'
@@ -44,10 +44,10 @@ class CmdPose(MuxCommand):
         if 'do' in cmd or 'rp' in cmd:
             target = char
             if not args and 'reset' not in opt:
-                pose = char.attributes.get('pose')
-                if pose:
+                has_pose = char.db.messages and char.db.messages.get('pose')
+                if has_pose:
                     char.msg("Current pose reads: '%s'" % char.get_display_name(char, pose=True))
-                    default_pose = target.db.pose_default or None
+                    default_pose = target.db.messages and target.db.messages.get('pose_default') or None
                     if default_pose:
                         char.msg('Default pose is \'%s%s\'' % (char.get_display_name(char), default_pose))
                     else:
@@ -64,23 +64,30 @@ class CmdPose(MuxCommand):
                     return
             else:
                 target = char
-            if not target.attributes.has('pose'):  # Check to see if any pose message is available, set Default if so
-                char.db.pose = ''  # TODO: Replace use of .db.pose with db.message['pose']
-                char.db.pose_default = '|_is here.'  # TODO: depreciate .db.pose_default, use db.message['pose default']
+            if not char.db.messages:
+                char.db.messages = {}
+            char.db.messages['pose'] = pose
+            char.db.messages['pose_default'] = '|_is here.'  # set Default if so
             target_name = target.sdesc.get() if hasattr(target, '_sdesc') else target.key
-            # set the pose
+            # reset the pose to default
             if 'reset' in opt:
-                pose = target.db.pose_default
-                target.db.pose = pose
+                pose = target.db.messages and target.db.messages.get('pose_default', '')
+                if not target.db.messages:
+                    target.db.messages = {}
+                target.db.messages['pose'] = pose
             elif 'default' in opt:
-                target.db.pose_default = pose
+                if not target.db.messages:
+                    target.db.messages = {}
+                target.db.messages['pose_default'] = pose
                 char.msg("Default pose is now: '%s%s'" % (char.get_display_name(char), pose))
                 return
             else:
                 if len(target_name) + len(pose) > 60:
                     char.msg('Your pose is too long.')
                     return
-                target.db.pose = pose
+                if not target.db.messages:
+                    target.db.messages = {}
+                target.db.messages['pose'] = pose
                 if self.args:
                     player.execute_cmd(';%s' % pose)
             char.msg("Pose now set to: '%s'" % char.get_display_name(char, pose=True))

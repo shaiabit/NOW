@@ -54,8 +54,10 @@ class Tangible(DefaultObject):
             display_name = "|lc%s|lt%s|le" % (mxp, display_name)
         if self.access(viewer, access_type='control') and db_id:
             display_name += '|w(#%s)|n' % self.id
-        if pose and self.attributes.get('pose'):
-            display_name += ('|n' if color else '') + self.attributes.get('pose')
+        if pose and self.db.messages and (self.db.messages.get('pose') or self.db.messages.get('pose_default')):
+            display_pose = self.db.messages.get('pose') if self.db.messages.get('pose', None)\
+                else self.db.messages.get('pose_default')
+            display_name += ('|n' if color else '') + display_pose
         return display_name
 
     def mxp_name(self, viewer, command):  # Depreciated. call obj.get_display_name(viewer, mxp=command)
@@ -120,16 +122,16 @@ class Tangible(DefaultObject):
             return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
         return '%sYou|n see nothing here.' % viewer.STYLE
 
-    def return_detail(self, detail_key):
+    def return_detail(self, detail_key, detail_sense):
         """
         This looks for an Attribute "obj_details" and possibly
         returns the value of it.
 
         Args:
-            detail_key (str): The detail being looked at. This is
-                case-insensitive.
+            detail_key (str): The detail being looked at. This is case-insensitive.
         """
-        return self.db.details.get(detail_key.lower(), None) if self.db.details else None
+        # return self.db.details.get(self.db.senses.get(detail_sense.lower()), None) if self.db.details else None
+        pass
 
     def set_detail(self, detail_key, description):
         """
@@ -142,7 +144,8 @@ class Tangible(DefaultObject):
             description (str): The text to return when looking
                 at the given detail_key.
         """
-        if self.db.details:
-            self.db.details[detail_key.lower()] = description
-        else:
-            self.db.details = {detail_key.lower(): description}
+        # if self.db.details:
+        #     self.db.details[detail_key.lower()] = description
+        # else:
+        #     self.db.details = {detail_key.lower(): description}
+        pass

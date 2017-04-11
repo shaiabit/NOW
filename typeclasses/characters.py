@@ -80,10 +80,11 @@ class Character(DefaultCharacter, Tangible):
             if not source_location.destination:
                 self.db.last_room = source_location
         if self.location:  # Things to do after the character moved somewhere
-            self.db.pose = self.db.pose_default  # Reset room pose when moving to new location
+            if self.db.messages:
+                self.db.messages['pose'] = self.db.messages.get('pose_default', None)  # Reset room pose after moving.
             if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
                 if not self.db.settings or self.db.settings.get('look arrive', default=True):
-                    self.msg(text=((self.at_look(self.location),), {'window': 'room'}))
+                    self.msg(text=(self.at_look(self.location), dict(type='look', window='room')))
             if source_location and self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
                 for each in source_location.contents:
                     if not each.has_player or each not in self.db.followers or not self.access(each, 'view'):
@@ -340,7 +341,8 @@ class Character(DefaultCharacter, Tangible):
                 things.append(con)
         string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))
         if self.location and self.location.tags.get('rp', category='flags'):
-            string += ' %s' % self.attributes.get('pose') or ''
+            pose = self.db.messages and self.db.messages.get('pose', None)
+            string += ' %s' % pose or ''
         if self.traits.mass and self.traits.mass.actual > 0:
             string += " |y(%s)|n " % mass_unit(self.get_mass())
         if self.traits.health:  # Add character health bar if character has health.
