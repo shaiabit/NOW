@@ -27,9 +27,9 @@ class CmdPathfind(default_cmds.MuxCommand):
         this = self.obj.get_display_name(self.caller)
         if self.caller is not self.obj:
             loc.msg_contents("{who} asks {it} to find something.", mapping=dict(who=self.caller, it=self.obj))
-        loc.msg_contents("%s's ears swivel, scanning for \"%s\"." % (this, self.args))
+        loc.msg_contents("{it}'s ears swivel, scanning for \"%s\"." % self.args, mapping=dict(it=self.obj))
         if not self.target:
-            loc.msg_contents("%s can't find \"%s\"." % (this, self.args))
+            loc.msg_contents("{it} can't find \"%s\"." % self.args, mapping=dict(it=self.obj))
             return
         target = self.target.get_display_name(self.caller)
         # initialize a list to store rooms we've visited
