@@ -107,8 +107,10 @@ class CmdPose(MuxCommand):
                     char.ndb.power_pose = pose
                     player.execute_cmd(self.rhs)
                 else:
-                    prepend_ooc = '[OOC] ' if 'o' in self.switches or 'ooc' in self.switches else ''
-                    here.msg_contents('%s{char}%s' % (prepend_ooc, escape_braces(pose)),
+                    ooc = 'o' in self.switches or 'ooc' in self.switches
+                    prepend_ooc = '[OOC] ' if ooc else ''
+                    here.msg_contents(('%s{char}%s' % (prepend_ooc, escape_braces(pose)),
+                                       {'type': 'pose', 'ooc': ooc}),
                                       from_obj=char, mapping=dict(char=char))
             else:
                 if char.location.tags.get('rp', category='flags'):

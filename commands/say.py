@@ -37,7 +37,8 @@ class CmdSay(MuxCommand):
             return
         if 'v' in opt or 'verb' in opt:
             char.attributes.add('say-verb', args)
-            here.msg_contents('{char} warms up vocally with "%s|n"' % escape_braces(args),
+            here.msg_contents(text=('{char} warms up vocally with "%s|n"' % escape_braces(args),
+                                    {'type': 'pose','action': True}),
                               from_obj=char, mapping=dict(char=char))
             return
         if 'q' in opt or 'quote' in opt:
@@ -48,11 +49,11 @@ class CmdSay(MuxCommand):
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             if 'o' in opt or 'ooc' in opt:
-                here.msg_contents('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
-                                  from_obj=char, mapping=dict(char=char))
+                here.msg_contents(text=('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
+                                        {'type': 'say', 'ooc': True}), from_obj=char, mapping=dict(char=char))
             else:
-                here.msg_contents('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
-                                  from_obj=char, mapping=dict(char=char))
+                here.msg_contents(text=('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
+                                        {'type': 'say'}), from_obj=char, mapping=dict(char=char))
 
 
 class CmdOoc(MuxCommand):
@@ -81,7 +82,8 @@ class CmdOoc(MuxCommand):
         elif args[0] == ':' or args[0] == ';':
             player.execute_cmd('pose/o %s' % args[1:])
         else:
-            here.msg_contents('[OOC {char}] %s' % escape_braces(args), from_obj=char, mapping=dict(char=char))
+            here.msg_contents(text=('[OOC {char}] %s' % escape_braces(args), {'type': 'ooc', 'ooc': True}),
+                              from_obj=char, mapping=dict(char=char))
 
 
 class CmdSpoof(MuxCommand):
@@ -124,7 +126,7 @@ class CmdSpoof(MuxCommand):
             if to_self:
                 char.msg(' ' * indent + args.rstrip())
             else:
-                here.msg_contents(' ' * indent + escape_braces(args.rstrip()))
+                here.msg_contents(text=(' ' * indent + escape_braces(args.rstrip()), {'type': 'spoof'}))
         elif 'right' in opt or 'center' in opt or 'news' in opt:
             if self.rhs is not None:  # Equals sign exists.
                 parameters = '' if not self.rhs else self.rhs.split()
@@ -147,7 +149,7 @@ class CmdSpoof(MuxCommand):
                 if to_self:
                     char.msg(text.rstrip())
                 else:
-                    here.msg_contents(escape_braces(text.rstrip()))
+                    here.msg_contents(text=(escape_braces(text.rstrip()), {'type': 'spoof'}))
         else:
             if not to_self:
                 here.at_say(char, stripped)  # calling the speech hook on the location if applies
@@ -155,15 +157,15 @@ class CmdSpoof(MuxCommand):
                 if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
-                    here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
+                    here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}), options={'raw': True})
             elif 'dot' in opt:  # Leave leading spacing intact, remove leading dot.
                 spoof = args.lstrip('.')
                 if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
-                    here.msg_contents(escape_braces(spoof.rstrip()), options={'raw': True})
+                    here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}), options={'raw': True})
             else:
                 if to_self:
                     char.msg(args.rstrip())
                 else:
-                    here.msg_contents(escape_braces(spoof.rstrip()))
+                    here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}))
