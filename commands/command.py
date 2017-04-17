@@ -160,7 +160,7 @@ class MuxCommand(default_cmds.MuxCommand):
         """
         char = self.character
         here = char.location if char else None
-        who = self.player.key if self.player else '-visitor-'
+        who = self.player.key if self.player else (char if char else '-visitor-')
         cmd = self.cmdstring if self.cmdstring != '__nomatch_command' else ''
         print('%s> %s%s' % (who, cmd, self.raw))
         if here:
