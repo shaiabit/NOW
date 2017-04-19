@@ -222,14 +222,11 @@ class Character(DefaultCharacter, Tangible):
         self.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
         if is_somewhere:  # if puppet is somewhere
             self.msg(self.at_look(self.location))  # look to see surroundings
-        if self.ndb.new_mail:
-            self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
-
-        def message(obj, from_obj):
+            if self.ndb.new_mail:
+                self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
             text = 'fades into view' if self.location != self.home else 'awakens'
-            obj.msg('|g%s|n %s.' % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
-
-        self.location.for_contents(message, exclude=[self], from_obj=self)
+            self.location.msg_contents('|g%s|n %s.' %
+                                       (self.get_display_name(self, color=False), text), from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
         """
