@@ -86,7 +86,7 @@ class Tangible(DefaultObject):
             message += text
         self.msg(message)
 
-    def return_glance(self, viewer):
+    def return_glance(self, viewer, bool=False):
         """
         Displays the name or sdesc of the object with its room pose in a viewer-aware manner.
         If self is in Nothingness, shows inventory contents instead of room contents.
@@ -95,6 +95,7 @@ class Tangible(DefaultObject):
             self (Object, Character, or Room):
             viewer (TypedObject): The object or player that is looking
                 at/getting information for this object.
+            bool (bool): Return True instead of a string list.
 
         Returns:
             name (str): A string of the name or sdesc containing the name of the objects
@@ -119,8 +120,8 @@ class Tangible(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
-            return (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
-        return '%sYou|n see nothing here.' % viewer.STYLE
+            return True if bool else (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
+        return False if bool else '%sYou|n see nothing here.' % viewer.STYLE
 
     def return_detail(self, detail_key, detail_sense):
         """
