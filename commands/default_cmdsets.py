@@ -16,6 +16,8 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 from evennia import default_cmds
 
 # from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
+from evennia.contrib.mail import CmdMail
+from evennia.contrib.clothing import CmdWear, CmdRemove, CmdCover, CmdUncover
 
 # [Traversal of path-exits]
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
@@ -71,18 +73,24 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdTeleport)  # Teleport haa cost and conditions.
 # [...]
         self.add(CmdOoc)
+        self.add(CmdSay)
         self.add(CmdTry)
         self.add(CmdDesc)
         self.add(CmdFlag)
         self.add(CmdHome)
         self.add(CmdMail)
+        self.add(CmdPose)
         self.add(CmdZone)
         self.add(CmdSpoof)
         self.add(CmdSummon)
         self.add(CmdWhisper)
         self.add(CmdInventory)
 # [...]
-        # RP commands used to be here.
+        # Clothing contrib commands
+        self.add(CmdWear)
+        self.add(CmdRemove)
+        self.add(CmdCover)
+        self.add(CmdUncover)
 # [...]
         self.add(CmdStop)
         self.add(CmdBack)

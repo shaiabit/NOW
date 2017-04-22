@@ -10,6 +10,8 @@ from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
 from world.helpers import make_bar, mass_unit
+from evennia.contrib.clothing import get_worn_clothes
+from evennia.utils import list_to_string
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 
 
@@ -335,7 +337,8 @@ class Character(DefaultCharacter, Tangible):
             elif con.has_player:
                 users.append(con)
             else:
-                things.append(con)
+                if not con.db.worn:
+                    things.append(con)
         string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))
         if self.location and self.location.tags.get('rp', category='flags'):
             pose = self.db.messages and self.db.messages.get('pose', None)
@@ -356,13 +359,25 @@ class Character(DefaultCharacter, Tangible):
             string += "%s" % desc_brief
         else:
             string += 'A shimmering illusion shifts from form to form.'
-        if exits:
-            string += "\n|wExits: " + ", ".join("%s" % e.get_display_name(viewer) for e in exits)
+        # ---- Allow clothes wearing to be seen
+        worn_string_list = []
+        clothes_list = get_worn_clothes(self, exclude_covered=True)
+        # Append worn, uncovered clothing to the description
+        for garment in clothes_list:
+            if garment.db.worn is True:  # If 'worn' is True,
+                worn_string_list.append(garment.name)  # just append the name.
+            # Otherwise, append the name and the string value of 'worn'
+            elif garment.db.worn:
+                worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
+        if worn_string_list:  # Append worn clothes.
+            string += "|/|/%s is wearing %s." % (self, list_to_string(worn_string_list))
+        # ---- List things carried (excludes worn things)
         if users or things:
             user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
             string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+        # ---- Look Notify system:
         if self != char:
             if not (self.db.settings and 'look notify' in self.db.settings
                     and self.db.settings['look notify'] is False):

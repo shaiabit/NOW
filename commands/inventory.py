@@ -18,18 +18,29 @@ class CmdInventory(MuxCommand):
     arg_regex = r'^/|\s|$'
 
     def func(self):
-        """check inventory"""
+        """
+        check inventory, listing carried and worn items,
+        and optionally, their weight.
+        """
         you = self.character
         items = you.contents
+        items_not_worn = []
+
+        wear_table = evtable.EvTable(border="header")
+        for item in items:
+            if item.db.worn:
+                wear_table.add_row("|C%s|n" % item.name, item.db.desc or "")
+            else:
+                items_not_worn.append(item)
         mass = you.traits.mass.actual if you.traits.mass else 0
-        if not items:
+        if not items_not_worn:
             if mass:
                 string = 'You (%s) are not carrying anything.' % mass_unit(mass)
             else:
                 string = 'You are not carrying anything.'
         else:
             table = evtable.EvTable(border='header')
-            for item in items:
+            for item in items_not_worn:
                 i_mass = mass_unit(item.get_mass()) if hasattr(item, 'get_mass') else 0
                 second = '(|y%s|n) ' % i_mass if 'weight' in self.switches else ''
                 second += item.db.desc_brief or item.db.desc or ''
@@ -39,4 +50,7 @@ class CmdInventory(MuxCommand):
             string = "|wYou (%s) and what you carry (%s) total |y%s|n:\n%s" %\
                      (mass_unit(mass), mass_unit(my_total_mass - my_mass),
                       mass_unit(my_total_mass), table)
+
+        if not wear_table.nrows == 0:
+            string += "|/|wYou are wearing:\n%s" % wear_table
         you.msg(string)
