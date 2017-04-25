@@ -15,7 +15,12 @@ class CmdPose(MuxCommand):
     Options:
     /o or /ooc  (Out-of-character to the room or channel.)
     /m or /magnet  (Show which characters remove name/pose space.)
-    /do    (Pose and set room-pose/doing message.)
+    /do or do, rp, doing  (Pose and set room-pose/doing message.)
+      Additional options for do, rp, doing command version of pose:
+      /reset   (Reset the current room pose to use default setting)
+      /default (Set the default room pose for all rooms, all times)
+      /quiet or silent (Update doing, but do not pose) 
+    
     Example:
       > pose is standing by the tree, smiling.
       Rulan is standing by the tree, smiling.
@@ -55,13 +60,14 @@ class CmdPose(MuxCommand):
                 else:
                     char.msg('No pose has been set.|/Usage: rp <pose-text> OR pose obj = <pose-text>')
                 return
-            if target and '=' in self.args:  # affect something else other than self. TODO: not currently parsed.
+            if target and '=' in self.args:  # affect something else other than self.
                 target = char.search(target)
                 if not target:
                     return
                 if not target.access(char, 'edit'):
                     char.msg('You have no permission to edit %s.' % target.get_display_name(char))
                     return
+                pass  # TODO: Apply setting to target.
             else:
                 target = char
             if not char.db.messages:
@@ -88,7 +94,7 @@ class CmdPose(MuxCommand):
                 if not target.db.messages:
                     target.db.messages = {}
                 target.db.messages['pose'] = pose
-                if self.args:
+                if self.args and not ('silent' in opt or 'quiet' in opt):
                     player.execute_cmd(';%s' % pose)
             char.msg("Pose now set to: '%s'" % char.get_display_name(char, pose=True))
         else:  # Action pose, not static Room Pose.
