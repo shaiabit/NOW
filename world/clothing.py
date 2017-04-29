@@ -269,6 +269,7 @@ class Item(Consumable):
         when they're picked up, in case they've somehow had their
         location changed without getting removed.
         """
+        super(Item, self).at_get()
         self.db.worn = False
 
 # COMMANDS START HERE
@@ -536,36 +537,49 @@ class CmdGive(MuxCommand):
     locks = 'cmd:all()'
     arg_regex = r"\s|$"
 
+    def parse(self):
+        """Implement additional parse"""
+        super(CmdGive, self).parse()
+        if ' to ' in self.args:
+            self.lhs, self.rhs = self.args.split(' to ', 2)
+
     def func(self):
         """Implement give"""
 
         caller = self.caller
+        opt = self.switches
+        cmd = self.cmdstring
         if not self.args or not self.rhs:
             caller.msg("Usage: give <inventory object> = <target>")
             return
         to_give = caller.search(self.lhs, location=caller,
-                                nofound_string="You aren't carrying %s." % self.lhs,
-                                multimatch_string="You carry more than one %s:" % self.lhs)
+                                nofound_string='You aren\'t carrying "%s".' % self.lhs,
+                                multimatch_string='You carry more than one "%s":' % self.lhs)
         target = caller.search(self.rhs)
         if not (to_give and target):
             return
         if target == caller:
-            caller.msg("You keep %s to yourself." % to_give.key)
+            caller.msg("You keep {it} to yourself.".format(to_give.get_display_name(caller)))
             return
         if not to_give.location == caller:
-            caller.msg("You are not holding %s." % to_give.key)
+            caller.msg("You are not holding {it}.".format(to_give.get_display_name(caller)))
             return
         # This is new! Can't give away something that's worn.
         if to_give.db.covered_by:
-            caller.msg("You can't give that away because it's covered by %s." % to_give.db.covered_by)
+            caller.msg("You can't give that away because it's covered by %s." %
+                       to_give.db.covered_by.get_display_name(caller))
             return
         # Remove clothes if they're given.
         if to_give.db.worn:
             to_give.remove(caller)
         to_give.move_to(caller.location, quiet=True)
         # give object
-        caller.msg("You give %s to %s." % (to_give.key, target.key))
+        caller.msg("You give {} to {}.".format(to_give.get_display_name(caller), target.get_display_name(caller)))
         to_give.move_to(target, quiet=True)
-        target.msg("%s gives you %s." % (caller.key, to_give.key))
+        if not (cmd == 'qgive' or 'silent' in opt or 'quiet' in opt):
+            caller.location.msg_contents("{giver} gives {item} to {receiver}.",
+                                         mapping=dict(giver=caller, item=to_give, receiver=target),
+                                         exclude=[caller, target])
+        target.msg("{} gives you {}.".format(caller.get_display_name(caller), to_give.get_display_name(caller)))
         # Call the object script's at_give() method.
         to_give.at_give(caller, target)

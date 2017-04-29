@@ -17,7 +17,7 @@ from evennia import default_cmds
 
 # from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
 from evennia.contrib.mail import CmdMail
-from world.clothing import CmdWear, CmdRemove, CmdCover, CmdUncover
+from world.clothing import CmdWear, CmdRemove, CmdCover, CmdUncover, CmdGive
 
 # [Traversal of path-exits]
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
