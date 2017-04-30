@@ -67,7 +67,6 @@ with which to test the system:
 """
 
 from typeclasses.objects import Consumable
-from evennia import DefaultCharacter
 from evennia import default_cmds
 from evennia.commands.default.muxcommand import MuxCommand
 from evennia.utils import list_to_string
@@ -290,7 +289,6 @@ class CmdWear(MuxCommand):
     If you provide a 'wear style' after the command, the message you
     provide will be displayed after the clothing's name.
     """
-
     key = 'wear'
     help_category = 'Clothing'
 
@@ -347,7 +345,6 @@ class CmdRemove(MuxCommand):
     clothes that are covered up by something else - you must take
     off the covering item first.
     """
-
     key = 'remove'
     help_category = 'Clothing'
 
@@ -378,7 +375,6 @@ class CmdCover(MuxCommand):
     your description until it's uncovered or the item covering it is removed.
     You can't remove an item of clothing if it's covered.
     """
-
     key = 'cover'
     help_category = 'Clothing'
 
@@ -442,7 +438,6 @@ class CmdUncover(MuxCommand):
     covering it. You can't uncover an item of clothing if the item covering
     it is also covered by something else.
     """
-
     key = 'uncover'
     help_category = 'Clothing'
 
@@ -474,68 +469,19 @@ class CmdUncover(MuxCommand):
         to_uncover.db.covered_by = None
 
 
-class CmdDrop(MuxCommand):
-    """
-    drop something
-
-    Usage:
-      drop <obj>
-
-    Lets you drop an object from your inventory into the
-    location you are currently in.
-    """
-
-    key = 'drop'
-    locks = 'cmd:all()'
-    arg_regex = r"\s|$"
-
-    def func(self):
-        """Implement command"""
-
-        caller = self.caller
-        if not self.args:
-            caller.msg("Drop what?")
-            return
-
-        # Because the DROP command by definition looks for items
-        # in inventory, call the search function using location = caller
-        obj = caller.search(self.args, location=caller,
-                            nofound_string="You aren't carrying %s." % self.args,
-                            multimatch_string="You carry more than one %s:" % self.args)
-        if not obj:
-            return
-
-        # This part is new!
-        # You can't drop clothing items that are covered.
-        if obj.db.covered_by:
-            caller.msg("You can't drop that because it's covered by %s." % obj.db.covered_by)
-            return
-        # Remove clothes if they're dropped.
-        if obj.db.worn:
-            obj.remove(caller, quiet=True)
-
-        obj.move_to(caller.location, quiet=True)
-        caller.msg("You drop %s." % (obj.name,))
-        caller.location.msg_contents("%s drops %s." %
-                                     (caller.name, obj.name),
-                                     exclude=caller)
-        # Call the object script's at_drop() method.
-        obj.at_drop(caller)
-
-
 class CmdGive(MuxCommand):
     """
-    give away something to someone
+    Gives an item from your inventory to another.
 
     Usage:
-      give <inventory obj> = <target>
+      give <inventory obj> <=|to> <target>
 
-    Gives an items from your inventory to another character,
-    placing it in their inventory.
+    Options:
+    /quiet or /silent  Others in the room not notified of give.
     """
     key = 'give'
+    aliases = ['qgive']
     locks = 'cmd:all()'
-    arg_regex = r"\s|$"
 
     def parse(self):
         """Implement additional parse"""
@@ -550,19 +496,20 @@ class CmdGive(MuxCommand):
         opt = self.switches
         cmd = self.cmdstring
         if not self.args or not self.rhs:
-            caller.msg("Usage: give <inventory object> = <target>")
+            caller.msg("Usage: give <inventory object> <=|to> <target>")
             return
         to_give = caller.search(self.lhs, location=caller,
                                 nofound_string='You aren\'t carrying "%s".' % self.lhs,
                                 multimatch_string='You carry more than one "%s":' % self.lhs)
         target = caller.search(self.rhs)
+        quiet = cmd == 'qgive' or 'silent' in opt or 'quiet' in opt
         if not (to_give and target):
             return
         if target == caller:
-            caller.msg("You keep {it} to yourself.".format(to_give.get_display_name(caller)))
+            caller.msg("You keep {it} to yourself.".format(it=to_give.get_display_name(caller)))
             return
         if not to_give.location == caller:
-            caller.msg("You are not holding {it}.".format(to_give.get_display_name(caller)))
+            caller.msg("You are not holding {it}.".format(it=to_give.get_display_name(caller)))
             return
         # This is new! Can't give away something that's worn.
         if to_give.db.covered_by:
@@ -574,12 +521,14 @@ class CmdGive(MuxCommand):
             to_give.remove(caller)
         to_give.move_to(caller.location, quiet=True)
         # give object
-        caller.msg("You give {} to {}.".format(to_give.get_display_name(caller), target.get_display_name(caller)))
+        message = "You quietly give {} to {}." if quiet else "You give {} to {}."
+        caller.msg(message.format(to_give.get_display_name(caller), target.get_display_name(caller)))
         to_give.move_to(target, quiet=True)
-        if not (cmd == 'qgive' or 'silent' in opt or 'quiet' in opt):
+        if not quiet:
             caller.location.msg_contents("{giver} gives {item} to {receiver}.",
                                          mapping=dict(giver=caller, item=to_give, receiver=target),
                                          exclude=[caller, target])
-        target.msg("{} gives you {}.".format(caller.get_display_name(caller), to_give.get_display_name(caller)))
+        message = "{} quietly gives you {}." if quiet else "{} gives you {}."
+        target.msg(message.format(caller.get_display_name(caller), to_give.get_display_name(caller)))
         # Call the object script's at_give() method.
         to_give.at_give(caller, target)
