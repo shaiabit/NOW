@@ -2,15 +2,16 @@
 from commands.command import MuxCommand
 from evennia import syscmdkeys, Command
 from evennia.utils.utils import string_suggestions
+from world.verbs import VerbHandler
 
 
 class CmdTry(MuxCommand):
     """
     Actions a character can do to things nearby.
     Usage:
-      ppose <pose> = <verb> [noun]
-      try <verb> [noun]
-      <verb> [noun]
+      ppose <pose> = <parse>
+      try <parse>
+      <parse>
     """
     key = syscmdkeys.CMD_NOMATCH
     aliases = 'try'
@@ -22,9 +23,8 @@ class CmdTry(MuxCommand):
     def func(self):
         """
         Run the try command
-        TODO: Parse <verb>, <verb> <article> <noun>, <verb> <preposition> <noun>, <verb> <preposition> <article> <noun>.
         """
-        player = self.player
+        account = self.player
         char = self.character
         args = self.args
         if args[3:] == 'try':
@@ -39,7 +39,7 @@ class CmdTry(MuxCommand):
                     here.msg_contents('%s = %s' % (char.ndb.power_pose, args))  # Display as normal pose.
                     char.nattributes.remove('power_pose')  # Flush power pose
                 else:
-                    player.msg(self.suggest_command())
+                    account.msg(self.suggest_command())
                 return
             else:
                 good_targets = self.objects_allowing_verb(verb)
@@ -48,44 +48,28 @@ class CmdTry(MuxCommand):
                     obj = obj[0] if obj else None
                 if not obj:
                     obj = good_targets[0] if len(good_targets) == 1 else None
-                player.msg('(%s/%s (%s))' % (verb, noun, obj))
+                account.msg('(%s/%s (%s))' % (verb, noun, obj))
                 if obj and obj in good_targets:
                     self.trigger_response(char, verb, obj)
                 else:
                     if good_targets:
                         if obj:
-                            player.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
+                            account.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                         else:
-                            player.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
+                            account.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                     else:
-                        player.msg('You can not %s %s|n.' % (verb, obj.get_display_name(player)))
+                        account.msg('You can not %s %s|n.' % (verb, obj.get_display_name(account)))
         else:
-            player.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
+            account.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
 
     @staticmethod
     def trigger_response(char, verb, obj):
         """
-        Triggers object method (check for method on object - check against forbidden list.)
-        Triggers command alias (tabled)
-        Triggers message (look for message)
+        Triggers verb method (check for method on verb handler - check against forbidden list.)
+        Triggers verb matched with alias, if initial verb is not a match.
+        Triggers message (look for message) on default verbs that have no method on the verb handler.
         """
-        if verb == 'get':
-            obj.get('', char)
-        elif verb == 'drop':
-            obj.drop('', char)
-        elif verb == 'read':
-            obj.read('', char)
-        elif verb == 'ride':
-            obj.mount(char)
-        elif verb == 'follow':
-            obj.follow(char)
-        elif verb == 'view':
-            char.player.execute_cmd('look %s' % obj.get_display_name(char, plain=True))
-        elif verb == 'examine':
-            char.player.execute_cmd('examine %s' % obj.get_display_name(char, plain=True))
-        elif verb == 'puppet':
-            char.player.execute_cmd('@ic %s' % obj.get_display_name(char, plain=True))
-
+        VerbHandler(char, verb, obj)
         if obj.location and obj.db.messages and verb in obj.db.messages:
             contents = obj.location.contents
             for viewer in contents:

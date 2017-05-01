@@ -39,6 +39,7 @@ def mass_unit(value):
 
 
 def escape_braces(text):
+    text = text if text else ''
     text = text.replace('{', '{{')
     text = text.replace('}', '}}')
     return text
