@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
+import time  # Check time since last activity
 
 
 class CmdTeleport(MuxCommand):
@@ -27,6 +28,30 @@ class CmdTeleport(MuxCommand):
     aliases = ['tport', 'tel']
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
+
+    @staticmethod
+    def stop_check(target):
+        """
+        Forbidden items do not teleport.
+        
+        Marked by tags, they are either left behind (teleport:remain),
+         or they prevent their holder to teleport (teleport:forbid).
+        
+        """
+        def tag_check(obj):
+            if obj.tags.get('teleport', category='forbid'):
+                return False
+            if obj.tags.get('teleport', category='remain'):
+                return None
+            return True
+
+        # Test target and target's contents:
+        items, result = [target] + target.contents, []
+        for each in items:
+            check = tag_check(each)
+            if not check:
+                result.append((each, check))
+        return True if not result else result
 
     def func(self):
         """Performs the teleport, accounting for in-world conditions."""
@@ -60,11 +85,11 @@ class CmdTeleport(MuxCommand):
                 if char and char.location and not tel_quietly:
                     char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
-                target = search_as.search(lhs, global_search=True)
+                target = search_as.search(lhs, global_search=True, exact=False)
                 if not target:
                     player.msg("Did not find object to teleport.")
                     return
-                if not player.check_permstring('Mages') or not target.access(player, 'control'):
+                if not (player.check_permstring('Mages') or target.access(player, 'control')):
                     player.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
                     return
                 player.msg("Teleported %s -> None-location." % (target.get_display_name(player)))
@@ -80,11 +105,11 @@ class CmdTeleport(MuxCommand):
             player.msg("Usage: teleport[/options] [<obj> =] <target_loc>||home")
             return
         if rhs:
-            target = search_as.search(lhs, global_search=True)
-            loc = search_as.search(rhs, global_search=True)
+            target = search_as.search(lhs, global_search=True, exact=False)
+            loc = search_as.search(rhs, global_search=True, exact=False)
         else:
             target = char
-            loc = search_as.search(lhs, global_search=True)
+            loc = search_as.search(lhs, global_search=True, exact=False)
         if not target:
             player.msg("Did not find object to teleport.")
             return
@@ -94,13 +119,17 @@ class CmdTeleport(MuxCommand):
         if target == loc:
             player.msg("You can not teleport an object inside of itself!")
             return
-        print("%s is trying to go to %s" % (target.key, loc.key))
         if target == loc.location:
             player.msg("You can not teleport an object inside something it holds!")
             return
         if target.location and target.location == loc:
             player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
             return
+        print("%s is about to go to %s" % (target.key, loc.key))
+        target.ndb._teleport_time = time.time()
+        scan = self.stop_check(target)
+        if scan is not True:
+            print("Teleport contraband detected: " + ', '.join([repr(each) for each in scan]))
         use_loc = True
         if 'into' in opt:
             use_loc = False
@@ -112,6 +141,8 @@ class CmdTeleport(MuxCommand):
         else:
             target.ndb.mover = char or player
         if target.move_to(loc, quiet=tel_quietly, emit_to_obj=char, use_destination=use_loc):
+            print("%s finally arrives at %s (Delay: %s seconds)" %
+                  (target.key, loc.key, str(time.time() - target.ndb._teleport_time)))
             if char and target == char:
                 player.msg("Teleported to %s." % loc.get_display_name(player))
             else:
