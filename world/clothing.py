@@ -482,12 +482,7 @@ class CmdGive(MuxCommand):
     key = 'give'
     aliases = ['qgive']
     locks = 'cmd:all()'
-
-    def parse(self):
-        """Implement additional parse"""
-        super(CmdGive, self).parse()
-        if ' to ' in self.args:
-            self.lhs, self.rhs = self.args.split(' to ', 2)
+    parse_to = True
 
     def func(self):
         """Implement give"""

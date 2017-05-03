@@ -6,15 +6,16 @@ import time  # Check time since last activity
 class CmdTeleport(MuxCommand):
     """
     Change object's location - IC component-aware.
-    If no object is given, you are teleported to the target location.
+    if target has a location, the teleport will be to its location by default.
+    If no object is given, you are teleported.
+
     Usage:
-      tel/switch [<object> =] <target location>
+      tel/switch [<object> =|to] <target's location>
     Options:
     /quiet     don't echo leave/arrive messages to the source/target
                locations for the move.
     /into      if target is an exit, teleport INTO
-               the exit object instead of to its destination
-    /to        if target is not a room, teleport to its location.
+               the exit object instead of to its destination    
     /vanish    if set, teleport the object into Nothingness. If this
                option is used, <target location> is ignored.
                Note that the only way to retrieve an object from
@@ -28,6 +29,7 @@ class CmdTeleport(MuxCommand):
     aliases = ['tport', 'tel']
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
+    parse_to = True
 
     @staticmethod
     def stop_check(target):
@@ -92,7 +94,7 @@ class CmdTeleport(MuxCommand):
                 if not (player.check_permstring('Mages') or target.access(player, 'control')):
                     player.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
                     return
-                player.msg("Teleported %s -> None-location." % (target.get_display_name(player)))
+                player.msg("Teleported %s -> None-location." % (target.get_display_name(char)))
                 if target.location and not tel_quietly:
                     if char and char.location == target.location and char != target:
                         target.location.msg_contents("%s%s|n sends %s%s|n into |222Nothingness|n."
@@ -102,7 +104,7 @@ class CmdTeleport(MuxCommand):
             target.location = None
             return
         if not args:
-            player.msg("Usage: teleport[/options] [<obj> =] <target_loc>||home")
+            player.msg("Usage: teleport[/options] [<obj> =|to] <target>")
             return
         if rhs:
             target = search_as.search(lhs, global_search=True, exact=False)
@@ -116,6 +118,12 @@ class CmdTeleport(MuxCommand):
         if not loc:
             player.msg("Destination not found.")
             return
+        be_with = loc
+        use_loc = True
+        if 'into' in opt:
+            use_loc = False
+        elif loc.location:
+            loc = loc.location
         if target == loc:
             player.msg("You can not teleport an object inside of itself!")
             return
@@ -123,18 +131,15 @@ class CmdTeleport(MuxCommand):
             player.msg("You can not teleport an object inside something it holds!")
             return
         if target.location and target.location == loc:
-            player.msg("%s is already at %s." % (target.get_display_name(player), loc.get_display_name(player)))
+            with_clause = ' with %s' % be_with.get_display_name(char) if be_with is not loc else '' 
+            player.msg("%s is already at %s%s." % (target.get_display_name(char),
+                                                   loc.get_display_name(char), with_clause))
             return
         print("%s is about to go to %s" % (target.key, loc.key))
         target.ndb._teleport_time = time.time()
         scan = self.stop_check(target)
         if scan is not True:
             print("Teleport contraband detected: " + ', '.join([repr(each) for each in scan]))
-        use_loc = True
-        if 'into' in opt:
-            use_loc = False
-        if 'to' in opt and loc.location:
-            loc = loc.location
         if target == char:
             player.msg('Personal teleporting costs 1 coin.')
             target.nattributes.remove('exit_used')  # Remove reference to using exit when not using exit to leave
@@ -144,13 +149,13 @@ class CmdTeleport(MuxCommand):
             print("%s finally arrives at %s (Delay: %s seconds)" %
                   (target.key, loc.key, str(time.time() - target.ndb._teleport_time)))
             if char and target == char:
-                player.msg("Teleported to %s." % loc.get_display_name(player))
+                player.msg("Teleported to %s." % loc.get_display_name(char))
             else:
-                player.msg("Teleported %s to %s." % (target.get_display_name(player), loc.get_display_name(player)))
+                player.msg("Teleported %s to %s." % (target.get_display_name(char), loc.get_display_name(char)))
                 target.nattributes.remove('mover')
             if target.location and target.db.prelogout_location and not target.has_player:
                 target.db.prelogout_location = target.location  # Have Character awaken here.
         else:
             if target.location != loc:
-                player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(player),
-                                                               loc.get_display_name(player)))
+                player.msg("|rFailed to teleport %s to %s." % (target.get_display_name(char),
+                                                               loc.get_display_name(char)))

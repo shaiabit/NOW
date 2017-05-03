@@ -130,6 +130,7 @@ class MuxCommand(default_cmds.MuxCommand):
     strings, but case is preserved.
     """
     player_caller = True
+    parse_to = False
 
     def at_pre_cmd(self):
         """
@@ -144,6 +145,8 @@ class MuxCommand(default_cmds.MuxCommand):
         that can be later accessed from self.func()
         """
         super(MuxCommand, self).parse()
+        if self.parse_to and ' to ' in self.args:
+            self.lhs, self.rhs = self.args.split(' to ', 2)
 
     def func(self):
         """
