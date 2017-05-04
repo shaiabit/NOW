@@ -384,46 +384,6 @@ class Character(DefaultCharacter, Tangible):
                 self.msg("%s just looked at you." % char.get_display_name(self))
         return string
 
-    def follow(self, caller):
-        """Set following agreement - caller follows character"""
-        if self == caller:
-            self.msg('You decide to follow your heart.')
-            return
-        action = 'follow'
-        if self.attributes.has('followers') and self.db.followers:
-            if caller in self.db.followers:
-                self.db.followers.remove(caller)
-                action = 'stop following'
-            else:
-                self.db.followers.append(caller)
-        else:
-            self.db.followers = [caller]
-        color = 'g' if action == 'follow' else 'r'
-        caller.location.msg_contents('|%s%s|n decides to %s {follower}.'
-                                     % (color, caller.key, action), from_obj=caller, mapping=dict(follower=self))
-
-    def mount(self, caller):
-        """Set riding agreement - caller rides character"""
-        if self == caller:
-            return
-        action = 'ride'
-        if self.attributes.has('riders') and self.db.riders:
-            if caller in self.db.riders:
-                self.db.riders.remove(caller)
-                action = 'stop riding'
-            else:
-                self.db.riders.append(caller)
-        else:
-            self.db.riders = [caller]
-        # caller is/was riding self invalidate caller riding anyone else in the room.
-        for each in caller.location.contents:
-            if each == caller or each == self or not each.db.riders or caller not in each.db.riders:
-                continue
-            each.db.riders.remove(caller)
-        color = 'g' if action == 'ride' else 'r'
-        caller.location.msg_contents('|%s%s|n decides to %s {mount}.'
-                                     % (color, caller.key, action), from_obj=caller, mapping=dict(mount=self))
-
 
 class NPC(Character):
     """Uses Character class as a starting point."""

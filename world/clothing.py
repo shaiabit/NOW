@@ -67,8 +67,7 @@ with which to test the system:
 """
 
 from typeclasses.objects import Consumable
-from evennia import default_cmds
-from evennia.commands.default.muxcommand import MuxCommand
+from commands.command import MuxCommand
 from evennia.utils import list_to_string
 from evennia.utils import evtable
 
@@ -268,7 +267,7 @@ class Item(Consumable):
         when they're picked up, in case they've somehow had their
         location changed without getting removed.
         """
-        super(Item, self).at_get()
+        super(Item, self).at_get(getter)
         self.db.worn = False
 
 # COMMANDS START HERE

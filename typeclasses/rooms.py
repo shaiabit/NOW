@@ -35,7 +35,7 @@ class Room(Tangible):
         Args:
             viewer (Object): Object doing the looking.
         """
-        if not viewer:
+        if not (viewer and viewer.has_player):
             return ''
         # get and identify all objects visible to the viewer, excluding the viewer.
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
@@ -541,7 +541,7 @@ class CmdGrid(CmdGridMotion):
             if 'there' in self.switches:
                 if here:
                     you.ndb.grid_loc = there
-                    name = '%s - %s'% (loc.get_display_name(you), loc.point(here, 'name'))
+                    name = '%s - %s' % (loc.get_display_name(you), loc.point(here, 'name'))
                     you.msg('|yYou have been moved to Current edit location at %s|w @ %r' % (name, coord))
                 else:
                     here = there

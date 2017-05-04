@@ -44,6 +44,8 @@ Example:
     Example:
 
         ```python
+        >>> obj.traits.add(key, name, trait_type='static', base=0, mod=0, min=None, max=None, extra={})
+        >>> obj.traits.add('hp', 'Health', 'gauge', 20, 0, 0, 20, {'nurse': True})
         >>> hp = obj.traits.hp
         >>> hp.actual
         100

@@ -70,10 +70,6 @@ class CmdTry(MuxCommand):
         Triggers message (look for message) on default verbs that have no method on the verb handler.
         """
         VerbHandler(char, verb, obj)
-        if obj.location and obj.db.messages and verb in obj.db.messages:
-            contents = obj.location.contents
-            for viewer in contents:
-                viewer.msg('%s %s' % (obj.get_display_name(viewer), obj.db.messages[verb]))
 
     def verb_list(self):
         """Scan location for objects that have verbs, and collect the verbs in a list."""

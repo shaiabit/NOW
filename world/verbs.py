@@ -35,7 +35,7 @@ class VerbHandler:
             print("Making attempt to %s" % verb)
             getattr(self, verb)()
         else:
-            _default()
+            self._default()
 
     def _default(self):
         self.s.msg('You {} {}.'.format(self.v, self.o))
@@ -43,7 +43,9 @@ class VerbHandler:
         self.s.location.msg_contents('{subject} tries to %s {object}.' % self.v,
                                      mapping=dict(subject=self.s, object=self.o),
                                      exclude=[self.s, self.o])
-        pass
+        if self.o.db.messages and self.v in self.o.db.messages:
+            self.s.location.msg_contents('{object} %s' % self.o.db.messages[self.v],
+                                         mapping=dict(object=self.o))
 
     def destroy(self):
         """Implements destroying this object."""
@@ -107,6 +109,9 @@ class VerbHandler:
             self.s.location.msg_contents('%s|g%s|n takes {it}.' % (escape_braces(pose), self.s.key),
                                          from_obj=self.s, mapping=dict(it=self.o))
             self.o.at_get(self.s)  # calling hook method
+
+    # def knock(self):
+    #     pass
 
     def puppet(self):
         self.s.player.execute_cmd('@ic %s' % self.o.get_display_name(self.s, plain=True))

@@ -78,9 +78,9 @@ class CmdExit(MuxCommand):
 
             typeclass = settings.BASE_ROOM_TYPECLASS
             room = {'name': name, 'aliases': aliases}
-            lockstring = "control:id(%s) or perm(Immortals); delete:id(%s)" \
-                         " or perm(Wizards); edit:id(%s) or perm(Wizards)"
-            lockstring = lockstring % (self.caller.dbref, self.caller.dbref, self.caller.dbref)
+            lockstring = "control:pid({0}) or perm(Immortals); delete:pid({0})" \
+                         " or perm(Wizards); edit:pid({0}) or perm(Wizards); get:false()"\
+                .format(player.id)
             r = create.create_object(typeclass, room['name'], aliases=room['aliases'], report_to=you)
             r.locks.add(lockstring)
             alias_string = room['aliases']

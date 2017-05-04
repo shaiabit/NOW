@@ -146,7 +146,7 @@ class MuxCommand(default_cmds.MuxCommand):
         """
         super(MuxCommand, self).parse()
         if self.parse_to and ' to ' in self.args:
-            self.lhs, self.rhs = self.args.split(' to ', 2)
+            self.lhs, self.rhs = self.args.split(' to ', 1)  # At most, split once, into left and right parts.
 
     def func(self):
         """
