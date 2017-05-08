@@ -30,9 +30,7 @@ class VerbHandler:
         self.o = object  # if object else subject
         self.p = preposition
         self.i = indirect
-        print('{} tries to {} {}'.format(subject, verb, object))
         if hasattr(self, self.v):
-            print("Making attempt to %s" % verb)
             getattr(self, verb)()
         else:
             self._default()
@@ -56,20 +54,7 @@ class VerbHandler:
 
     def drop(self):
         """Implements the attempt to drop this object."""
-        pose = self.s.ndb.pose
-        if self.o.location != self.s:  # If subject is not holding object,
-            self.s.msg("You do not have %s." % self.o.get_display_name(self.s))
-            return False
-        if self.o.db.covered_by:  # You can't drop clothing items that are covered.
-            self.s.msg("You can't drop that because it's covered by %s." % self.o.db.covered_by)
-            return False
-        if self.o.db.worn:
-            self.o.remove(self.s, quiet=True)
-        if self.o.move_to(self.s.location, quiet=True, use_destination=False):
-            self.o.location.msg_contents('%s|g%s|n drops {it}.' % (escape_braces(pose), self.s.key),
-                                         from_obj=self.s, mapping=dict(it=self.o))
-            self.o.at_drop(self.s)  # Call at_drop() method.
-        return True
+        self.s.player.execute_cmd('give/drop %s' % self.o.get_display_name(self.s, plain=True))
 
     def examine(self):
         self.s.player.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
@@ -106,7 +91,7 @@ class VerbHandler:
             self.s.msg("%sYou|n can lift %s, but it is too large to carry." %
                        (self.s.STYLE, self.o.get_display_name(self.s)))
         elif self.o.move_to(self.s, quiet=True):
-            self.s.location.msg_contents('%s|g%s|n takes {it}.' % (escape_braces(pose), self.s.key),
+            self.s.location.msg_contents('%s|g%s|n gets {it}.' % (escape_braces(pose), self.s.key),
                                          from_obj=self.s, mapping=dict(it=self.o))
             self.o.at_get(self.s)  # calling hook method
 

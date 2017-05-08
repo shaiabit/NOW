@@ -411,11 +411,11 @@ class CmdCover(MuxCommand):
             char.msg("You can't cover an item with itself!")
             return
         if cover_with.db.covered_by:
-            char.msg("{item} is covered by something else!".format(cover_with.get_display_name(char)))
+            char.msg("{} is covered by something else!".format(cover_with.get_display_name(char)))
             return
         if to_cover.db.covered_by:
-            char.msg("{item} is already covered by {cover}.".format(cover_with.get_display_name(char),
-                                                                    to_cover.db.covered_by.get_display_name(char)))
+            char.msg("{} is already covered by {cover}.".format(cover_with.get_display_name(char),
+                                                                to_cover.db.covered_by.get_display_name(char)))
             return
         if not cover_with.db.worn:
             cover_with.wear(char, True)  # Put on the item to cover with if it's not on already
@@ -476,6 +476,7 @@ class CmdGive(MuxCommand):
 
     Options:
     /quiet or /silent  Others in the room not notified of give.
+    /drop   Drops <inventory obj>
     """
     key = 'give'
     aliases = ['qgive']
@@ -488,12 +489,15 @@ class CmdGive(MuxCommand):
         opt = self.switches
         cmd = self.cmdstring
         char = self.character
-        if not self.args or not self.rhs:
-            char.msg("Usage: give <inventory object> <=|to> <target>")
+        drop = 'drop' in opt
+        lhs, rhs = self.lhs, 'here' if drop else self.rhs
+        if not self.args or not rhs:
+            char.msg("Usage: {} <inventory object> [<=|to> <target>]".format(cmd))
             return
         to_give = char.search(self.lhs, location=char, nofound_string='You aren\'t carrying "%s".' % self.lhs,
                               multimatch_string='You carry more than one "%s":' % self.lhs)
-        target = char.search(self.rhs)
+        target = char.search(rhs)
+        drop = drop or target is char.location
         quiet = cmd == 'qgive' or 'silent' in opt or 'quiet' in opt
         if not (to_give and target):
             return
@@ -505,22 +509,36 @@ class CmdGive(MuxCommand):
             return
         # This is new! Can't give away something that's worn.
         if to_give.db.covered_by:
-            char.msg("You can't give that away because it's covered by %s." %
-                     to_give.db.covered_by.get_display_name(char))
+            verb = 'drop {verb}' if drop else 'give {verb} away'
+            verb = verb.format(verb=to_give.get_display_name(self.s))
+            char.msg("You can't %s because it's covered by %s." % (verb, to_give.db.covered_by.get_display_name(char)))
             return
-        # Remove clothes if they're given.
+        # Remove clothes if they're given or dropped.
         if to_give.db.worn:
             to_give.remove(char)
-        to_give.move_to(char.location, quiet=True)
-        # give object
-        message = "You quietly give {} to {}." if quiet else "You give {} to {}."
-        char.msg(message.format(to_give.get_display_name(char), target.get_display_name(char)))
-        to_give.move_to(target, quiet=True)
+        result = False if to_give is target else to_give.move_to(target, quiet=True)
+        if not result:
+            message = "drop %s." % to_give.get_display_name(char) if drop else\
+                "give %s to %s." % (to_give.get_display_name(char), target.get_display_name(char))
+            char.msg("You can't %s" % message)
+            return
+        if drop:
+            message = "You quietly drop {}." if quiet else "You drop {}."
+            char.msg(message.format(to_give.get_display_name(char)))
+        else:
+            message = "You quietly give {} to {}." if quiet else "You give {} to {}."
+            char.msg(message.format(to_give.get_display_name(char), target.get_display_name(char)))
         if not quiet:
-            char.location.msg_contents("{giver} gives {item} to {receiver}.",
-                                       mapping=dict(giver=char, item=to_give, receiver=target),
-                                       exclude=[char, target])
-        message = "{} quietly gives you {}." if quiet else "{} gives you {}."
-        target.msg(message.format(char.get_display_name(char), to_give.get_display_name(char)))
+            if drop:
+                char.location.msg_contents("{giver} drops {item}.",
+                                           mapping=dict(giver=char, item=to_give),
+                                           exclude=[char, target])
+            else:
+                char.location.msg_contents("{giver} gives {item} to {receiver}.",
+                                           mapping=dict(giver=char, item=to_give, receiver=target),
+                                           exclude=[char, target])
+        if target.location and target.has_player:
+            message = "{} quietly gives you {}." if quiet else "{} gives you {}."
+            target.msg(message.format(char.get_display_name(char), to_give.get_display_name(char)))
         # Call the object script's at_give() method.
         to_give.at_give(char, target)
