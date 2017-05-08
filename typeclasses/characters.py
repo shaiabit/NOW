@@ -227,8 +227,10 @@ class Character(DefaultCharacter, Tangible):
             if self.ndb.new_mail:
                 self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
             text = 'fades into view' if self.location != self.home else 'awakens'
-            self.location.msg_contents('|g%s|n %s.' %
-                                       (self.get_display_name(self, color=False), text), from_obj=self)
+            for each in self.location.contents:
+                if not each.access(self, 'view'):
+                    continue
+                each.msg('|g%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
         """
@@ -244,12 +246,11 @@ class Character(DefaultCharacter, Tangible):
         if self.location:
             # reason = ['Idle Timeout', 'QUIT', 'BOOTED', 'Lost Connection']  # TODO
             at_home = self.location == self.home
-
-            def message(obj, from_obj):
-                text = 'sleeps' if at_home else 'fades from view'
-                obj.msg('|r%s|n %s.' % (self.get_display_name(obj, color=False), text), from_obj=from_obj)
-
-            self.location.for_contents(message, exclude=[self], from_obj=self)
+            text = 'sleeps' if at_home else 'fades from view'
+            for each in self.location.contents:
+                if not each.access(self, 'view'):
+                    continue
+                each.msg('|r%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
             self.db.prelogout_location = self.location
 
             if not (at_home or self.has_player):  # if no sessions control it anymore, and its not home...
@@ -403,14 +404,16 @@ class NPC(Character):
         self.msg(self.at_look(self.location))
         if self.ndb.new_mail:
             self.msg('|/You have new mail in your %s mailbox.|/' % self.home.get_display_name(self))
-
-        def message(obj, from_obj):
-            if self.sessions.count() > 1:  # Show as pose if NPC already has a player.
-                obj.msg("%s looks more awake." % self.get_display_name(obj), from_obj=from_obj)
-            else:
-                obj.msg("|g%s|n awakens." % self.get_display_name(obj, color=False), from_obj=from_obj)
-
-        self.location.for_contents(message, exclude=[self], from_obj=self)
+        if self.sessions.count() > 1:  # Show as pose if NPC already has a player.
+            for each in self.location.contents:
+                if not each.access(self, 'view'):
+                    continue
+                each.msg("%s looks more awake." % self.get_display_name(each), from_obj=self)
+        else:
+            for each in self.location.contents:
+                if not each.access(self, 'view'):
+                    continue
+                each.msg("|g%s|n awakens." % self.get_display_name(each, color=False), from_obj=self)
 
     def at_post_unpuppet(self, player, session=None):
         """
@@ -425,12 +428,14 @@ class NPC(Character):
                 just disconnected.
         """
         if self.location:
-
-            def message(obj, from_obj):
-                if self.has_player:  # Show as pose if NPC still has a player.
-                    obj.msg("%s looks sleepier." % (self.get_display_name(obj)), from_obj=from_obj)
-                else:  # Show as gone if NPC has no player now.
-                    obj.msg("|r%s|n sleeps." % self.get_display_name(obj, color=False), from_obj=from_obj)
-
-            self.location.for_contents(message, exclude=[self], from_obj=self)
+            if self.has_player:  # Show as pose if NPC still has a player.
+                for each in self.location.contents:
+                    if not each.access(self, 'view'):
+                        continue
+                    each.msg("%s looks sleepier." % (self.get_display_name(each)), from_obj=self)
+            else:  # Show as sleeping if NPC has no player now.
+                for each in self.location.contents:
+                    if not each.access(self, 'view'):
+                        continue
+                    each.msg("|r%s|n sleeps." % self.get_display_name(each, color=False), from_obj=self)
             self.db.prelogout_location = self.location
