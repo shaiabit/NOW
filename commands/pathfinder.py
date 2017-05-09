@@ -16,7 +16,7 @@ class CmdPathfind(default_cmds.MuxCommand):
     key = 'seek'
     locks = 'cmd:all()'
 
-    maxdepth = 10
+    maxdepth, maxrooms = 12, 150  # Adjustable range limits.
 
     def func(self):
         """confirms the target and initiates the search"""
@@ -42,13 +42,15 @@ class CmdPathfind(default_cmds.MuxCommand):
 
     def _searcher(self, room, depth):
         """Searches surrounding rooms recursively for an object"""
+        if not room or len(self.visited) >= self.maxrooms:  # Stop search if the search has ...
+            return False  # ... visited too many rooms or has come across a bad room.
         loc = self.caller.location
         this = self.obj.get_display_name(self.caller)
         target = self.target.get_display_name(self.caller)
         # first, record searching here
         self.visited.append(room)
         # End search either when the item is found...
-        if self.target in room.contents or self.target is room:
+        if self.target in ([room] + room.contents + sum([each.contents for each in room.contents], [])):
             if depth == 0:
                 here = loc.get_display_name(self.caller)
                 loc.msg_contents("{} finds {} right here in {}!".format(this, target, here))
@@ -65,7 +67,7 @@ class CmdPathfind(default_cmds.MuxCommand):
                 print('Depth and Number of rooms searched: ', depth, len(self.visited))
             return True
         # or searched to `maxdepth` distance
-        if depth > self.maxdepth:
+        if depth >= self.maxdepth:
             return False
         # Target not in the current room, scan through the exits and check them,
         # skipping rooms we've already visited
