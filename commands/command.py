@@ -129,8 +129,8 @@ class MuxCommand(default_cmds.MuxCommand):
     All args and list members are stripped of excess whitespace around the
     strings, but case is preserved.
     """
-    player_caller = True
-    parse_to = False
+    player_caller = True  # By default, assume caller is player.
+    parse_using = ''  # If set, use additional left/right delimiter.
 
     def at_pre_cmd(self):
         """
@@ -145,8 +145,8 @@ class MuxCommand(default_cmds.MuxCommand):
         that can be later accessed from self.func()
         """
         super(MuxCommand, self).parse()
-        if self.parse_to and ' to ' in self.args:
-            self.lhs, self.rhs = self.args.split(' to ', 1)  # At most, split once, into left and right parts.
+        if self.parse_using and self.parse_using in self.args:
+            self.lhs, self.rhs = self.args.split(self.parse_using, 1)  # At most, split once, into left and right parts.
 
     def func(self):
         """

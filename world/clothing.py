@@ -1,8 +1,8 @@
 """
-Clothing - Provides a typeclass and commands for wearable clothing,
-which is appended to a character's description when worn.
-
-Evennia contribution - Tim Ashley Jenkins 2017
+Clothing typeclass and commands for wearable clothing,
+which is appended to the view of a character's
+description when worn, based on the Evennia contribution
+by Tim Ashley Jenkins 2017
 
 Clothing items, when worn, are added to the character's description
 in a list. For example, if wearing the following clothing items:
@@ -43,27 +43,9 @@ that can be worn. The system as-is is fairly freeform - you
 can cover any garment with almost any other, for example - but it
 can easily be made more restrictive, and can even be tied into a
 system for armor or other equipment.
-
-To install, import this module and have your default character
-inherit from ClothedCharacter in your game's characters.py file:
-
-    from evennia.contrib.clothing import ClothedCharacter
-
-    class Character(ClothedCharacter):
-
-And do the same with the ClothedCharacterCmdSet in your game's
-default_cmdsets.py:
-
-    from evennia.contrib.clothing import ClothedCharacterCmdSet
-
-    class CharacterCmdSet(default_cmds.CharacterCmdSet):
-
-From here, you can use the default builder commands to create clothes
-with which to test the system:
-
+Example:
     @create a pretty shirt : world.clothing.Item
     @set shirt/clothing_type = 'top'
-
 """
 
 from typeclasses.objects import Consumable
@@ -370,7 +352,7 @@ class CmdCover(MuxCommand):
     Covers a worn item of clothing with another you're holding or wearing.
 
     Usage:
-        cover <obj> [with] <obj>
+        cover <obj> <=|with> <obj>
 
     When you cover a clothing item, it is hidden and no longer appears in
     your description until it's uncovered or the item covering it is removed.
@@ -378,20 +360,19 @@ class CmdCover(MuxCommand):
     """
     key = 'cover'
     help_category = 'Clothing'
+    parse_using = ' with '
 
     def func(self):
         """
         This performs the actual command.
         """
         char = self.character
-        if len(self.arglist) < 2:
-            char.msg("Usage: cover <worn clothing> [with] <clothing object>")
+        lhs, rhs = self.lhs, self.rhs
+        if not rhs:
+            char.msg("Usage: cover <worn clothing> [=|with] <clothing object>")
             return
-        # Get rid of optional 'with' syntax
-        if self.arglist[1].lower() == "with" and len(self.arglist) > 2:
-            del self.arglist[1]
-        to_cover = char.search(self.arglist[0], candidates=char.contents)
-        cover_with = char.search(self.arglist[1], candidates=char.contents)
+        to_cover = char.search(lhs, candidates=char.contents)
+        cover_with = char.search(rhs, candidates=char.contents)
         if not to_cover or not cover_with:
             return
         if not to_cover.is_typeclass("world.clothing.Item"):
@@ -472,7 +453,7 @@ class CmdGive(MuxCommand):
     Gives an item from your inventory to another.
 
     Usage:
-      give <inventory obj> <=|to> <target>
+      give <inventory obj> [=|to <target>]
 
     Options:
     /quiet or /silent  Others in the room not notified of give.
@@ -481,11 +462,10 @@ class CmdGive(MuxCommand):
     key = 'give'
     aliases = ['qgive']
     locks = 'cmd:all()'
-    parse_to = True
+    parse_using = ' to '
 
     def func(self):
         """Implement give"""
-
         opt = self.switches
         cmd = self.cmdstring
         char = self.character

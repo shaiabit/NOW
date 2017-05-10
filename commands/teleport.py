@@ -14,22 +14,24 @@ class CmdTeleport(MuxCommand):
     Options:
     /quiet     don't echo leave/arrive messages to the source/target
                locations for the move.
-    /into      if target is an exit, teleport INTO
-               the exit object instead of to its destination    
+    /into      if target is an exit, teleport INTO the object
+               instead of to its location or destination.    
     /vanish    if set, teleport the object into Nothingness. If this
                option is used, <target location> is ignored.
                Note that the only way to retrieve an object from
                Nothingness is by direct #dbref reference.
     Examples:
       tel Limbo
+      tel Rulan to me
       tel/quiet box=fog
+      tel/into book to shelf
       tel/vanish box
     """
     key = 'teleport'
     aliases = ['tport', 'tel']
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
-    parse_to = True
+    parse_using = ' to '
 
     @staticmethod
     def stop_check(target):
@@ -63,6 +65,8 @@ class CmdTeleport(MuxCommand):
         player = self.player
         args = self.args
         lhs, rhs = self.lhs, self.rhs
+        if lhs.startswith('to ') and not rhs:  # Additional parse step when left of "to" is left empty.
+            lhs, rhs = 'me', lhs[3:].strip()
         opt = self.switches
 
         if char and char.ndb.currently_moving:
