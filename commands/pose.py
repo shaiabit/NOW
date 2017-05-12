@@ -130,6 +130,8 @@ class CmdPose(MuxCommand):
                     player.execute_cmd(';%s' % pose)  # pose to the room like a normal pose would.
             char.msg("Pose now set to: '%s'" % target.get_display_name(char, pose=True))  # Display name with pose.
         else:  # ---- Action pose, not static Room Pose. ---------------------
+            if '|/' in pose:
+                pose = pose.split('|/', 1)[0]
             if 'magnet' in opt or 'm' in opt:
                 char.msg("Pose magnet glyphs are %s." % non_space_chars)
             if not (here and char):
@@ -139,9 +141,7 @@ class CmdPose(MuxCommand):
                     player.msg('Usage: pose <message>   to pose to public channel.')
                 return
             if args:
-                if char.location.tags.get('rp', category='flags') and 'o' not in self.switches:
-                    pass  # char.execute_cmd('emote /me%s' % pose)  # Emoting is posing in RP flagged areas.
-                elif power and self.rhs and 'o' not in self.switches:
+                if power and self.rhs and 'o' not in self.switches:
                     char.ndb.power_pose = pose
                     player.execute_cmd(self.rhs)
                 else:
@@ -151,7 +151,4 @@ class CmdPose(MuxCommand):
                                        {'type': 'pose', 'ooc': ooc}),
                                       from_obj=char, mapping=dict(char=char))
             else:
-                if char.location.tags.get('rp', category='flags'):
-                    player.execute_cmd('help emote')
-                else:
-                    player.execute_cmd('help pose')
+                player.execute_cmd('help pose')
