@@ -56,8 +56,39 @@ class VerbHandler:
         """Implements the attempt to drop this object."""
         self.s.player.execute_cmd('give/drop %s' % self.o.get_display_name(self.s, plain=True))
 
+    def enter(self):
+        if self.s.location == self.o:
+            player.msg("You are already aboard %s." % self.o.get_display_name(self.s))
+            return
+        entry_message = None
+        if 'entry' in self.o.db.messages:
+            entry_message = self.o.db.messages['entry']
+        if entry_message:
+            self.s.msg('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message))
+        self.s.msg("You board %s." % self.o.get_display_name(self.s))
+        if entry_message:
+            self.o.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message), exclude=self.s)
+        self.s.move_to(self.o)
+        if entry_message:
+            self.o.location.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message))
+
     def examine(self):
         self.s.player.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
+
+    def exit(self):
+        if self.s.location != self.o:
+            self.s.msg("You are not aboard %s." % self.o.get_display_name(self.s))
+            return
+        exit_message = None
+        if 'exit' in self.o.db.messages:
+            exit_message = self.o.db.messages['exit']
+        self.s.msg("You disembark %s." % self.o.get_display_name(self.s))
+        if exit_message:
+            self.s.location.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, exit_message), exclude=self.s)
+            self.o.location.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, exit_message))
+        self.s.move_to(self.o.location)
+        if exit_message:
+            self.s.msg('%s%s|n %s' % (self.s.STYLE, self.s.key, exit_message))
 
     def follow(self):
         """Set following agreement - caller follows character"""
@@ -94,9 +125,6 @@ class VerbHandler:
             self.s.location.msg_contents('%s|g%s|n gets {it}.' % (escape_braces(pose), self.s.key),
                                          from_obj=self.s, mapping=dict(it=self.o))
             self.o.at_get(self.s)  # calling hook method
-
-    # def knock(self):
-    #     pass
 
     def puppet(self):
         self.s.player.execute_cmd('@ic %s' % self.o.get_display_name(self.s, plain=True))
