@@ -8,17 +8,19 @@ class CmdHome(MuxCommand):
     Takes you to your home, if you have one. home/set will show you
     where your home is set, or provide a what and where to set its home.
     Usage:
-      home
+      home[/option]
     Options:
     /set <obj> [= home_location]  views or sets <obj>'s home location.
     /sweep <obj>  send obj home.
     /here  sets current character's home to current location.
+    
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
     should always have a home location for this reason.
     It is also a convenient target of the "home" command.
     """
     key = 'home'
+    options = ('set', 'sweep', 'here')
     locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
     help_category = 'Travel'

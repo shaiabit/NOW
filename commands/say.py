@@ -10,14 +10,15 @@ class CmdSay(MuxCommand):
     """
     Speak as your character.
     Usage:
-      say <message>
+      say[/option] <message>
     Options:
-    /o or /ooc  - Out-of-character to the room.
-    /v or /verb - set default say verb.
+    /ooc  - Out-of-character to the room.
+    /verb - set default say verb.
     """
     key = 'say'
     aliases = ['"', "'"]
     locks = 'cmd:all()'
+    options = ('ooc', 'quote', 'verb')
 
     def func(self):
         """Run the say command"""
@@ -35,20 +36,20 @@ class CmdSay(MuxCommand):
         if not args:
             player.execute_cmd("help say")
             return
-        if 'v' in opt or 'verb' in opt:
+        if 'verb' in opt:
             char.attributes.add('say-verb', args)
             here.msg_contents(text=('{char} warms up vocally with "%s|n"' % escape_braces(args),
                                     {'type': 'pose','action': True}),
                               from_obj=char, mapping=dict(char=char))
             return
-        if 'q' in opt or 'quote' in opt:
+        if 'quote' in opt:
             if len(args) > 2:
                 char.quote = args  # Not yet implemented.
                 return
         else:
             speech = here.at_say(char, args)  # Notify NPCs and listeners.
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
-            if 'o' in opt or 'ooc' in opt:
+            if 'ooc' in opt:
                 here.msg_contents(text=('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
                                         {'type': 'say', 'ooc': True}), from_obj=char, mapping=dict(char=char))
             else:
@@ -103,6 +104,7 @@ class CmdSpoof(MuxCommand):
     key = 'spoof'
     aliases = ['~', '`', 'sp']
     locks = 'cmd:all()'
+    options = ('dot', 'center', 'right', 'indent', 'news', 'strip', 'self')
 
     def func(self):
         """Run the spoof command"""

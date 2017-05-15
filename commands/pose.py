@@ -10,14 +10,14 @@ class CmdPose(MuxCommand):
     The pose text will automatically begin with your name.
     pose, :, ;, do, pp
     Usage:
-      pose <pose text>
-      pose's <pose text>
-      do <pose>
-      do <target>=<pose>
-      pp <pose text> = <verb> <noun>
+      pose[/option] <pose text>
+      pose[/option]'s <pose text>
+      do[/option] <pose text>
+      do[/option] <target>=<pose text>
+      pp[/option] <parse> = <pose text> 
     Options:
-    /o or /ooc  (Out-of-character to the room or channel.)
-    /m or /magnet  (Show which characters remove name/pose space.)
+    /ooc  (Out-of-character to the room or channel.)
+    /magnet  (Show which characters remove name/pose space.)
     /do or do, rp, doing  (Pose and set room-pose/doing message.)
       Additional options for do, rp, doing command version of pose:
       /reset   (Reset the current room pose to use default setting)
@@ -32,12 +32,13 @@ class CmdPose(MuxCommand):
       > do stapler=is out of staples.
       Current room pose set to "Orange Swingline stapler is out of staples."
     """
-    # > ppose strains to lift the anvil. = get anvil
+    # > ppose get anvil = strains to lift the anvil.
     # > Werewolf strains to lift the anvil.
     # ==> Werewolf takes the anvil.
     # (optional success message if anvil can be lifted.)
     key = 'pose'
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
+    options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
     locks = 'cmd:all()'
     player_caller = True
 
@@ -132,7 +133,7 @@ class CmdPose(MuxCommand):
         else:  # ---- Action pose, not static Room Pose. ---------------------
             if '|/' in pose:
                 pose = pose.split('|/', 1)[0]
-            if 'magnet' in opt or 'm' in opt:
+            if 'magnet' in opt:
                 char.msg("Pose magnet glyphs are %s." % non_space_chars)
             if not (here and char):
                 if args:
@@ -145,7 +146,7 @@ class CmdPose(MuxCommand):
                     char.ndb.power_pose = pose
                     player.execute_cmd(self.rhs)
                 else:
-                    ooc = 'o' in self.switches or 'ooc' in self.switches
+                    ooc = 'ooc' in self.switches
                     prepend_ooc = '[OOC] ' if ooc else ''
                     here.msg_contents(('%s{char}%s' % (prepend_ooc, escape_braces(pose)),
                                        {'type': 'pose', 'ooc': ooc}),

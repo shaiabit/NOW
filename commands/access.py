@@ -8,11 +8,12 @@ class CmdAccess(MuxCommand):
     Displays your current world access levels for
     your current player and character account.
     Usage:
-      access
-    Switches:
+      access[/option]
+    Options:
     /groups  - Also displays the system's permission groups hierarchy.
     """
     key = 'access'
+    options = ('groups',)
     locks = 'cmd:all()'
     help_category = 'System'
 

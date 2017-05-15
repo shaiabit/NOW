@@ -10,7 +10,7 @@ class CmdTeleport(MuxCommand):
     If no object is given, you are teleported.
 
     Usage:
-      tel/switch [<object> =|to] <target's location>
+      tel[/option] [<object> =|to] <target's location>
     Options:
     /quiet     don't echo leave/arrive messages to the source/target
                locations for the move.
@@ -29,6 +29,7 @@ class CmdTeleport(MuxCommand):
     """
     key = 'teleport'
     aliases = ['tport', 'tel']
+    options = ('quiet', 'silent', 'into', 'vanish')
     locks = 'cmd:perm(teleport) or perm(Builders)'
     help_category = 'Travel'
     parse_using = ' to '
