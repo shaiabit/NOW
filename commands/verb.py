@@ -9,7 +9,7 @@ class CmdTry(MuxCommand):
     """
     Actions a character can do to things nearby.
     Usage:
-      ppose <pose> = <parse>
+      ppose <parse> = <pose>
       try <parse>
       <parse>
     """
@@ -42,9 +42,10 @@ class CmdTry(MuxCommand):
                     account.msg(self.suggest_command())
                 return
             else:
-                good_targets = self.objects_allowing_verb(verb)
+                good_targets = self.verb_list(verb)
                 if noun:  # Look for an object that matches noun.
-                    obj = char.search(noun, quiet=True, candidates=[here] + here.contents + char.contents)
+                    surroundings = ([here] + here.contents + char.contents) if here else ([char] + char.contents)
+                    obj = char.search(noun, quiet=True, candidates=surroundings)
                     obj = obj[0] if obj else None
                 if not obj:
                     obj = good_targets[0] if len(good_targets) == 1 else None
@@ -71,28 +72,26 @@ class CmdTry(MuxCommand):
         """
         VerbHandler(char, verb, obj)
 
-    def verb_list(self):
-        """Scan location for objects that have verbs, and collect the verbs in a list."""
+    def verb_list(self, search_verb=None):
+        """
+        Scan location for objects that have verbs, and collect the verbs in a list or, if verb given,
+        scan location for objects that have a specific verb, and collect the objects in a list.
+        """
         collection = []
-        for obj in [self.character.location] + self.character.location.contents + self.character.contents:
+        char = self.character
+        here = char.location
+        surroundings = ([here] + here.contents + char.contents) if here else ([char] + char.contents)
+        for obj in surroundings:
             verbs = obj.locks
             for verb in ("%s" % verbs).split(';'):
                 element = verb.split(':')[0]
                 name = element[2:] if element[:2] == 'v-' else element
-                if obj.access(self.character, element):  # obj lock checked against character
+                if not obj.access(char, element):  # search_verb on object is inaccessible.
+                    continue
+                if name == search_verb:
+                    collection.append(obj)  # Collect objects that are accessible.
+                elif search_verb is None:
                     collection.append(name)
-        return list(set(collection))
-
-    def objects_allowing_verb(self, search_verb):
-        """Scan location for objects that have a specific verb, and collect the objects in a list."""
-        collection = []
-        for obj in [self.character.location] + self.character.location.contents + self.character.contents:
-            verbs = obj.locks
-            for verb in ("%s" % verbs).split(';'):
-                element = verb.split(':')[0]
-                name = element[2:] if element[:2] == 'v-' else element
-                if name == search_verb and obj.access(self.character, element):  # search_verb on object is accessible.
-                    collection.append(obj)
         return list(set(collection))
 
     @staticmethod
