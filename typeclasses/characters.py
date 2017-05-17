@@ -311,12 +311,6 @@ class Character(DefaultCharacter, Tangible):
         pronoun = _GENDER_PRONOUN_MAP[gender][typ.lower()]
         return pronoun.capitalize() if typ.isupper() else pronoun
 
-    def get_mass(self):
-        mass = self.traits.mass.actual if self.traits.mass else 0
-        return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
-
-    def get_carry_limit(self):
-        return 80 * self.traits.health.actual
 
     def return_appearance(self, viewer):
         """This formats a description. It is the hook a 'look' command should call.

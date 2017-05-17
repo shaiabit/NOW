@@ -274,9 +274,6 @@ class Object(Tangible):
         return '|g%s|n' % sdesc
 
     def get_mass(self):  # TODO: Add mass of objects on surface, also.
-        if not self.traits.mass:
-            mass = 1 if not self.db.mass else self.db.mass
-            self.traits.add('mass', 'Mass', 'static', mass)
         mass = self.traits.mass.actual or 1
         return reduce(lambda x, y: x+y.get_mass(), [mass] + self.contents)
 
