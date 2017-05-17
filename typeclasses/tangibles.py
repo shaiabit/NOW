@@ -20,6 +20,13 @@ class Tangible(DefaultObject):
     def traits(self):
         return TraitHandler(self)
 
+    def at_object_creation(self):
+        """Initialize a newly-created Tangible"""
+        super(Tangible, self).at_object_creation()
+        self.traits.add('mass', 'Mass', 'static', 500)
+        self.traits.add('cc', 'Core Count', 'counter')
+        self.traits.add('ct', 'Core Time', 'counter')
+
     def get_display_name(self, viewer, **kwargs):
         """
         Displays the name of the object in a viewer-aware manner.
@@ -65,6 +72,16 @@ class Tangible(DefaultObject):
         print('*** Depreciated use of mxp_name ***')
         print('%s / %s /%s' % (self.key, viewer.key, command))
         return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
+
+    def get_mass(self):
+        mass = self.traits.mass.actual if self.traits.mass else 0
+        return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
+
+    def get_limit(self):
+        # TODO: Apply health as a small factor.
+        mass = self.traits.mass.actual
+        swr = self.traits.swr.actual if self.traits.swr else 1.0
+        return swr * mass - (self.get_mass() - mass)
 
     def private(self, source, category, text):
         """
