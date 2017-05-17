@@ -110,7 +110,8 @@ class VerbHandler:
 
     def get(self):
         """Implements the attempt to get this object."""
-        too_heavy, too_large = False, False
+        too_heavy, too_large = self.s.get_limit() < self.o.get_mass(), False
+        print(('limit, omass, bool', self.s.get_limit(), self.o.get_mass(), self.s.get_limit() < self.o.get_mass()),)
         pose = self.s.ndb.pose
         if self.s == self.o:
             self.s.msg("%sYou|n can't get yourself." % self.s.STYLE)
