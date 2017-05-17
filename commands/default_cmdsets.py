@@ -134,6 +134,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.remove(default_cmds.CmdCdestroy)
         self.remove(default_cmds.CmdChannelCreate)
         self.add(CmdSay)
+        self.add(CmdTry)
         self.add(CmdWho)
         self.add(CmdPose)
         self.add(CmdQuit)

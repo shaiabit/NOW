@@ -26,6 +26,9 @@ class CmdTry(MuxCommand):
         """
         account = self.player
         char = self.character
+        if not char:
+            account.msg('You must be in-character to interact with objects.')
+            return
         args = self.args
         if args[3:] == 'try':
             args = args[:4]
