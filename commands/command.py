@@ -5,8 +5,7 @@ Commands
 Commands describe the input the player can do to the world.
 
 """
-from evennia import gametime
-from django.conf import settings
+import time  # Check time since last activity
 from evennia import utils
 from evennia import default_cmds
 from evennia import Command as BaseCommand
@@ -126,7 +125,7 @@ class MuxCommand(default_cmds.MuxCommand):
         """
         This hook is called before self.parse() on all commands
         """
-        pass
+        self.command_time = time.time()
 
     def parse(self):
         """
@@ -173,10 +172,10 @@ class MuxCommand(default_cmds.MuxCommand):
         (after self.func()).
         """
         char = self.character
+        player = self.player
         here = char.location if char else None
-        who = self.player.key if self.player else (char if char else '-visitor-')
+        who = player.key if player else (char if char else '-visitor-')
         cmd = self.cmdstring if self.cmdstring != '__nomatch_command' else ''
-        print('%s> %s%s' % (who, cmd, self.raw))
         if here:
             if char.db.settings and 'broadcast commands' in char.db.settings and \
                             char.db.settings['broadcast commands'] is True:
@@ -184,7 +183,16 @@ class MuxCommand(default_cmds.MuxCommand):
                     if each.has_player:
                         if each == self or each.db.settings and 'see commands' in each.db.settings and\
                                         each.db.settings['see commands'] is True:
-                            each.msg('|r(|w%s|r)|n %s%s|n' % (self.character.key, cmd, self.raw.replace('|', '||')))
+                            each.msg('|r(|w%s|r)|n %s%s|n' % (char.key, cmd, self.raw.replace('|', '||')))
+        command_time = time.time() - self.command_time
+        if player:
+            player.db._command_time_total = (0 if player.db._command_time_total is None
+                                             else player.db._command_time_total) + command_time
+        if char:
+            char.traits.ct.current += command_time
+            char.traits.cc.current += 1
+
+        print('{}> {}{} ({:.4f})'.format(who, cmd, self.raw, command_time))
 
 
 class MuxPlayerCommand(MuxCommand):
