@@ -39,7 +39,7 @@ class CmdSay(MuxCommand):
         if 'verb' in opt:
             char.attributes.add('say-verb', args)
             here.msg_contents(text=('{char} warms up vocally with "%s|n"' % escape_braces(args),
-                                    {'type': 'pose','action': True}),
+                                    {'type': 'pose', 'action': True}),
                               from_obj=char, mapping=dict(char=char))
             return
         if 'quote' in opt:
@@ -52,9 +52,16 @@ class CmdSay(MuxCommand):
             if 'ooc' in opt:
                 here.msg_contents(text=('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
                                         {'type': 'say', 'ooc': True}), from_obj=char, mapping=dict(char=char))
+                if here.has_player:
+                    here.msg(text=('[OOC] %s says, "|w%s|n"' % (char.get_display_name(here), escape_braces(speech)),
+                                   {'type': 'say', 'ooc': True}), from_obj=char)
             else:
                 here.msg_contents(text=('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
                                         {'type': 'say'}), from_obj=char, mapping=dict(char=char))
+                if here.has_player:
+                    here.msg(text=('From inside you, %s %s, "|w%s|n"' %
+                                   (char.get_display_name(here), escape_braces(verb),
+                                    escape_braces(speech)), {'type': 'say'}), from_obj=char)
 
 
 class CmdOoc(MuxCommand):
@@ -85,6 +92,10 @@ class CmdOoc(MuxCommand):
         else:
             here.msg_contents(text=('[OOC {char}] %s' % escape_braces(args), {'type': 'ooc', 'ooc': True}),
                               from_obj=char, mapping=dict(char=char))
+            if here.has_player:
+                here.msg(text=('[OOC %s] %s' %
+                               (char.get_display_name(here), escape_braces(args)),
+                               {'type': 'ooc', 'ooc': True}), from_obj=char)
 
 
 class CmdSpoof(MuxCommand):
