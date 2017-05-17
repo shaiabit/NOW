@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 from commands.command import MuxCommand
-import time  # Check time since last activity
 
 
 class CmdTeleport(MuxCommand):
@@ -141,7 +140,6 @@ class CmdTeleport(MuxCommand):
                                                    loc.get_display_name(char), with_clause))
             return
         print("%s is about to go to %s" % (target.key, loc.key))
-        target.ndb._teleport_time = time.time()
         scan = self.stop_check(target)
         if scan is not True:
             print("Teleport contraband detected: " + ', '.join([repr(each) for each in scan]))
@@ -151,8 +149,6 @@ class CmdTeleport(MuxCommand):
         else:
             target.ndb.mover = char or player
         if target.move_to(loc, quiet=tel_quietly, emit_to_obj=char, use_destination=use_loc):
-            print("%s finally arrives at %s (Delay: %s seconds)" %
-                  (target.key, loc.key, str(time.time() - target.ndb._teleport_time)))
             if char and target == char:
                 player.msg("Teleported to %s." % loc.get_display_name(char))
             else:
