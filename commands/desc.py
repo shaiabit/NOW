@@ -101,7 +101,7 @@ class CmdDesc(MuxCommand):
             self.caller.msg("Your brief description has been saved: %s" % self.caller.db.desc_brief)
             return
         if 'side' in self.switches:
-            caller.db.desc_side = user_input.strip()
+            char.db.desc_side = self.args
         else:
-            caller.db.desc = user_input.strip()
+            char.db.desc = self.args
         char.msg('You successfully set your description.')

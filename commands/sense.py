@@ -40,10 +40,13 @@ class CmdSense(MuxCommand):
         lhs = self.lhs.strip()
         rhs = self.rhs
         obj_string, aspect = [lhs, None] if "'s " not in lhs else lhs.rsplit("'s ", 1)
-        if obj_string:
-            print('Searching for: %s' % obj_string)
-        obj = char.search(obj_string, quiet=True,
-                          candidates=[here] + here.contents + char.contents) if args else [char]
+
+        if obj_string and obj_string.lower() in ('outside', 'out') and here and here.location:
+            char.msg('From within {}, you see:'.format(here.get_display_name(char)))
+            obj = [here.location]
+        else:
+            obj = char.search(obj_string, quiet=True,
+                              candidates=[here] + here.contents + char.contents) if args else [char]
         if obj:
             obj = obj[0]
             obj_string = obj.key
@@ -115,8 +118,8 @@ class CmdSense(MuxCommand):
                             continue
                         name = element[2:] if element[:2] == 'v-' else element
                         if obj.access(char, element):  # obj lock checked against actor
-                            collector_list.append("|lctry %s %s|lt|g%s|n|le " %\
-                                         (name, obj.get_display_name(char, plain=True), name))
+                            collector_list.append("|lctry %s %s|lt|g%s|n|le " %
+                                                  (name, obj.get_display_name(char, plain=True), name))
                         elif show_red:
                             collector_list.append("|r%s|n " % name)
                     char.msg(verb_msg + ''.join(collector_list))
