@@ -58,10 +58,13 @@ class VerbHandler:
 
     def enter(self):
         if self.s.location == self.o:
-            player.msg("You are already aboard %s." % self.o.get_display_name(self.s))
+            self.s.msg("You are already aboard %s." % self.o.get_display_name(self.s))
+            return
+        if self.o.location == self.s:
+            self.s.msg("You cannot board %s while holding it." % self.o.get_display_name(self.s))
             return
         entry_message = None
-        if 'entry' in self.o.db.messages:
+        if self.o.db.messages and 'entry' in self.o.db.messages:
             entry_message = self.o.db.messages['entry']
         if entry_message:
             self.s.msg('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message))
@@ -80,7 +83,7 @@ class VerbHandler:
             self.s.msg("You are not aboard %s." % self.o.get_display_name(self.s))
             return
         exit_message = None
-        if 'exit' in self.o.db.messages:
+        if self.o.db.messages and 'exit' in self.o.db.messages:
             exit_message = self.o.db.messages['exit']
         self.s.msg("You disembark %s." % self.o.get_display_name(self.s))
         if exit_message:
