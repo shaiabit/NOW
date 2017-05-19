@@ -20,13 +20,6 @@ class Tangible(DefaultObject):
     def traits(self):
         return TraitHandler(self)
 
-    def at_object_creation(self):
-        """Initialize a newly-created Tangible"""
-        super(Tangible, self).at_object_creation()
-        self.traits.add('mass', 'Mass', 'static', 500)
-        self.traits.add('cc', 'Core Count', 'counter')
-        self.traits.add('ct', 'Core Time', 'counter')
-
     def get_display_name(self, viewer, **kwargs):
         """
         Displays the name of the object in a viewer-aware manner.
@@ -51,11 +44,6 @@ class Tangible(DefaultObject):
         if kwargs.get('plain', False):  # "plain" means "without color, without db_id"
             color, db_id = [False, False]
         name = self.key
-        if self.location:
-            if self.tags.get('rp', category='flags') or self.location.tags.get('rp', category='flags'):
-                pass  # NOWTangible is in an RP flagged room.
-        elif self.tags.get('rp', category='flags'):
-            pass  # NOWTangible is an RP flagged object.
         display_name = ("%s%s|n" % (self.STYLE, name)) if color else name
         if mxp:
             display_name = "|lc%s|lt%s|le" % (mxp, display_name)
@@ -67,14 +55,10 @@ class Tangible(DefaultObject):
             display_name += ('|n' if color else '') + display_pose
         return display_name
 
-    def mxp_name(self, viewer, command):  # Depreciated. call obj.get_display_name(viewer, mxp=command)
-        """Returns the full styled and clickable-look name for the viewer's perspective as a string."""
-        print('*** Depreciated use of mxp_name ***')
-        print('%s / %s /%s' % (self.key, viewer.key, command))
-        return self.get_display_name(viewer, mxp=command) if viewer and self.access(viewer, 'view') else ''
-
     def get_mass(self):
         mass = self.traits.mass.actual if self.traits.mass else 0
+        if mass <= 0 and self.tags.get('weightless', category='flags'):
+            return mass  # Ignore mass of contents if this tangible is weight-free or inert.
         return reduce(lambda x, y: x+y.get_mass() if hasattr(y, 'get_mass') else 0, [mass] + self.contents)
 
     def get_limit(self):
