@@ -24,7 +24,7 @@ class CmdSummon(MuxCommand):
       summon/vanish me
     """
     key = 'summon'
-    aliases = ['msummon', 'meet']
+    aliases = ['msummon', 'meet', 'join', 'mjoin']
     locks = 'cmd:perm(summon) or perm(Players)'
     help_category = 'Travel'
 
@@ -66,29 +66,29 @@ class CmdSummon(MuxCommand):
             char.msg("You begin to summon a portal to bring %s" % target[0].get_display_name(char) +
                      " to your location.")
         # Check the pool for objects to use.  Filter a list of objects tagged "pool" by those located in None.
-        obj_pool = [each for each in evennia.search_tag('pool') if not each.location]
+        obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
         print('Object pool total: %i' % len(obj_pool))
         if len(obj_pool) < 2:
+            char.msg('Portals are currently out of stock or in use elsewhere.')
             return
         portal_enter, portal_exit = obj_pool[-2:]
 
         def open_portal():
-            portal_enter.aliases.clear()
-            portal_exit.aliases.clear()
-            portal_enter.aliases.add(['shimmering', 'portal'])
-            portal_exit.aliases.add(['smooth', 'portal'])
-            portal_enter.key, portal_exit.key = 'Shimmering Portal', 'Smooth Portal'
-            portal_enter.destination, portal_exit.destination = loc, target[0].location
+            """Move inflatable portals into place."""
             portal_enter.move_to(target[0].location)
             portal_exit.move_to(loc)
 
-        delay(30, callback=open_portal)  # 30 seconds later, the portal (exit pair) appears.
+        delay(10, callback=open_portal)  # 10 seconds later, the portal (exit pair) appears.
 
         def close_portal():
+            """Remove and store inflatable portals in Nothingness."""
+            for each in portal_enter.contents:
+                each.move_to(target[0].location)
+            for each in portal_exit.contents:
+                each.move_to(loc)
             portal_enter.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % portal_enter)
             portal_exit.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % portal_exit)
-            portal_enter.location = None
-            portal_exit.location = None
+            portal_enter.move_to(None, to_none=True)
+            portal_exit.move_to(None, to_none=True)
 
-        delay(120, callback=close_portal)  # Wait, then move them back to None
-
+        delay(180, callback=close_portal)  # Wait, then move them back to the portal pool in Nothingness
