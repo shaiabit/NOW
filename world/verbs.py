@@ -71,7 +71,8 @@ class VerbHandler:
         self.s.msg("You board %s." % self.o.get_display_name(self.s))
         if entry_message:
             self.o.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message), exclude=self.s)
-        self.s.move_to(self.o)
+        destination = self.o.destination.location if self.o.tags.get('portal', category='flags') else self.o
+        self.s.move_to(destination)
         if entry_message:
             self.o.location.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message))
 
@@ -114,7 +115,6 @@ class VerbHandler:
     def get(self):
         """Implements the attempt to get this object."""
         too_heavy, too_large = self.s.get_limit() < self.o.get_mass(), False
-        print(('limit, omass, bool', self.s.get_limit(), self.o.get_mass(), self.s.get_limit() < self.o.get_mass()),)
         pose = self.s.ndb.pose
         if self.s == self.o:
             self.s.msg("%sYou|n can't get yourself." % self.s.STYLE)
