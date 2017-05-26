@@ -48,11 +48,10 @@ class CmdWho(MuxPlayerCommand):
             if not (my_character and my_character.location):
                 self.msg("You can't see anyone here.")
                 return
-            table.add_header('|wCharacter', '|wOn for', '|wIdle', '|wSpecies')
-            table.reformat_column(0, width=40, align='l')
+            table.add_header('|wCharacter', '|wOn for', '|wIdle')
+            table.reformat_column(0, width=45, align='l')
             table.reformat_column(1, width=8, align='l')
             table.reformat_column(2, width=7, pad_right=1, align='r')
-            table.reformat_column(3, width=25, align='l')
             for session in session_list:
                 character = session.get_puppet()
                 if not session.logged_in or not character or character.location != my_character.location:
@@ -62,8 +61,8 @@ class CmdWho(MuxPlayerCommand):
                 character = session.get_puppet()
                 species = '-masked-' if my_character.location.tags.get('rp', category='flags') and character.db.\
                     unmasked_sdesc else character.attributes.get('species', default='*ghost*')
-                table.add_row(character.get_display_name(you) if character else '*ghost*',
-                              utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1), species)
+                table.add_row((character.get_display_name(you) if character else '*ghost*') + ', ' + species,
+                              utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
             table.add_header('|wCharacter  - Doing', '|wIdle')
             table.reformat_column(0, width=72, align='l')
@@ -113,5 +112,5 @@ class CmdWho(MuxPlayerCommand):
         string += ' single ' if is_one else ' unique '
         plural = ' is' if is_one else 's are'
         string += 'account%s logged in.' % plural
-        you.msg(table)
-        you.msg(string)
+        self.msg(table)
+        self.msg(string)
