@@ -13,6 +13,8 @@ from world.helpers import make_bar, mass_unit
 from evennia.contrib.clothing import get_worn_clothes
 from evennia.utils import list_to_string
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
+from evennia.comms.models import ChannelDB, Msg  # To find and
+from evennia.comms.channelhandler import CHANNELHANDLER  # Send to public channel
 
 
 class Character(DefaultCharacter, Tangible):
@@ -210,27 +212,32 @@ class Character(DefaultCharacter, Tangible):
         """
         Called just after puppeting has been completed and all
         Player<->Object links have been established.
+        NOTES: self.msg() or caller.msg(..., session=self.session)
+        sends to the session actually triggering the command.
+        player.sessions.all() exclude self.session could send
+        to all but the current session.
+        `self.player` and `self.sessions.get()` retrieves
+        player and sessions at this point; the last entry in the
+        list from `self.sessions.get()` is the latest Session puppeting this Object.
         """
-        # Inside your Command func(), use self.msg() or caller.msg(..., session=self.session)
-        # That will go only to the session actually triggering the command. You can then do player.sessions.all()
-        # and send to all but the current session.
-        # There is no way to know that unless the session sends themself as an argument to said method.
-        # The session has to be in an argument to that method, like you said.
-        # I see that the session is indeed available in the puppet_object method (which calls at_post_puppet)
-        # so I suppose we could extend that hook with a session argument.
-        # I think it may have originally been defined at a time when an object only ever had one session,
-        # so once you were puppeted you could easily retrieve it.
-        is_somewhere = self.location is not None
-        self.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
-        if is_somewhere:  # if puppet is somewhere
-            self.msg(self.at_look(self.location))  # look to see surroundings
-            if self.ndb.new_mail:
-                self.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
+        sessions = self.sessions.get()
+        session = sessions[-1] if sessions else None
+        if len(sessions) == 1:
+            channel = ChannelDB.objects.channel_search('Public')
+            if channel[0]:
+                channel[0].msg('|c%s |gis now active.' % self.key, keep_log=True)
             text = 'fades into view' if self.location != self.home else 'awakens'
             for each in self.location.contents:
-                if not each.access(self, 'view'):
+                if not each.access(self, 'view') or each is self:
                     continue
                 each.msg('|g%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
+        is_somewhere = self.location is not None
+        if session:
+            session.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
+            if is_somewhere:  # if puppet is somewhere
+                session.msg(self.at_look(self.location))  # look to see surroundings
+                if self.ndb.new_mail:
+                    session.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
 
     def at_post_unpuppet(self, player, session=None):
         """
@@ -243,6 +250,8 @@ class Character(DefaultCharacter, Tangible):
             session (Session): Session controlling the connection that
                 just disconnected.
         """
+        if self.has_player:  # if there's still a session controlling ...
+            return  # ... then there's nothing more to do.
         if self.location:
             # reason = ['Idle Timeout', 'QUIT', 'BOOTED', 'Lost Connection']  # TODO
             at_home = self.location == self.home
@@ -252,9 +261,12 @@ class Character(DefaultCharacter, Tangible):
                     continue
                 each.msg('|r%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
             self.db.prelogout_location = self.location
-
-            if not (at_home or self.has_player):  # if no sessions control it anymore, and its not home...
-                self.location = None  # store in Nothingness.
+            if not self.has_player:  # if no sessions control it anymore...
+                channel = ChannelDB.objects.channel_search('Public')
+                if channel[0]:
+                    channel[0].msg('|c%s |ris now inactive.' % self.key, keep_log=True)
+                if not at_home:  # ... and its not home...
+                    self.location = None  # store in Nothingness.
 
     def process_sdesc(self, sdesc, obj, **kwargs):
         """
@@ -310,7 +322,6 @@ class Character(DefaultCharacter, Tangible):
         gender = gender if gender in ('male', 'female', 'neutral') else 'neutral'
         pronoun = _GENDER_PRONOUN_MAP[gender][typ.lower()]
         return pronoun.capitalize() if typ.isupper() else pronoun
-
 
     def return_appearance(self, viewer):
         """This formats a description. It is the hook a 'look' command should call.
