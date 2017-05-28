@@ -52,17 +52,15 @@ class CmdWho(MuxPlayerCommand):
             table.reformat_column(0, width=45, align='l')
             table.reformat_column(1, width=8, align='l')
             table.reformat_column(2, width=7, pad_right=1, align='r')
-            for session in session_list:
-                character = session.get_puppet()
-                if not session.logged_in or not character or character.location != my_character.location:
+            for element in my_character.location.contents:
+                if not element.has_player:
                     continue
-                delta_cmd = time.time() - session.cmd_last_visible
-                delta_conn = time.time() - session.conn_time
-                character = session.get_puppet()
-                species = '-masked-' if my_character.location.tags.get('rp', category='flags') and character.db.\
-                    unmasked_sdesc else character.attributes.get('species', default='*ghost*')
-                table.add_row((character.get_display_name(you) if character else '*ghost*') + ', ' + species,
-                              utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1))
+                delta_cmd = time.time() - max([each.cmd_last_visible for each in element.sessions.all()])
+                delta_con = time.time() - min([each.conn_time for each in element.sessions.all()])
+                name = element.get_display_name(you)
+                type = element.attributes.get('species', default='')
+                table.add_row(name + (', ' + type) if type else '',
+                              utils.time_format(delta_con, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
             table.add_header('|wCharacter  - Doing', '|wIdle')
             table.reformat_column(0, width=72, align='l')
