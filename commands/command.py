@@ -6,7 +6,7 @@ Commands describe the input the player can do to the world.
 
 """
 import time  # Check time since last activity
-from evennia import utils
+from evennia.utils import inherits_from
 from evennia import default_cmds
 from evennia import Command as BaseCommand
 from evennia.commands.default.muxcommand import MuxCommand, MuxPlayerCommand
@@ -189,10 +189,13 @@ class MuxCommand(default_cmds.MuxCommand):
             player.db._command_time_total = (0 if player.db._command_time_total is None
                                              else player.db._command_time_total) + command_time
         if char:
+            if char.traits.ct is None:
+                char.traits.add('ct', 'Core Time', 'counter')
+            if char.traits.cc is None:
+                char.traits.add('cc', 'Core Count', 'counter')
             char.traits.ct.current += command_time
             char.traits.cc.current += 1
-
-        print('{}> {}{} ({:.4f})'.format(who, cmd, self.raw, command_time))
+        print(u'{}> {}{} ({:.4f})'.format(who, cmd, self.raw, command_time))
 
 
 class MuxPlayerCommand(MuxCommand):
@@ -213,10 +216,10 @@ class MuxPlayerCommand(MuxCommand):
         """
         super(MuxPlayerCommand, self).parse()
 
-        if utils.inherits_from(self.caller, "evennia.objects.objects.DefaultObject"):
+        if inherits_from(self.caller, "evennia.objects.objects.DefaultObject"):
             self.character = self.caller  # caller is an Object/Character
             self.caller = self.caller.player
-        elif utils.inherits_from(self.caller, "evennia.players.players.DefaultPlayer"):
+        elif inherits_from(self.caller, "evennia.players.players.DefaultPlayer"):
             self.character = self.caller.get_puppet(self.session)  # caller was already a Player
         else:
             self.character = None
