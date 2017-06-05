@@ -60,20 +60,3 @@ PERMISSION_HIERARCHY = ["Guests", # note-only used if GUEST_ENABLED=True
                         "Mages",
                         "Wizards",
                         "Immortals"]
-
-######################################################################
-# Evennia modules
-######################################################################
-
-
-######################################################################
-# Django web features
-######################################################################
-
-
-# The secret key is randomly seeded upon creation. It is used to sign
-# Django's cookies. Do not share this with anyone. Changing it will
-# log out all active web browsing sessions. Game web client sessions
-# may survive.
-
-SECRET_KEY = open("server/conf/secret.txt", "r").read()
