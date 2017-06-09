@@ -59,7 +59,7 @@ class CmdWho(MuxPlayerCommand):
                 delta_con = time.time() - min([each.conn_time for each in element.sessions.all()])
                 name = element.get_display_name(you)
                 type = element.attributes.get('species', default='')
-                table.add_row(name + (', ' + type) if type else '',
+                table.add_row(name + (', ' + type) if type else name,
                               utils.time_format(delta_con, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
             table.add_header('|wCharacter  - Doing', '|wIdle')
