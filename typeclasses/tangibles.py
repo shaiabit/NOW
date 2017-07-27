@@ -63,7 +63,7 @@ class Tangible(DefaultObject):
 
     def get_limit(self):
         # TODO: Apply health as a small factor.
-        mass = self.traits.mass.actual
+        mass = self.traits.mass.actual if self.traits.mass else 10
         swr = self.traits.swr.actual if self.traits.swr else 1.0
         return swr * mass - (self.get_mass() - mass)
 
