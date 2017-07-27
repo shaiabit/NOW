@@ -376,17 +376,17 @@ class CmdCover(MuxCommand):
         if not to_cover or not cover_with:
             return
         if not to_cover.is_typeclass("world.clothing.Item"):
-            char.msg("{item} isn't clothes!".format(to_cover.get_display_name(char)))
+            char.msg("{item} isn't clothes!".format(item=to_cover.get_display_name(char)))
             return
         if not cover_with.is_typeclass("world.clothing.Item"):
-            char.msg("{item} isn't wearable!".format(cover_with.get_display_name(char)))
+            char.msg("{item} isn't wearable!".format(item=cover_with.get_display_name(char)))
             return
         if cover_with.db.clothing_type:
             if cover_with.db.clothing_type in CLOTHING_TYPE_CANT_COVER_WITH:
                 char.msg("You can't cover anything with that!")
                 return
         if not to_cover.db.worn:
-            char.msg("You're not wearing {item}!".format(to_cover.get_display_name(char)))
+            char.msg("You're not wearing {item}!".format(item=to_cover.get_display_name(char)))
             return
         if to_cover == cover_with:
             char.msg("You can't cover an item with itself!")
@@ -395,8 +395,9 @@ class CmdCover(MuxCommand):
             char.msg("{} is covered by something else!".format(cover_with.get_display_name(char)))
             return
         if to_cover.db.covered_by:
-            char.msg("{} is already covered by {cover}.".format(cover_with.get_display_name(char),
-                                                                to_cover.db.covered_by.get_display_name(char)))
+            char.msg("{item} is already covered by {cover}.".format(
+                item=cover_with.get_display_name(char),
+                cover=to_cover.db.covered_by.get_display_name(char)))
             return
         if not cover_with.db.worn:
             cover_with.wear(char, True)  # Put on the item to cover with if it's not on already
@@ -435,14 +436,14 @@ class CmdUncover(MuxCommand):
         if not to_uncover:
             return
         if not to_uncover.db.worn:
-            char.msg("You're not wearing {item}!".format(to_uncover.get_display_name(char)))
+            char.msg("You're not wearing {item}!".format(item=to_uncover.get_display_name(char)))
             return
         if not to_uncover.db.covered_by:
-            char.msg("{item} isn't covered by anything!".format(to_uncover.get_display_name(char)))
+            char.msg("{item} isn't covered by anything!".format(item=to_uncover.get_display_name(char)))
             return
         covered_by = to_uncover.db.covered_by
         if covered_by.db.covered_by:
-            char.msg("{item} is under too many layers to uncover.".format(to_uncover.get_display_name(char)))
+            char.msg("{item} is under too many layers to uncover.".format(item=to_uncover.get_display_name(char)))
             return
         char.location.msg_contents("{wearer} uncovers {item}.", mapping=dict(wearer=char, item=to_uncover))
         to_uncover.db.covered_by = None
@@ -490,7 +491,7 @@ class CmdGive(MuxCommand):
         # This is new! Can't give away something that's worn.
         if to_give.db.covered_by:
             verb = 'drop {verb}' if drop else 'give {verb} away'
-            verb = verb.format(verb=to_give.get_display_name(self.s))
+            verb = verb.format(verb=to_give.get_display_name(char))
             char.msg("You can't %s because it's covered by %s." % (verb, to_give.db.covered_by.get_display_name(char)))
             return
         # Remove clothes if they're given or dropped.
