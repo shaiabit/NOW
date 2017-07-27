@@ -25,13 +25,14 @@ from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 # [commands modules]
 from commands import prelogin
 from commands import exitdirections
+from commands.suntime import CmdAstral
 from commands.say import CmdSay, CmdOoc, CmdSpoof
 from commands.set import CmdSettings
 from commands.who import CmdWho
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
-from commands.mail import CmdMail
+from commands.menu import CmdMenu
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
 from commands.verb import CmdTry
@@ -63,6 +64,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdSay)
         self.remove(default_cmds.CmdDrop)
+        self.remove(default_cmds.CmdGive)  # Now handled by world/clothing
         self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
         self.remove(default_cmds.CmdPose)
         self.remove(default_cmds.CmdTime)   # Moved to player command
@@ -77,8 +79,8 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdTry)
         self.add(CmdDesc)
         self.add(CmdFlag)
+        self.add(CmdGive)
         self.add(CmdHome)
-        self.add(CmdMail)
         self.add(CmdPose)
         self.add(CmdZone)
         self.add(CmdSpoof)
@@ -136,6 +138,7 @@ class PlayerCmdSet(default_cmds.PlayerCmdSet):
         self.add(CmdSay)
         self.add(CmdTry)
         self.add(CmdWho)
+        self.add(CmdMail)
         self.add(CmdPose)
         self.add(CmdQuit)
         self.add(CmdTime)
@@ -178,4 +181,5 @@ class SessionCmdSet(default_cmds.SessionCmdSet):
         It prints some info.
         """
         super(SessionCmdSet, self).at_cmdset_creation()
+        self.add(CmdMenu)
         # any commands you add below will overload the default ones.
