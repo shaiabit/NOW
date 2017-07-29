@@ -28,21 +28,35 @@ class CmdWho(MuxPlayerCommand):
         player_count = (SESSIONS.player_count())
         table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
         if cmd == 'wa' or cmd == 'where':
-            table.add_header('|wCharacter', '|wOn for', '|wIdle', '|wLocation')
-            table.reformat_column(0, width=40, align='l')
-            table.reformat_column(1, width=8, align='l')
-            table.reformat_column(2, width=7, pad_right=1, align='r')
-            table.reformat_column(3, width=25, align='l')
-            for session in session_list:
+            # Example output expected:
+            # Occ, Location,  Avg Time, Top 3 Active, Directions
+            # #3 	Park 		5m 		Rulan, Amber, Tria		Taxi, Park
+            # Other possible sort methods: Alphabetical by name, by occupant count, by activity, by distance
+            # Nick = Global Nick (no greater than five A/N or randomly created if not a Global Nick
+            #
+            # WA with name parameters to pull up more extensive information about the direction
+            # Highest Occupants (since last reboot), Last Visited, Last Busy (3+) etc. (more ideas here)
+            table.add_header('|wOcc', '|wLocation', '|wAvg Time', '|cTop 3 Active', '|gDirections')
+            table.reformat_column(0, width=4, align='l')
+            table.reformat_column(1, width=25, align='l')
+            table.reformat_column(2, width=6, align='l')
+            table.reformat_column(3, width=16, pad_right=1, align='l')
+            table.reformat_column(4, width=20, align='l')
+            locations = {}  # Create an empty dictionary to gather locations information.
+            for session in session_list:  # Go through connected list and see who's where.
                 if not session.logged_in:
                     continue
-                delta_cmd = time.time() - session.cmd_last_visible
-                delta_conn = time.time() - session.conn_time
                 character = session.get_puppet()
-                here = character.location if character else None
-                location = here.get_display_name(you) if character and here else '|222Nothingness|n'
-                table.add_row(character.get_display_name(you) if character else '- Unknown -',
-                              utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1), location)
+                if not character:
+                    continue
+                if character.location not in locations:
+                    locations[character.location] = []
+                locations[character.location].append(character)  # Build the list of who's in a location
+            for place in locations:
+                location = place.get_display_name(you) if place else '|222Nothingness|n'
+                table.add_row(len(locations[place]), location, '?',
+                              ', '.join(each.get_display_name(you) for each in locations[place]),
+                              'Summon or walk')
         elif cmd == 'ws':
             my_character = self.caller.get_puppet(self.session)
             if not (my_character and my_character.location):
@@ -59,7 +73,7 @@ class CmdWho(MuxPlayerCommand):
                 delta_con = time.time() - min([each.conn_time for each in element.sessions.all()])
                 name = element.get_display_name(you)
                 type = element.attributes.get('species', default='')
-                table.add_row(name + (', ' + type) if type else name,
+                table.add_row(name + ', ' + type if type else name,
                               utils.time_format(delta_con, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
             table.add_header('|wCharacter  - Doing', '|wIdle')
@@ -103,8 +117,10 @@ class CmdWho(MuxPlayerCommand):
                     delta_cmd = time.time() - session.cmd_last_visible
                     delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
-                    table.add_row(character.get_display_name(you) if character else '- Unknown -',
-                                  utils.time_format(delta_conn, 0), utils.time_format(delta_cmd, 1))
+                    if not character:
+                        continue
+                    table.add_row(character.get_display_name(you), utils.time_format(delta_conn, 0),
+                                  utils.time_format(delta_cmd, 1))
         is_one = player_count == 1
         string = '%s' % 'A' if is_one else str(player_count)
         string += ' single ' if is_one else ' unique '
