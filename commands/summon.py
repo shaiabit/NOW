@@ -15,6 +15,8 @@ class CmdSummon(MuxCommand):
     Options:
     /quiet     Portal arrives quietly to others in room.
     /only      Only the summoned object can use the portal exit.
+    /in        Portal is one-way; into summon location.
+    /out       Portal is one-way; summon location outward
     /vanish    if set, the portal leads to Nothingness.
                When this option is used, <location> is ignored.
     Examples:
@@ -25,6 +27,7 @@ class CmdSummon(MuxCommand):
     """
     key = 'summon'
     aliases = ['msummon', 'meet', 'join', 'mjoin']
+    options = ('quiet', 'only', 'in', 'out', 'vanish')
     locks = 'cmd:perm(summon) or perm(Players)'
     help_category = 'Travel'
 
@@ -47,7 +50,7 @@ class CmdSummon(MuxCommand):
         session_list = SESSIONS.get_sessions()
         target = []
         for session in session_list:
-            if not session.logged_in:
+            if not (session.logged_in and session.get_puppet()):
                 continue
             puppet = session.get_puppet()
             if lhs.lower() in puppet.get_display_name(char, plain=True).lower():
@@ -63,8 +66,8 @@ class CmdSummon(MuxCommand):
                           "by %s" % char.get_display_name(target[0]) +
                           ". A portal should appear soon that will take you to " +
                           "%s." % char.get_display_name(target[0]))
-            char.msg("You begin to summon a portal to bring %s" % target[0].get_display_name(char) +
-                     " to your location.")
+            char.msg("You begin to summon a portal between %s" % target[0].get_display_name(char) +
+                     " and your location.")
         # Check the pool for objects to use.  Filter a list of objects tagged "pool" by those located in None.
         obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
         print('Object pool total: %i' % len(obj_pool))
@@ -91,4 +94,4 @@ class CmdSummon(MuxCommand):
             portal_enter.move_to(None, to_none=True)
             portal_exit.move_to(None, to_none=True)
 
-        delay(180, callback=close_portal)  # Wait, then move them back to the portal pool in Nothingness
+        delay(180, callback=close_portal)  # Wait, then move portal objects to the portal pool in Nothingness
