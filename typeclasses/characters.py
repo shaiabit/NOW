@@ -79,6 +79,9 @@ class Character(DefaultCharacter, Tangible):
 
     def at_after_move(self, source_location):
         """Store last location and room then trigger the arrival look after a move. Reset doing to default."""
+        if self.db.messages and self.db.messages.get('location'):
+            loc_name = self.location.get_display_name(self, plain=True)
+            self.msg(self.db.messages.get('location') + loc_name)
         if source_location:  # Is "None" when moving from Nothingness. If so, do nothing.
             self.ndb.last_location = source_location
             if not source_location.destination:
@@ -236,8 +239,8 @@ class Character(DefaultCharacter, Tangible):
             session.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
             if is_somewhere:  # if puppet is somewhere
                 session.msg(self.at_look(self.location))  # look to see surroundings
-                if self.ndb.new_mail:
-                    session.msg('\nYou have new mail in your %s mailbox.\n' % self.home.get_display_name(self))
+            session.msg('\nChecking for new mail in your mailbox. (@mail # to read message #)')
+            self.player.execute_cmd('@mail')
 
     def at_post_unpuppet(self, player, session=None):
         """

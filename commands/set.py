@@ -14,6 +14,7 @@ class SettingsCmdSet(CmdSet):
 class CmdSettingsDefault(MuxCommand):
     """Add command to the set - this set will be attached to the item or room."""
     key = 'set'
+    options = ('on', 'off', 'toggle', 'value', 'symbol', 'message')
     locks = 'cmd:all()'
     help_category = 'Settings'
     player_caller = True
@@ -47,12 +48,20 @@ class CmdSettings(CmdSettingsDefault):
 
         if 'set' in cmd:
             if 'list' in opt or not args:
-                if not char.db.settings:
-                    char.db.settings = {}
-                player.msg('Listing %s control panel settings: |g%s'
-                           % (char.get_display_name(player), '|n, |g'.join('|lcset/toggle %s|lt%s|le|n: |c%s'
-                                                                           % (each, each, char.db.settings[each])
-                                                                           for each in char.db.settings)))
+                if 'message' in opt:
+                    if not char.db.messages:
+                        char.db.messages = {}
+                    player.msg('Listing %s message settings: |g%s'
+                               % (char.get_display_name(player), '|n, |g'.join('|g%s|n: |c%s|n'
+                                                                               % (each, char.db.messages[each])
+                                                                               for each in char.db.messages)))
+                else:
+                    if not char.db.settings:
+                        char.db.settings = {}
+                    player.msg('Listing %s control panel settings: |g%s'
+                               % (char.get_display_name(player), '|n, |g'.join('|lcset/toggle %s|lt%s|le|n: |c%s'
+                                                                               % (each, each, char.db.settings[each])
+                                                                               for each in char.db.settings)))
                 return
             if 'on' in opt or 'off' in opt or 'toggle' in opt or 'symbol' in opt or 'message' in opt:
                 action = opt[0]
