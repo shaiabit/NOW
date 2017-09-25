@@ -5,7 +5,7 @@ Rooms are simple containers that need no location of their own.
 import time  # Check time since last activity
 import random  # Random weather events
 from math import sqrt  # Distance formula for coordinate
-from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active players in room
+from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active accounts in room
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
@@ -34,7 +34,7 @@ class Room(Tangible):
         Args:
             viewer (Object): Object doing the looking.
         """
-        if not (viewer and viewer.has_player):
+        if not (viewer and viewer.has_account):
             return ''
         # get and identify all objects visible to the viewer, excluding the viewer.
         visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
@@ -116,8 +116,8 @@ class Room(Tangible):
             source_location (Object): The place we came from
         """
         name = self.name
-        if not source_location and self.location.has_player:
-            # This was created from nowhere and added to a player's
+        if not source_location and self.location.has_account:
+            # This was created from nowhere and added to a account's
             # inventory; it's probably the result of a create command.
             string = "You now have %s%s|n in your possession." % (self.STYLE, name)
             self.location.msg(string)
@@ -133,7 +133,7 @@ class Room(Tangible):
     def at_object_creation(self):
         """Called when room is first created"""
         self.db.desc_brief = "This is a default room."
-        
+
     def at_object_receive(self, new_arrival, source_location):
         """
         When an object enters a room we tell other objects in the room
@@ -148,7 +148,7 @@ class Room(Tangible):
         if self.tags.get('rp', category='flags') and not new_arrival.attributes.has('_sdesc'):
             sdesc = self.db.messages and self.db.messages.get('species') or new_arrival.key
             new_arrival.sdesc.add(sdesc)
-        if new_arrival.has_player:  # and not new_arrival.is_superuser: # this is a character
+        if new_arrival.has_account:  # and not new_arrival.is_superuser: # this is a character
             if self.tags.get('weather', category='flags'):
                 if not self.nattributes.has('weather_time'):
                     self.attempt_weather_update(1.00)  # 100% chance of update on initial arrival.
@@ -392,7 +392,7 @@ class CmdSetGridRoom(CmdSet):
 
 class CmdGridMotion(default_cmds.MuxCommand):
     """
-    Parent class for all simple exit-directions. 
+    Parent class for all simple exit-directions.
     Actual exit objects superseded these in every way.
 
     Grid locations are stored on the Grid room that is navigated by these commands.
@@ -401,7 +401,7 @@ class CmdGridMotion(default_cmds.MuxCommand):
     arg_regex = r'^/|\s|$'
     auto_help = True
     help_category = 'Travel'
-    player_caller = True
+    account_caller = True
 
     def func(self):
         """Command for all simple exit directions."""
@@ -501,7 +501,7 @@ class CmdGrid(CmdGridMotion):
     key = 'grid'
     help_category = 'Building'
     locks = 'cmd:perm(Builders)'
-    player_caller = True
+    account_caller = True
 
     def func(self):
         """Command to manage all grid room properties."""
