@@ -51,8 +51,8 @@ from commands.inventory import CmdInventory
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
     The `CharacterCmdSet` contains general in-game commands available to
-    in-world Character objects. It is merged with the `PlayerCmdSet` when
-    a Player puppets a Character.
+    in-world Character objects. It is merged with the `AccountCmdSet` when
+    an Account puppets a Character.
     """
     key = 'DefaultCharacter'
 
@@ -67,7 +67,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdGive)  # Now handled by world/clothing
         self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
         self.remove(default_cmds.CmdPose)
-        self.remove(default_cmds.CmdTime)   # Moved to player command
+        self.remove(default_cmds.CmdTime)   # Moved to account command
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
@@ -111,18 +111,18 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(exitdirections.CmdExitDown())
 
 
-class PlayerCmdSet(default_cmds.PlayerCmdSet):
+class AccountCmdSet(default_cmds.AccountCmdSet):
     """
-    This is the cmdset available to the Player at all times. It is
-    combined with the `CharacterCmdSet` when the Player puppets a
+    This is the cmdset available to the Account at all times. It is
+    combined with the `CharacterCmdSet` when the Account puppets a
     Character. It holds game-account-specific commands, channel
     commands, etc.
     """
-    key = 'DefaultPlayer'
+    key = 'DefaultAccount'
 
     def at_cmdset_creation(self):
-        """Populates the DefaultPlayer cmdset"""
-        super(PlayerCmdSet, self).at_cmdset_creation()
+        """Populates the DefaultAccount cmdset"""
+        super(AccountCmdSet, self).at_cmdset_creation()
         # any commands you add below will overload the default ones.
         self.remove(default_cmds.CmdCWho)
         self.remove(default_cmds.CmdCBoot)
