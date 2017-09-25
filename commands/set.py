@@ -17,7 +17,7 @@ class CmdSettingsDefault(MuxCommand):
     options = ('on', 'off', 'toggle', 'value', 'symbol', 'message')
     locks = 'cmd:all()'
     help_category = 'Settings'
-    player_caller = True
+    account_caller = True
 
 
 class CmdSettings(CmdSettingsDefault):
@@ -42,7 +42,7 @@ class CmdSettings(CmdSettingsDefault):
         lhs, rhs = [self.lhs, self.rhs]
         char = self.character
         # where = self.obj
-        player = self.player
+        account = self.account
         setting = char.db.settings or {}
         message = char.db.messages or {}
 
@@ -51,15 +51,15 @@ class CmdSettings(CmdSettingsDefault):
                 if 'message' in opt:
                     if not char.db.messages:
                         char.db.messages = {}
-                    player.msg('Listing %s message settings: |g%s'
-                               % (char.get_display_name(player), '|n, |g'.join('|g%s|n: |c%s|n'
+                    account.msg('Listing %s message settings: |g%s'
+                               % (char.get_display_name(account), '|n, |g'.join('|g%s|n: |c%s|n'
                                                                                % (each, char.db.messages[each])
                                                                                for each in char.db.messages)))
                 else:
                     if not char.db.settings:
                         char.db.settings = {}
-                    player.msg('Listing %s control panel settings: |g%s'
-                               % (char.get_display_name(player), '|n, |g'.join('|lcset/toggle %s|lt%s|le|n: |c%s'
+                    account.msg('Listing %s control panel settings: |g%s'
+                               % (char.get_display_name(account), '|n, |g'.join('|lcset/toggle %s|lt%s|le|n: |c%s'
                                                                                % (each, each, char.db.settings[each])
                                                                                for each in char.db.settings)))
                 return
@@ -91,12 +91,12 @@ class CmdSettings(CmdSettingsDefault):
                     status = setting[args]
                 mode = 'messages' if action == 'set' else 'settings'
                 if rhs:
-                    string = '|wYou %s %s message to "%s" on %s.' % \
-                              (action, lhs if lhs else 'something', rhs, char.get_display_name(player))
+                    string = '|wYou %s %s to %s on %s character %s to "%s".' % \
+                              (action, lhs if lhs else 'something', rhs, char.get_display_name(account), mode, status)
                 else:
                     string = '|wYou %s %s on %s character %s to "%s".' %\
-                              (action, args if args else 'something', char.get_display_name(player), mode, status)
-                player.msg(string)  # Notify player of character setting changes.
+                              (action, args if args else 'something', char.get_display_name(account), mode, status)
+                account.msg(string)  # Notify account of character setting changes.
                 if action == 'set' and rhs:
                     char.db.messages = message
                 else:
