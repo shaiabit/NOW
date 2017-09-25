@@ -7,12 +7,30 @@ but from their respective default implementations in the evennia library.
 If you want a class as a parent to change all tangible types, you can do
 so by editing the Tangible class in tangibles.py.
 """
+from evennia import DefaultObject
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
 from evennia.utils.evmenu import get_input
 from world.helpers import make_bar, mass_unit
 from commands.poll import PollCmdSet
+
+
+class Junk(DefaultObject):
+    """A minimal object - not intended to be tangible."""
+
+    STYLE = '|r'  # Nobody except superusers would see junk objects directly.
+
+    def basetype_setup(self):
+        """
+        Junk objects are meant as object placeholders.
+        """
+        super(Junk, self).basetype_setup()
+
+        # Set locks: can't do much with this object type
+        self.locks.add(';'.join([
+            'get:none()', 'view:none()', 'puppet:none()', 'tell:none()', 'examine:perm(Immortal)',
+            'edit:perm(Immortal)', 'control:perm(Immortal)', 'call:none()']))
 
 
 class Object(Tangible):
@@ -163,6 +181,16 @@ class Object(Tangible):
 
     """
     STYLE = '|334'
+
+    def basetype_setup(self):
+        """
+        Make sure default objects are also dropable by default.
+        """
+        super(Object, self).basetype_setup()
+
+        self.locks.add(";".join([
+            "drop:all()",  # drop object
+            ]))
 
     def at_before_move(self, destination):
         """
