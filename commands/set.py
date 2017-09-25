@@ -91,8 +91,8 @@ class CmdSettings(CmdSettingsDefault):
                     status = setting[args]
                 mode = 'messages' if action == 'set' else 'settings'
                 if rhs:
-                    string = '|wYou %s %s to %s on %s character %s to "%s".' % \
-                              (action, lhs if lhs else 'something', rhs, char.get_display_name(player), mode, status)
+                    string = '|wYou %s %s message to "%s" on %s.' % \
+                              (action, lhs if lhs else 'something', rhs, char.get_display_name(player))
                 else:
                     string = '|wYou %s %s on %s character %s to "%s".' %\
                               (action, args if args else 'something', char.get_display_name(player), mode, status)
