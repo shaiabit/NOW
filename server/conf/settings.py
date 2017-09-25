@@ -40,6 +40,8 @@ IDLE_TIMEOUT = 5 * 60 * 60  # 5 hours
 
 MULTISESSION_MODE = 1
 
+IRC_ENABLED = True  # @irc2chan Public = irc.furnet.org 7000 #NOW NOW
+
 IN_GAME_ERRORS = False  # Errors in console are sufficient.
 
 SEARCH_MULTIMATCH_REGEX = r"(?P<number>[0-9]+) (?P<name>.*)"
@@ -51,12 +53,14 @@ ENCODINGS = ["utf-8", "latin-1", "ISO-8859-1", "cp437"]
 # Player settings
 ######################################################################
 
-PERMISSION_HIERARCHY = ["Guests", # note-only used if GUEST_ENABLED=True
-                        "Players",
-                        "Crafters",
-                        "PlayerHelpers",
+HELP_MORE = False
+PERMISSION_HIERARCHY = ["Guest",  # NOTE: only used if GUEST_ENABLED=True
+                        "Denizen",
+                        "Citizen",
+                        "Helper",
+                        "Crafter",
+                        "Builder",
                         "Helpstaff",
-                        "Builders",
-                        "Mages",
-                        "Wizards",
-                        "Immortals"]
+                        "Mage",
+                        "Wizard",
+                        "Immortal"]
