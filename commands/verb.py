@@ -27,7 +27,7 @@ class CmdTry(MuxCommand):
         account = self.player
         char = self.character
         if not char:
-            account.msg('You must be in-character to interact with objects.')
+            self.msg('You must be in-character to interact with objects.')
             return
         args = self.args
         if args[3:] == 'try':
@@ -42,7 +42,7 @@ class CmdTry(MuxCommand):
                     here.msg_contents('%s = %s' % (char.ndb.power_pose, args))  # Display as normal pose.
                     char.nattributes.remove('power_pose')  # Flush power pose
                 else:
-                    account.msg(self.suggest_command())
+                    self.msg(self.suggest_command())
                 return
             else:
                 good_targets = self.verb_list(verb)
@@ -52,19 +52,19 @@ class CmdTry(MuxCommand):
                     obj = obj[0] if obj else None
                 if not obj:
                     obj = good_targets[0] if len(good_targets) == 1 else None
-                account.msg('(%s/%s (%s))' % (verb, noun, obj))
+                self.msg('(%s/%s (%s))' % (verb, noun, obj))
                 if obj and obj in good_targets:
                     self.trigger_response(char, verb, obj)
                 else:
                     if good_targets:
                         if obj:
-                            account.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
+                            self.msg('You can only %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                         else:
-                            account.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
+                            self.msg('You can %s %s|n.' % (verb, self.style_object_list(good_targets, char)))
                     else:
-                        account.msg('You can not %s %s|n.' % (verb, obj.get_display_name(account)))
+                        self.msg('You can not %s %s|n.' % (verb, obj.get_display_name(account)))
         else:
-            account.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
+            self.msg('|wVerbs to try|n: |g%s|n.' % '|w, |g'.join(verb_list))
 
     @staticmethod
     def trigger_response(char, verb, obj):
