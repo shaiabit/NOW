@@ -100,6 +100,51 @@ class Player(DefaultPlayer):
         else:
             return "%s%s|n" % (self.STYLE, self.name)
 
+    def at_post_login(self, session=None):
+        welcome = ('''
+        |rN  N |y  OOO |g W   W
+        |rNN  N|y OO OO|g W   W
+        |rN N N|y O   O|g W W W
+        |rN  NN|y OO OO|g W W W
+        |r N  N|y  OOO |g  W W
+         ''', 'NOW (in large friendly letters)')
+        # if the account has saved protocol flags, apply them to this session.
+        protocol_flags = self.attributes.get("_saved_protocol_flags", None)
+        if session and protocol_flags:
+            session.update_flags(**protocol_flags)
+
+        # inform the client of logged in status via OOB message
+        if session:
+            session.msg(logged_in={})
+
+        self._send_to_connect_channel('|G{} connected|n'.format(self.key))
+        if not (self.is_superuser or (self.sessions.count() != 1)):
+            if not self.attributes.has('_quell'):
+                self.attributes.add('_quell', True)
+                self.locks.reset()
+        if session:
+            webclient = session.protocol_key == 'websocket'
+            text = '' if webclient else welcome[0]
+            text += ('\n|wSuccessful login. Welcome, %s!' % self.key)
+            if webclient:
+                session.msg(
+                    image=['http://marketingland.com/wp-content/ml-loads/2014/08/google-now-fade-1920-800x450.jpg'])
+            session.msg(text)
+            session.execute_cmd('@ic')
+
+    def at_disconnect(self):
+        super(Player, self).at_disconnect()
+        # sessions = self.sessions.all()
+        # session = sessions[-1]
+        # do_not_exceed = 24  # Keep the last dozen entries
+        # if not self.db.lastsite:
+        #     self.db.lastsite = []
+        # self.db.lastsite = self.db.lastsite.insert(0, (session.address, int(time.time())))
+        # if len(self.db.lastsite) > do_not_exceed:
+        #     self.db.lastsite.pop()
+        # print(session.cmd_total)
+        pass  # Write stats to db.
+
 
 class Guest(DefaultGuest):
     """
