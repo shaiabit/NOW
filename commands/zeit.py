@@ -1,7 +1,5 @@
 import datetime
-import astral
 from django.conf import settings
-from django.utils import timezone
 from commands.command import MuxCommand
 from evennia.utils.evtable import EvTable
 from evennia.utils import logger, utils, gametime, create
@@ -16,10 +14,10 @@ class CmdTime(MuxCommand):
     and the current time stamp.
     """
     key = 'time'
-    aliases = ['uptime', 'events', 'zeit']
-    locks = 'cmd:perm(time) or perm(Players)'
+    aliases = 'uptime'
+    locks = 'cmd:perm(time) or perm(Accounts)'
     help_category = 'World'
-    player_caller = True
+    account_caller = True
 
     def func(self):
         """Show server time data in a table."""
