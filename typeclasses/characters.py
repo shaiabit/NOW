@@ -235,6 +235,9 @@ class Character(DefaultCharacter, Tangible):
                     continue
                 each.msg('|g%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
         is_somewhere = self.location is not None
+        if self.db.messages and self.db.messages.get('location'):
+            loc_name = self.location.get_display_name(self, plain=True)
+            self.msg(self.db.messages.get('location') + loc_name)
         if session:
             session.msg('\nYou assume the role of: %s\n' % self.get_display_name(self, pose=is_somewhere))
             if is_somewhere:  # if puppet is somewhere
