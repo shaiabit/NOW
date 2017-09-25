@@ -84,10 +84,34 @@ class CmdPose(MuxCommand):
         char = self.character
         player = self.player
         here = char.location if char else None
-        non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
-        raw_pose = rhs if rhs else args
-        magnet = True if raw_pose and raw_pose[0] in non_space_chars or cmd == ";" else False
         power = True if self.cmdstring == 'ppose' or self.cmdstring == 'pp' or self.cmdstring == 'p:' else False
+
+        def parse_pose(text):
+            return_text = []
+            for each in text.split():
+                match = None
+                new_each = each
+                word_end = ''
+                if each.startswith('/'):  # A possible substitution to test
+                    if each.endswith('/'):  # Skip this one, it's /italic/
+                        return_text.append(new_each)
+                        continue
+                    search_word = each[1:]
+                    if search_word.startswith('/'):  # Skip this one, it's being escaped
+                        new_each = each[1:]
+                    else:  # Marked for substitution, try to find a match
+                        if "'" in each:  # Test for possessive or contraction:  's  (apostrophe before end of grouping)
+                            pass
+                        if each[-1] in ".,!?":
+                            search_word, word_end = search_word[:-1], each[-1]
+                        match = char.search(search_word, quiet=True)
+                return_text.append(new_each if not match else (match[0].get_display_name(char) + word_end))
+            return ' '.join(return_text)
+
+        raw_pose = rhs if rhs and power else args
+        raw_pose = parse_pose(raw_pose)
+        non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
+        magnet = True if raw_pose and raw_pose[0] in non_space_chars or cmd == ";" else False
         doing = True if 'do' in cmd or 'rp' in cmd else False
         pose = ('' if magnet else '|_') + (ansi.strip_ansi(raw_pose) if doing else raw_pose)
         # ---- Setting Room poses as a doing message ----------
