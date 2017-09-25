@@ -24,17 +24,17 @@ class CmdSay(MuxCommand):
         """Run the say command"""
         char = self.character
         here = char.location if char else None
-        player = self.player
+        account = self.account
         opt = self.switches
         args = self.args.strip()
         if not (here and char):
             if args:
-                player.execute_cmd('pub %s' % args)
+                account.execute_cmd('pub %s' % args)
             else:
-                player.msg('Usage: say <message>   to speak on public channel.')
+                account.msg('Usage: say <message>   to speak on public channel.')
             return
         if not args:
-            player.execute_cmd("help say")
+            account.execute_cmd("help say")
             return
         if 'verb' in opt:
             char.attributes.add('say-verb', args)
@@ -47,18 +47,18 @@ class CmdSay(MuxCommand):
                 char.quote = args  # Not yet implemented.
                 return
         else:
-            speech = here.at_say(char, args)  # Notify NPCs and listeners.
+            speech = args
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             if 'ooc' in opt:
                 here.msg_contents(text=('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
                                         {'type': 'say', 'ooc': True}), from_obj=char, mapping=dict(char=char))
-                if here.has_player:
+                if here.has_account:
                     here.msg(text=('[OOC] %s says, "|w%s|n"' % (char.get_display_name(here), escape_braces(speech)),
                                    {'type': 'say', 'ooc': True}), from_obj=char)
             else:
                 here.msg_contents(text=('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
                                         {'type': 'say'}), from_obj=char, mapping=dict(char=char))
-                if here.has_player:
+                if here.has_account:
                     here.msg(text=('From inside you, %s %s, "|w%s|n"' %
                                    (char.get_display_name(here), escape_braces(verb),
                                     escape_braces(speech)), {'type': 'say'}), from_obj=char)
@@ -79,20 +79,20 @@ class CmdOoc(MuxCommand):
     def func(self):
         """Run the ooc command"""
         char = self.character
-        player = self.player
+        account = self.account
         here = char.location
         args = self.args.strip()
         if not args:
-            player.execute_cmd('help ooc')
+            account.execute_cmd('help ooc')
             return
         elif args[0] == '"' or args[0] == "'":
-            player.execute_cmd('say/o ' + here.at_say(char, args[1:]))
+            account.execute_cmd('say/o ' + args[1:])
         elif args[0] == ':' or args[0] == ';':
-            player.execute_cmd('pose/o %s' % args[1:])
+            account.execute_cmd('pose/o %s' % args[1:])
         else:
             here.msg_contents(text=('[OOC {char}] %s' % escape_braces(args), {'type': 'ooc', 'ooc': True}),
                               from_obj=char, mapping=dict(char=char))
-            if here.has_player:
+            if here.has_account:
                 here.msg(text=('[OOC %s] %s' %
                                (char.get_display_name(here), escape_braces(args)),
                                {'type': 'ooc', 'ooc': True}), from_obj=char)
@@ -125,7 +125,7 @@ class CmdSpoof(MuxCommand):
         args = self.args
         to_self = 'self' in opt or not here
         if not args:
-            self.player.execute_cmd('help spoof')
+            self.account.execute_cmd('help spoof')
             return
         # Optionally strip any markup /or/ just escape it,
         stripped = ansi.strip_ansi(args)
@@ -164,8 +164,6 @@ class CmdSpoof(MuxCommand):
                 else:
                     here.msg_contents(text=(escape_braces(text.rstrip()), {'type': 'spoof'}))
         else:
-            if not to_self:
-                here.at_say(char, stripped)  # calling the speech hook on the location if applies
             if 'strip' in opt:  # Optionally strip any markup or escape it,
                 if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})
