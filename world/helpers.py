@@ -22,7 +22,7 @@ def make_bar(value, maximum, length, gradient):
 def mass_unit(value):
     """Present a suitable mass unit based on value"""
     if not value:
-        return ''
+        return 'unknown'
     value = float(value)
     if value <= 0:
         return 'weightless'

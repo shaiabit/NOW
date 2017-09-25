@@ -36,6 +36,34 @@ See the `@spawn` command and `evennia.utils.spawner` for more info.
 
 """
 
+OBJECT = {'typeclass': 'typeclasses.objects.Object'}
+
+CHARACTER = {'typeclass': 'typeclasses.characters.Character'}
+
+CONSUMABLE = {'typeclass': 'typeclasses.objects.Consumable'}
+
+WEARABLE = {'typeclass': 'world.clothing.Item'}
+
+HAT = {'prototype': 'WEARABLE'}
+
+TOOL = {'typeclass': 'typeclasses.objects.Tool'}
+
+VEHICLE = {'typeclass': 'typeclasses.objects.Vehicle'}
+
+DISPENSER = {'typeclass': 'typeclasses.objects.Dispenser'}
+
+NPC = {'typeclass': 'typeclasses.characters.NPC'}
+
+ROOM = {'typeclass': 'typeclasses.rooms.Room'}
+
+ENTRY = {'typeclass': 'typeclasses.rooms.RealmEntry'}
+
+GRID = {'typeclass': 'typeclasses.rooms.Grid'}
+
+EXIT = {'typeclass': 'typeclasses.exits.Exit'}
+
+JUNK = {'typeclass': 'typeclasses.objects.Junk'}
+
 # from random import randint
 #
 # NOBODY = {}
