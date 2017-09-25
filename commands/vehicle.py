@@ -16,7 +16,7 @@ class CmdVehicleDefault(MuxCommand):
     key = 'vehicle'
     locks = 'cmd:all()'
     help_category = 'Travel'
-    player_caller = True
+    account_caller = True
 
     def send_msg(self, message):
         """Send message internal and external to vehicle and optionally move vehicle."""
@@ -45,15 +45,15 @@ class CmdVehicle(CmdVehicleDefault):
         where = self.obj
         here = char.location
         outside = where.location
-        player = self.player
+        account = self.account
         setting = where.db.settings or {}
         if 'vehicle' in cmd:
-            player.msg('|wCommand list for %s%s|n:|/|C%s' % (where.STYLE, where.key, '|n, |C'.join(self.aliases)))
+            account.msg('|wCommand list for %s%s|n:|/|C%s' % (where.STYLE, where.key, '|n, |C'.join(self.aliases)))
         if 'operate' in cmd:
             if 'list' in opt:
                 if not where.db.settings:
                     where.db.settings = {}
-                player.msg('Listing %s%s|n control panel settings: |g%s'
+                account.msg('Listing %s%s|n control panel settings: |g%s'
                            % (where.STYLE, where.key, '|n, |g'.join('%s|n: |c%s' % (each, where.db.settings[each])
                                                                     for each in where.db.settings)))
                 return
@@ -84,7 +84,7 @@ class CmdVehicle(CmdVehicleDefault):
                 return
             self.send_msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
                           (char.STYLE, char.key, where.STYLE, where.key, args))
-            player.msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
+            account.msg("%s%s|n commands in-operable %s%s|n vehicle to %s." %
                        (char.STYLE, char.key, where.STYLE, where.key, args))
             self.send_msg("%s%s|n does nothing." % (where.STYLE, where.key))
-            player.msg("%s%s|n does nothing." % (where.STYLE, where.key))
+            account.msg("%s%s|n does nothing." % (where.STYLE, where.key))
