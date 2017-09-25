@@ -40,7 +40,7 @@ class CmdPose(MuxCommand):
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
     options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
     locks = 'cmd:all()'
-    player_caller = True
+    account_caller = True
 
     def set_doing(self, setter, pose, target=None, default=False):
         """
@@ -82,7 +82,7 @@ class CmdPose(MuxCommand):
         args = unicode(self.args).strip()
         lhs, rhs = self.lhs, self.rhs
         char = self.character
-        player = self.player
+        account = self.account
         here = char.location if char else None
         power = True if self.cmdstring == 'ppose' or self.cmdstring == 'pp' or self.cmdstring == 'p:' else False
 
@@ -152,7 +152,7 @@ class CmdPose(MuxCommand):
             elif not rhs:
                 self.set_doing(char, pose)  # Setting temp doing message on the setter...
                 if args and not ('silent' in opt or 'quiet' in opt) and char is target:  # Allow set without posing
-                    player.execute_cmd(';%s' % pose)  # pose to the room like a normal pose would.
+                    account.execute_cmd(';%s' % pose)  # pose to the room like a normal pose would.
             char.msg("Pose now set to: '%s'" % target.get_display_name(char, pose=True))  # Display name with pose.
         else:  # ---- Action pose, not static Room Pose. ---------------------
             if '|/' in pose:
@@ -161,14 +161,14 @@ class CmdPose(MuxCommand):
                 char.msg("Pose magnet glyphs are %s." % non_space_chars)
             if not (here and char):
                 if args:
-                    player.execute_cmd('pub :%s' % pose)
+                    account.execute_cmd('pub :%s' % pose)
                 else:
-                    player.msg('Usage: pose <message>   to pose to public channel.')
+                    account.msg('Usage: pose <message>   to pose to public channel.')
                 return
             if args:
                 if power and self.rhs and 'o' not in self.switches:
                     char.ndb.power_pose = pose
-                    player.execute_cmd(self.rhs)
+                    account.execute_cmd(self.rhs)
                 else:
                     ooc = 'ooc' in self.switches
                     prepend_ooc = '[OOC] ' if ooc else ''
@@ -176,4 +176,4 @@ class CmdPose(MuxCommand):
                                        {'type': 'pose', 'ooc': ooc}),
                                       from_obj=char, mapping=dict(char=char))
             else:
-                player.execute_cmd('help pose')
+                account.execute_cmd('help pose')
