@@ -28,7 +28,7 @@ class CmdSummon(MuxCommand):
     key = 'summon'
     aliases = ['msummon', 'meet', 'join', 'mjoin']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
-    locks = 'cmd:perm(summon) or perm(Players)'
+    locks = 'cmd:perm(summon) or perm(Accounts)'
     help_category = 'Travel'
 
     def func(self):
@@ -36,13 +36,13 @@ class CmdSummon(MuxCommand):
 
         char = self.character
         loc = char.location
-        player = self.player
+        account = self.account
         args = self.args
         lhs, rhs = self.lhs, self.rhs
         # opt = self.switches  # TODO - add code to make the switches work.
 
         if char and char.ndb.currently_moving:
-            player.msg("You can not summon while moving. (|rstop|n, then try again.)")
+            account.msg("You can not summon while moving. (|rstop|n, then try again.)")
             return
         if not args:
             char.msg("Could not find target to summon. Usage: summon <character or NPC>")
