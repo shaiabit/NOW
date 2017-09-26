@@ -25,12 +25,12 @@ class CmdHome(MuxCommand):
     locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
     help_category = 'Travel'
-    player_caller = True
+    account_caller = True
 
     def func(self):
         """Implement the command"""
         you = self.character
-        player = self.player
+        account = self.account
         opt = self.switches
         # you potentially has two homes.
         room = you.db.objects['home'] if you.db.objects and you.db.objects.get('home', False) else you.home
@@ -53,12 +53,12 @@ class CmdHome(MuxCommand):
             if 'sweep' in opt:
                 home = obj.home
                 if not home:
-                    you.msg('%s has no home yet.' % obj.get_display_name(player))
+                    you.msg('%s has no home yet.' % obj.get_display_name(account))
                 elif home == obj.location:
-                    you.msg('%s is already home!' % obj.get_display_name(player))
-                elif obj != you and not player.check_permstring('Helpstaff') and not obj.access(player, 'puppet'):
+                    you.msg('%s is already home!' % obj.get_display_name(account))
+                elif obj != you and not account.check_permstring('Helpstaff') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wHelpstaff|n or higher access to send %s home."
-                            % obj.get_display_name(player))
+                            % obj.get_display_name(account))
                 else:
                     obj.msg("There's no place like home ... (%s is sending you home.)" % you.get_display_name(obj))
                     if you.location:
@@ -72,9 +72,9 @@ class CmdHome(MuxCommand):
                                 % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return
             if not self.rhs and 'here' not in opt:  # just view the destination set as home
-                if obj != you and not player.check_permstring('Helpstaff') and not obj.access(player, 'puppet'):
+                if obj != you and not account.check_permstring('Helpstaff') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wHelpstaff|n or higher access to view the home of %s."
-                            % obj.get_display_name(player))
+                            % obj.get_display_name(account))
                     return
                 home = obj.home
                 if not home:
@@ -82,7 +82,7 @@ class CmdHome(MuxCommand):
                 else:
                     string = "%s's current home is %s." % (obj.get_display_name(you), home.get_display_name(you))
             else:  # set/change a home location
-                if obj != you and not player.check_permstring('Mages') and not obj.access(player, 'puppet'):
+                if obj != you and not account.check_permstring('Mages') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wMages|n or higher access to change the home of %s." % obj)
                     return
                 if self.rhs and 'here' not in opt:
