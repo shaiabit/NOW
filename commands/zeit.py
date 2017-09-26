@@ -1,4 +1,5 @@
 import datetime
+from astral import Astral
 from django.conf import settings
 from commands.command import MuxCommand
 from evennia.utils.evtable import EvTable
@@ -31,7 +32,7 @@ class CmdTime(MuxCommand):
                 lat, lon = float(y/10000), float(x/10000)
                 print('Using location coordinates: {}, {}'.format(lat, lon))
 
-        place = astral.Location(info=('', '', lat, lon, 'UTC', ele))
+        place = Astral.Location(info=('', '', lat, lon, 'UTC', ele))
         place.solar_depression = 'civil'
 
         def time_dif(at, when):
