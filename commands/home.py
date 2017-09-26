@@ -13,6 +13,7 @@ class CmdHome(MuxCommand):
     /set <obj> [= home_location]  views or sets <obj>'s home location.
     /sweep <obj>  send obj home.
     /here  sets current character's home to current location.
+    /room  returns a character to its home room, regardless of where home is set.
     
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
@@ -20,7 +21,7 @@ class CmdHome(MuxCommand):
     It is also a convenient target of the "home" command.
     """
     key = 'home'
-    options = ('set', 'sweep', 'here')
+    options = ('set', 'sweep', 'here', 'room')
     locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
     help_category = 'Travel'
@@ -31,8 +32,10 @@ class CmdHome(MuxCommand):
         you = self.character
         player = self.player
         opt = self.switches
-        home = you.home
-        if not opt:
+        # you potentially has two homes.
+        room = you.db.objects['home'] if you.db.objects and you.db.objects.get('home', False) else you.home
+        home = room if 'room' in opt else you.home  # Or home room, to handle /room option
+        if not opt or 'room' in opt:
             if not home:
                 you.msg('You have no home yet.')
             elif home == you.location:
@@ -57,7 +60,7 @@ class CmdHome(MuxCommand):
                     you.msg("You must have |wHelpstaff|n or higher access to send %s home."
                             % obj.get_display_name(player))
                 else:
-                    obj.msg("There's no place like home ... (%s is sending you home.)" % you.get_display_name(player))
+                    obj.msg("There's no place like home ... (%s is sending you home.)" % you.get_display_name(obj))
                     if you.location:
                         you.location.msg_contents('%s%s|n sends %s%s|n home.'
                                                   % (you.STYLE, you.key, obj.STYLE, obj.key))
