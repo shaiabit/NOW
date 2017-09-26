@@ -72,7 +72,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdAccess)
         self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
         self.remove(default_cmds.CmdDestroy)  # Reuse instead of destroy database objects.
-        self.remove(default_cmds.CmdTeleport)  # Teleport haa cost and conditions.
+        self.remove(default_cmds.CmdTeleport)  # Teleport has cost and conditions.
 # [...]
         self.add(CmdOoc)
         self.add(CmdSay)
