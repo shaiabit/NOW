@@ -24,7 +24,7 @@ class CmdQuit(MuxAccountCommand):
         account = self.account
         bye = '|RDisconnecting|n'
         exit_msg = 'Hope to see you again, soon.'
-        reason = self.args.strip() if self.args else 'Quitting'
+        reason = self.args.strip() + '(Quitting)'
         if reason:
             bye += " ( |w%s|n ) " % reason
         if 'all' in self.switches:
@@ -33,7 +33,7 @@ class CmdQuit(MuxAccountCommand):
                 msg = bye + ' all sessions after ' + session_online_time + ' online. '
                 account.msg(msg, session=session)
                 account.msg(exit_msg, session=session)
-                account.disconnect_session_from_account(session, reason=reason)
+                account.disconnect_session_from_account(session, reason + '/ALL')
         else:
             session_count = len(account.sessions.all())
             online = utils.time_format(time.time() - self.session.conn_time, 1)
@@ -50,4 +50,4 @@ class CmdQuit(MuxAccountCommand):
                 msg = bye + 'after ' + online + ' online. '
                 account.msg(msg, session=self.session)
             account.msg(exit_msg, session=self.session)
-            account.disconnect_session_from_account(self.session, reason=reason)
+            account.disconnect_session_from_account(self.session, reason)
