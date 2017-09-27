@@ -25,7 +25,7 @@ var options = {};
 // Manage history for input line
 var input_history = function() {
     var history_max = 21;
-    var history = [];
+    var history = new Array();
     var history_pos = 0;
 
     history[0] = ''; // the very latest input is empty for new entry.
