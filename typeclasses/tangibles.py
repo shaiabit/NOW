@@ -26,7 +26,7 @@ class Tangible(DefaultObject):
 
         Args:
             self (Object, Character, Exit or Room):
-            viewer (TypedObject): The object or player that is looking
+            viewer (TypedObject): The object or account that is looking
                 at/getting information for this object.
         Kwargs:
             pose Return pose appended to name if True
@@ -94,7 +94,7 @@ class Tangible(DefaultObject):
 
         Args:
             self (Object, Character, or Room):
-            viewer (TypedObject): The object or player that is looking
+            viewer (TypedObject): The object or account that is looking
                 at/getting information for this object.
             bool (bool): Return True instead of a string list.
 
@@ -109,7 +109,7 @@ class Tangible(DefaultObject):
         else:
             visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
         for con in visible:
-            if con.has_player:
+            if con.has_account:
                 users.append(con)
             elif con.destination:
                 continue
