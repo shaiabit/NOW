@@ -61,16 +61,16 @@ class Object(Tangible):
      date_created (string) - time stamp of object creation
      permissions (list of strings) - list of permission strings
 
-     player (Player) - controlling player (if any, only set together with
+     account (Account) - controlling account (if any, only set together with
                        sessid below)
      sessid (int, read-only) - session id (if any, only set together with
-                       player above). Use `sessions` handler to get the
+                       account above). Use `sessions` handler to get the
                        Sessions directly.
      location (Object) - current location. Is None if this is a room
      home (Object) - safety start-location
      sessions (list of Sessions, read-only) - returns all sessions connected
                        to this object
-     has_player (bool, read-only)- will only return *connected* players
+     has_account (bool, read-only)- will only return *connected* accounts
      contents (list of Objects, read-only) - returns all objects inside this
                        object (including exits)
      exits (list of Objects, read-only) - returns all exits from this
@@ -94,7 +94,7 @@ class Object(Tangible):
     * Helper methods (see src.objects.objects.py for full headers)
 
      search(ostring, global_search=False, attribute_name=None,
-             use_nicks=False, location=None, ignore_errors=False, player=False)
+             use_nicks=False, location=None, ignore_errors=False, account=False)
      execute_cmd(raw_string)
      msg(text=None, **kwargs)
      msg_contents(message, exclude=None, from_obj=None, **kwargs)
@@ -126,14 +126,14 @@ class Object(Tangible):
                             requests a cmdset from this object. The kwargs are
                             not normally used unless the cmdset is created
                             dynamically (see e.g. Exits).
-     at_pre_puppet(player)- (player-controlled objects only) called just
+     at_pre_puppet(account)- (account-controlled objects only) called just
                             before puppeting
-     at_post_puppet()     - (player-controlled objects only) called just
-                            after completing connection player<->object
-     at_pre_unpuppet()    - (player-controlled objects only) called just
+     at_post_puppet()     - (account-controlled objects only) called just
+                            after completing connection account<->object
+     at_pre_unpuppet()    - (account-controlled objects only) called just
                             before un-puppeting
-     at_post_unpuppet(player) - (player-controlled objects only) called just
-                            after disconnecting player<->object link
+     at_post_unpuppet(account) - (account-controlled objects only) called just
+                            after disconnecting account<->object link
      at_server_reload()   - called before server is reloaded
      at_server_shutdown() - called just before server is fully shut down
 
@@ -231,8 +231,8 @@ class Object(Tangible):
         here = self.location
         there = source_location
         print(there)
-        if not there and here.has_player:
-            # This was created from nowhere and added to a player's
+        if not there and here.has_account:
+            # This was created from nowhere and added to an account's
             # inventory; it's probably the result of a create command.
             here.msg("You now have %s%s|n in your possession." % (self.STYLE, this))
             return
@@ -316,7 +316,7 @@ class Object(Tangible):
         for con in visible:
             if con.destination:
                 exits.append(con)
-            elif con.has_player:
+            elif con.has_account:
                 users.append(con)
             else:
                 things.append(con)
