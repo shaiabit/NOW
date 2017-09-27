@@ -54,7 +54,7 @@ class VerbHandler:
 
     def drop(self):
         """Implements the attempt to drop this object."""
-        self.s.player.execute_cmd('give/drop %s' % self.o.get_display_name(self.s, plain=True))
+        self.s.account.execute_cmd('give/drop %s' % self.o.get_display_name(self.s, plain=True))
 
     def enter(self):
         if self.s.location == self.o:
@@ -77,7 +77,7 @@ class VerbHandler:
             self.o.location.msg_contents('%s%s|n %s' % (self.s.STYLE, self.s.key, entry_message))
 
     def examine(self):
-        self.s.player.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
+        self.s.account.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
 
     def exit(self):
         if self.s.location != self.o:
@@ -131,7 +131,7 @@ class VerbHandler:
             self.o.at_get(self.s)  # calling hook method
 
     def puppet(self):
-        self.s.player.execute_cmd('@ic %s' % self.o.get_display_name(self.s, plain=True))
+        self.s.account.execute_cmd('@ic %s' % self.o.get_display_name(self.s, plain=True))
 
     def read(self):
         """
@@ -171,4 +171,4 @@ class VerbHandler:
                                      % (color, self.s.key, action), from_obj=self.s, mapping=dict(mount=self.o))
 
     def view(self):
-        return self.s.player.execute_cmd('look %s' % self.o.get_display_name(self.s, plain=True))
+        return self.s.account.execute_cmd('look %s' % self.o.get_display_name(self.s, plain=True))
