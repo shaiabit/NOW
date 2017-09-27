@@ -132,19 +132,6 @@ class Account(DefaultAccount):
             session.msg(text)
             session.execute_cmd('@ic')
 
-    def at_disconnect(self):
-        super(Account, self).at_disconnect()
-        # sessions = self.sessions.all()
-        # session = sessions[-1]
-        # do_not_exceed = 24  # Keep the last dozen entries
-        # if not self.db.lastsite:
-        #     self.db.lastsite = []
-        # self.db.lastsite = self.db.lastsite.insert(0, (session.address, int(time.time())))
-        # if len(self.db.lastsite) > do_not_exceed:
-        #     self.db.lastsite.pop()
-        # print(session.cmd_total)
-        pass  # Write stats to db.
-
 
 class Guest(DefaultGuest):
     """
