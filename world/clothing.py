@@ -518,7 +518,7 @@ class CmdGive(MuxCommand):
                 char.location.msg_contents("{giver} gives {item} to {receiver}.",
                                            mapping=dict(giver=char, item=to_give, receiver=target),
                                            exclude=[char, target])
-        if target.location and target.has_player:
+        if target.location and target.has_account:
             message = "{} quietly gives you {}." if quiet else "{} gives you {}."
             target.msg(message.format(char.get_display_name(char), to_give.get_display_name(char)))
         # Call the object script's at_give() method.
