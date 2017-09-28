@@ -500,7 +500,7 @@ class CmdGrid(CmdGridMotion):
     """
     key = 'grid'
     help_category = 'Building'
-    locks = 'cmd:perm(Builders)'
+    locks = 'cmd:perm(builder)'
     account_caller = True
 
     def func(self):

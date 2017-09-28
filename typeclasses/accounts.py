@@ -95,7 +95,7 @@ class Account(DefaultAccount):
 
     def get_display_name(self, looker, **kwargs):
         """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
+        if self.locks.check_lockstring(looker, "perm(builder)"):
             return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
             return "%s%s|n" % (self.STYLE, self.name)
@@ -142,7 +142,7 @@ class Guest(DefaultGuest):
 
     def get_display_name(self, looker, **kwargs):
         """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(Builders)"):
+        if self.locks.check_lockstring(looker, "perm(builder)"):
             return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
         else:
             return "%s%s|n" % (self.STYLE, self.name)

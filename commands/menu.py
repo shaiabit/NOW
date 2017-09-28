@@ -11,7 +11,7 @@ class CmdMenu(MuxCommand):
     List menus you can use
     """
     key = 'menu'
-    locks = 'perm(Denizen)'
+    locks = 'perm(denizen)'
     account_caller = True
 
     def func(self):
@@ -28,10 +28,11 @@ def menu_main(caller):
                {'desc': 'Character menu', 'goto': 'menu_character'},
                {'desc': 'Craft menu', 'goto': 'menu_craft'},
                {'desc': 'Room menu', 'goto': 'menu_room'},
+               {'desc': 'Helper menu', 'goto': 'menu_helper'},
                {'desc': 'Helpstaff menu', 'goto': 'menu_helpstaff'},
-               {'desc': 'Mages menu', 'goto': 'menu_mage'},
-               {'desc': 'Wizards menu', 'goto': 'menu_wizard'},
-               {'desc': 'Immortals menu', 'goto': 'menu_imortal'},
+               {'desc': 'Mage menu', 'goto': 'menu_mage'},
+               {'desc': 'Wizard menu', 'goto': 'menu_wizard'},
+               {'desc': 'Immortal menu', 'goto': 'menu_imortal'},
                {'desc': 'Admin menu', 'goto': 'menu_admin'},
                {'desc': 'EXIT', 'key': 'X', 'goto': 'menu_quit'},
                {'key': '_default', 'goto': 'menu_quit'})

@@ -29,7 +29,7 @@ class CmdTeleport(MuxCommand):
     key = 'teleport'
     aliases = ['tport', 'tel']
     options = ('quiet', 'silent', 'into', 'vanish')
-    locks = 'cmd:perm(teleport) or perm(Builders)'
+    locks = 'cmd:perm(teleport) or perm(builder)'
     help_category = 'Travel'
     parse_using = ' to '
 
@@ -96,8 +96,8 @@ class CmdTeleport(MuxCommand):
                 if not target:
                     account.msg("Did not find object to teleport.")
                     return
-                if not (account.check_permstring('Mages') or target.access(account, 'control')):
-                    account.msg("You must have |wMages|n or higher access to send something into |222Nothingness|n.")
+                if not (account.check_permstring('mage') or target.access(account, 'control')):
+                    account.msg("You must have |wMage|n or higher power to send something into |222Nothingness|n.")
                     return
                 account.msg("Teleported %s -> None-location." % (target.get_display_name(char)))
                 if target.location and not tel_quietly:

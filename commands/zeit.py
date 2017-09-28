@@ -16,7 +16,7 @@ class CmdTime(MuxCommand):
     """
     key = 'time'
     aliases = 'uptime'
-    locks = 'cmd:perm(time) or perm(Accounts)'
+    locks = 'cmd:perm(time) or perm(denizen)'
     help_category = 'World'
     account_caller = True
 

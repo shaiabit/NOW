@@ -24,7 +24,7 @@ class CmdWho(MuxAccountCommand):
         you = self.account
         session_list = SESSIONS.get_sessions()
         cmd = self.cmdstring
-        show_session_data = you.check_permstring('Immortals') and not you.attributes.has('_quell')
+        show_session_data = you.check_permstring('immortal') and not you.attributes.has('_quell')
         account_count = (SESSIONS.account_count())
         table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
         if cmd == 'wa' or cmd == 'where':

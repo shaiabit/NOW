@@ -28,7 +28,7 @@ class CmdSummon(MuxCommand):
     key = 'summon'
     aliases = ['msummon', 'meet', 'join', 'mjoin']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
-    locks = 'cmd:perm(summon) or perm(Accounts)'
+    locks = 'cmd:perm(summon) or perm(denizen)'
     help_category = 'Travel'
 
     def func(self):

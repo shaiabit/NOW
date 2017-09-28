@@ -29,8 +29,8 @@ class Junk(DefaultObject):
 
         # Set locks: can't do much with this object type
         self.locks.add(';'.join([
-            'get:none()', 'view:none()', 'puppet:none()', 'tell:none()', 'examine:perm(Immortal)',
-            'edit:perm(Immortal)', 'control:perm(Immortal)', 'call:none()']))
+            'get:none()', 'view:none()', 'puppet:none()', 'tell:none()', 'examine:perm(immortal)',
+            'edit:perm(immortal)', 'control:perm(immortal)', 'call:none()']))
 
 
 class Object(Tangible):

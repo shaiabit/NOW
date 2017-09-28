@@ -56,7 +56,7 @@ class CmdHome(MuxCommand):
                     you.msg('%s has no home yet.' % obj.get_display_name(account))
                 elif home == obj.location:
                     you.msg('%s is already home!' % obj.get_display_name(account))
-                elif obj != you and not account.check_permstring('Helpstaff') and not obj.access(account, 'puppet'):
+                elif obj != you and not account.check_permstring('helpstaff') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wHelpstaff|n or higher access to send %s home."
                             % obj.get_display_name(account))
                 else:
@@ -72,8 +72,8 @@ class CmdHome(MuxCommand):
                                 % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return
             if not self.rhs and 'here' not in opt:  # just view the destination set as home
-                if obj != you and not account.check_permstring('Helpstaff') and not obj.access(account, 'puppet'):
-                    you.msg("You must have |wHelpstaff|n or higher access to view the home of %s."
+                if obj != you and not account.check_permstring('helpstaff') and not obj.access(account, 'puppet'):
+                    you.msg("You must have |wHelpstaff|n or higher power to view the home of %s."
                             % obj.get_display_name(account))
                     return
                 home = obj.home
@@ -82,8 +82,8 @@ class CmdHome(MuxCommand):
                 else:
                     string = "%s's current home is %s." % (obj.get_display_name(you), home.get_display_name(you))
             else:  # set/change a home location
-                if obj != you and not account.check_permstring('Mages') and not obj.access(account, 'puppet'):
-                    you.msg("You must have |wMages|n or higher access to change the home of %s." % obj)
+                if obj != you and not account.check_permstring('mage') and not obj.access(account, 'puppet'):
+                    you.msg("You must have |wmage|n or higher powers to change the home of %s." % obj)
                     return
                 if self.rhs and 'here' not in opt:
                     new_home = you.search(self.rhs, global_search=True)

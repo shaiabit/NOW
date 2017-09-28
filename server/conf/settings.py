@@ -52,7 +52,7 @@ SEARCH_MULTIMATCH_TEMPLATE = " {number} {name}{aliases}{info}\n"
 ENCODINGS = ["utf-8", "latin-1", "ISO-8859-1", "cp437"]
 
 ######################################################################
-# Player settings
+# Account settings
 ######################################################################
 
 HELP_MORE = False
