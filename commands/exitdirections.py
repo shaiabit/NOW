@@ -65,7 +65,7 @@ class CmdExit(MuxCommand):
             print("Lock: %s" % lockstring)
             print("=====")
             """
-            if not account.check_permstring('Builders'):
+            if not account.check_permstring('builder'):
                 you.msg("You must have |wBuilders|n or higher access to create a new room.")
                 return None
 
@@ -78,8 +78,8 @@ class CmdExit(MuxCommand):
 
             typeclass = settings.BASE_ROOM_TYPECLASS
             room = {'name': name, 'aliases': aliases}
-            lockstring = "control:pid({0}) or perm(Immortals); delete:pid({0})" \
-                         " or perm(Wizards); edit:pid({0}) or perm(Wizards); get:false()"\
+            lockstring = "control:pid({0}) or perm(immortal); delete:pid({0})" \
+                         " or perm(wizard); edit:pid({0}) or perm(wizard); get:false()"\
                 .format(account.id)
             r = create.create_object(typeclass, room['name'], aliases=room['aliases'], report_to=you)
             r.locks.add(lockstring)
@@ -306,8 +306,8 @@ class CmdExit(MuxCommand):
             if not switches:
                 you.msg("You cannot travel %s." % self.key)
         if 'show' in switches and 'go' not in switches:
-            if not account.check_permstring('Helpstaff'):
-                you.msg("You must have |gHelpstaff|n or higher access to use this.")
+            if not account.check_permstring('helpstaff'):
+                you.msg("You must have |gHelpstaff|n or higher power to use this.")
                 return None
             if you.location.attributes.has('exits'):  # Does an 'exits' attribute exist?
                 ways = loc.db.exits
