@@ -11,8 +11,8 @@ class CmdMenu(MuxCommand):
     List menus you can use
     """
     key = 'menu'
-    locks = 'perm(Players)'
-    player_caller = True
+    locks = 'perm(Denizen)'
+    account_caller = True
 
     def func(self):
         EvMenu(self.caller, 'commands.menu', startnode='menu_main', cmd_on_exit=None, persistent=False)
