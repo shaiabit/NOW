@@ -66,13 +66,14 @@ class CmdFlag(MuxCommand):
                     return
             flags_obj = obj.tags.get(category='flags', return_list=True)
             if flags_obj:
+                flags_obj_count = len(flags_obj)
                 if 'long' in opt:
                     account.msg('Flag list on %s: (%s): ' % (obj.get_display_name(account), flags_obj_count))
                     for flag in flags_obj:
                         account.msg('|c%s: |w%s|n|/' % (flag, self.FLAGS[flag]))
                 else:
-                    account.msg('Flag list on %s: (%s) = |c%s' %
-                               (obj.get_display_name(account), flags_obj_count, "|n, |c".join(a for a in flags_obj)))
+                    account.msg('Flag list on %s: (%s) = |c%s' % (
+                        obj.get_display_name(account), flags_obj_count, "|n, |c".join(a for a in flags_obj)))
             else:
                 account.msg('Flag list is not found on %s.' % obj.get_display_name(account))
             if rhs:  # If something is on the right hand side!
