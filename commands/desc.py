@@ -44,12 +44,13 @@ class CmdDesc(MuxCommand):
     def edit_handler(self):
         char = self.character
         opt = self.switches
+        target = self.target
         if self.args:
             self.msg("|yYou may specify a description, or use the edit switch, "
                      "but not both.|n")
             return
         else:
-            obj = char.location if 'room' in opt else char
+            obj = char
 
         def load(obj):
             return obj.db.evmenu_target.db.desc or ''
@@ -67,7 +68,7 @@ class CmdDesc(MuxCommand):
             obj.attributes.remove('evmenu_target')
             obj.msg('Exited editor.')
 
-        char.db.evmenu_target = obj  # launch the editor
+        char.db.evmenu_target = target  # launch the editor
         EvEditor(obj, loadfunc=load, savefunc=save, quitfunc=quit, key='desc')
         return
 
@@ -77,6 +78,7 @@ class CmdDesc(MuxCommand):
         here = char.location
         opt = self.switches
         target = here if 'room' in opt else char
+        self.target = target
         if not here and 'room' in opt:
             self.caller.msg("You cannot edit your room's description while |y@OOC|n. Switch to |y@IC|n first.")
             return
