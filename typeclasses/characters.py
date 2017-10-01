@@ -37,6 +37,27 @@ class Character(DefaultCharacter, Tangible):
     """
     STYLE = '|c'
 
+    def at_object_creation(self):
+        """Initialize a newly-created Character"""
+        super(Character, self).at_object_creation()
+        # Check to see if Character has a home room set.
+        if not self.db.objects:  # Prime non-existent objects attribute
+            self.db.objects = {}  # with empty list, before checking
+        if not self.db.objects.get('home', False):  # if self has no home room,
+            self.assign_room()  # call the assign_room method.
+
+    def assign_room(self):
+        """
+        Spawn a new home room for this character.
+        Set locks:  set "owner" to edit/control lock,
+        set owner's home there, (self.home = there)
+        set owner's home room there.
+            (self.db.objects['home'] = there)
+        Move owner there?
+        """
+        # Spawn a new room
+        pass
+
     def at_before_move(self, destination):
         """
         Called just before moving object - here we check to see if
@@ -286,7 +307,7 @@ class Character(DefaultCharacter, Tangible):
             sdesc (str): The processed sdesc ready
                 for display.
         """
-        if self.check_permstring('Mages'):
+        if self.check_permstring('mage'):
             return '%s%s|n [|[G%s|n]' % (obj.STYLE, sdesc, obj.key)
         else:
             return '%s%s|n' % (obj.STYLE, sdesc)

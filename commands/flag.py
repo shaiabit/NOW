@@ -64,9 +64,8 @@ class CmdFlag(MuxCommand):
                 obj = char.search(lhs, location=[char, char.location]) if args else here
                 if not obj:
                     return
-            flags_obj = obj.tags.get(category='flags')
-            flags_obj_count = len(flags_obj)
-            if flags_obj:  # returns a list of flags
+            flags_obj = obj.tags.get(category='flags', return_list=True)
+            if flags_obj:
                 if 'long' in opt:
                     account.msg('Flag list on %s: (%s): ' % (obj.get_display_name(account), flags_obj_count))
                     for flag in flags_obj:
