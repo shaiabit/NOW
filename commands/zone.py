@@ -17,11 +17,6 @@ class CmdZone(MuxCommand):
     help_category = 'System'
     account_caller = True
 
-    # myscript.tags.add('weather', category='climate')
-    # mychair.tags.all(category='flags')  # returns a list of Tags
-    # mychair.tags.remove('furniture')
-    # mychari.tags.clear()
-
     def func(self):
         """ """
         char = self.character
