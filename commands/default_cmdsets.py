@@ -64,14 +64,15 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdGet)
         self.remove(default_cmds.CmdSay)
         self.remove(default_cmds.CmdDrop)
-        self.remove(default_cmds.CmdGive)  # Now handled by world/clothing
-        self.remove(default_cmds.CmdLook)   # Now handled by sense command, along with 4 other senses
+        self.remove(default_cmds.CmdGive)      # Now handled by world/clothing
+        self.remove(default_cmds.CmdLook)      # Now handled by sense command, along with 4 other senses
         self.remove(default_cmds.CmdPose)
-        self.remove(default_cmds.CmdTime)   # Moved to account command
+        self.remove(default_cmds.CmdTime)      # Moved to account command
         self.remove(default_cmds.CmdAbout)
         self.remove(default_cmds.CmdAccess)
-        self.remove(default_cmds.CmdSetHome)  # Replaced with home/set and home/here
-        self.remove(default_cmds.CmdDestroy)  # Reuse instead of destroy database objects.
+        self.remove(default_cmds.CmdSetHome)   # Replaced with home/set and home/here
+        self.remove(default_cmds.CmdSetDesc)   # Duplicate subset of functions to CmdDesc
+        self.remove(default_cmds.CmdDestroy)   # Reuse instead of destroy database objects.
         self.remove(default_cmds.CmdTeleport)  # Teleport has cost and conditions.
 # [...]
         self.add(CmdOoc)
