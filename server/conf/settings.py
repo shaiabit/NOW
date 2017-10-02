@@ -55,6 +55,9 @@ ENCODINGS = ["utf-8", "latin-1", "ISO-8859-1", "cp437"]
 # Account settings
 ######################################################################
 
+# The default permission given to all new accounts
+PERMISSION_ACCOUNT_DEFAULT = "denizen"
+
 HELP_MORE = False
 PERMISSION_HIERARCHY = ["Guest",      # NOTE: only used if GUEST_ENABLED=True
                         "Denizen",    # Player
