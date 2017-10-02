@@ -34,9 +34,9 @@ TELNET_PORTS = [4000, 8888]
 
 WEBSERVER_PORTS = [(8000, 8001)]
 
-IDMAPPER_CACHE_MAXSIZE = 150
+IDMAPPER_CACHE_MAXSIZE = 150  # Keeping cache size small for now
 
-INLINEFUNC_ENABLED = False  # Too buggy to use, currently.
+INLINEFUNC_ENABLED = False  # Needs testing before use.
 
 IDLE_TIMEOUT = 5 * 60 * 60  # 5 hours
 
@@ -56,13 +56,13 @@ ENCODINGS = ["utf-8", "latin-1", "ISO-8859-1", "cp437"]
 ######################################################################
 
 HELP_MORE = False
-PERMISSION_HIERARCHY = ["Guest",  # NOTE: only used if GUEST_ENABLED=True
-                        "Denizen",
-                        "Citizen",
-                        "Helper",
-                        "Crafter",
-                        "Builder",
-                        "Helpstaff",
-                        "Mage",
-                        "Wizard",
-                        "Immortal"]
+PERMISSION_HIERARCHY = ["Guest",      # NOTE: only used if GUEST_ENABLED=True
+                        "Denizen",    # Player
+                        "Citizen",    #
+                        "Helper",     # Helper
+                        "Crafter",    #
+                        "Builder",    # Builder
+                        "Helpstaff",  #
+                        "Mage",       #
+                        "Wizard",     # Admin
+                        "Immortal"]   # Developer
