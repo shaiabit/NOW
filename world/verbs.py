@@ -95,7 +95,7 @@ class VerbHandler:
             self.s.msg('%s%s|n %s' % (self.s.STYLE, self.s.key, exit_message))
 
     def follow(self):
-        """Set following agreement - caller follows character"""
+        """Set following agreement - subject follows object"""
         if self.o == self.s:
             self.s.msg('You decide to follow your heart.')
             return
@@ -105,7 +105,7 @@ class VerbHandler:
                 self.o.db.followers.remove(self.s)
                 action = 'stop following'
             else:
-                self.o.db.followers.append(caller)
+                self.o.db.followers.append(self.s)
         else:
             self.o.db.followers = [self.s]
         color = 'g' if action == 'follow' else 'r'
@@ -149,7 +149,7 @@ class VerbHandler:
         self.s.msg(string)
 
     def ride(self):
-        """Set riding agreement - caller rides character"""
+        """Set riding agreement - subject rides object"""
         if self.o == self.s:
             return
         action = 'ride'
