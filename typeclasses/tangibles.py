@@ -47,7 +47,7 @@ class Tangible(DefaultObject):
         display_name = ("%s%s|n" % (self.STYLE, name)) if color else name
         if mxp:
             display_name = "|lc%s|lt%s|le" % (mxp, display_name)
-        if self.access(viewer, access_type='control') and db_id:
+        if not self.account.attributes.has("_quell") and self.access(viewer, access_type='control') and db_id:
             display_name += '|w(#%s)|n' % self.id
         if pose and self.db.messages and (self.db.messages.get('pose') or self.db.messages.get('pose_default')):
             display_pose = self.db.messages.get('pose') if self.db.messages.get('pose', None)\
