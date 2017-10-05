@@ -27,8 +27,8 @@ class Tangible(DefaultObject):
 
         Args:
             self (Object, Character, Exit or Room):
-            viewer (TypedObject): The object or account that is looking
-                at/getting information for this object.
+            viewer (TypedObject): The Tangible object, account, or session
+                that needs the name of this Tangible object.
         Kwargs:
             pose Return pose appended to name if True
             color Return includes color style markup prefix if True
@@ -40,9 +40,11 @@ class Tangible(DefaultObject):
             if this is defined.
                 including the DBREF if viewer is privileged to control this.
         """
+        if type(viewer) is 'ServerSession':
+            viewer = viewer.get_puppet_or_account
         if inherits_from(viewer, "evennia.accounts.accounts.DefaultAccount"):
             viewer = viewer.get_puppet(viewer.sessions.all()[0])  # viewer is an Account, convert to tangible
-        if not viewer.has_account:
+        if not viewer or not viewer.has_account:
             return ''
         color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
         mxp, db_id = [kwargs.get('mxp', False), kwargs.get('db_id', True)]
