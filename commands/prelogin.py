@@ -24,11 +24,11 @@ class CmdWhoUs(CmdWhoinfo):
         table = evtable.EvTable(border='none')
         table.add_row('Character', 'On for', 'Idle',  'Location')
         for session in session_list:
-            if not session.logged_in:
+            puppet = session.get_puppet()
+            if not session.logged_in or not puppet:
                 continue
             delta_cmd = time.time() - session.cmd_last_visible
             delta_conn = time.time() - session.conn_time
-            puppet = session.get_puppet()
             location = puppet.location.key if puppet and puppet.location else 'Nothingness'
             table.add_row(puppet.key if puppet else 'None', utils.time_format(delta_conn, 0),
                           utils.time_format(delta_cmd, 1), location)
