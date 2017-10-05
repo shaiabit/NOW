@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from evennia import DefaultObject
+from evennia.utils import inherits_from
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
 # from effects import EffectHandler
@@ -39,6 +40,10 @@ class Tangible(DefaultObject):
             if this is defined.
                 including the DBREF if viewer is privileged to control this.
         """
+        if inherits_from(viewer, "evennia.accounts.accounts.DefaultAccount"):
+            viewer = viewer.get_puppet(viewer.sessions.all()[0])  # viewer is an Account, convert to tangible
+        if not viewer.has_account:
+            return ''
         color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
         mxp, db_id = [kwargs.get('mxp', False), kwargs.get('db_id', True)]
         if kwargs.get('plain', False):  # "plain" means "without color, without db_id"
@@ -47,7 +52,7 @@ class Tangible(DefaultObject):
         display_name = ("%s%s|n" % (self.STYLE, name)) if color else name
         if mxp:
             display_name = "|lc%s|lt%s|le" % (mxp, display_name)
-        if not self.account.attributes.has("_quell") and self.access(viewer, access_type='control') and db_id:
+        if not viewer.account.attributes.has('_quell') and self.access(viewer, access_type='control') and db_id:
             display_name += '|w(#%s)|n' % self.id
         if pose and self.db.messages and (self.db.messages.get('pose') or self.db.messages.get('pose_default')):
             display_pose = self.db.messages.get('pose') if self.db.messages.get('pose', None)\
