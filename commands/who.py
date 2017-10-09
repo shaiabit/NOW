@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import time
 from commands.command import MuxAccountCommand
 from evennia.server.sessionhandler import SESSIONS

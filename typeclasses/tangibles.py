@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from evennia import DefaultObject
 from evennia.utils import inherits_from
 from evennia.utils.utils import lazy_property

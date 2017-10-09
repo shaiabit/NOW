@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from commands.command import MuxAccountCommand
 from django.conf import settings
 from evennia.comms.models import ChannelDB, Msg

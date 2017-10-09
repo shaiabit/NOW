@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """
 Exits are connectors between Rooms. An exit always has a destination property
 set and has a single command defined on itself with the same name as its key,

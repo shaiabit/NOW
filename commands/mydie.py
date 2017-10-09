@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import random
 from builtins import range
 from commands.command import MuxCommand

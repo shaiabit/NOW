@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import evennia
 from evennia.utils.utils import delay
 from commands.command import MuxCommand

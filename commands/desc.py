@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from commands.command import MuxCommand
 from evennia.utils.eveditor import EvEditor
 from evennia.utils.evmenu import get_input
