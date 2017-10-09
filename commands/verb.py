@@ -109,14 +109,14 @@ class CmdTry(MuxCommand):
         """Create default "command not available" error message."""
         raw = self.raw_string.strip()  # The raw command line text, minus surrounding whitespace
         char = self.character
-        message = "|wCommand |n'|y%s|n' |wis not available." % raw
+        message = ["|wCommand |n'|y%s|n' |wis not available." % raw]
         suggestions = string_suggestions(raw, self.cmdset.get_all_cmd_keys_and_aliases(char), cutoff=0.72, maxnum=3)
         if suggestions:
             if len(suggestions) == 1:
-                message += ' Maybe you meant |n"|g%s|n" |w?' % suggestions[0]
+                message.append('Maybe you meant |n"|g%s|n" |w?' % suggestions[0])
             else:
-                message += ' Maybe you meant %s' % '|w, '.join('|n"|g%s|n"' % each for each in suggestions[:-1])
-                message += ' |wor |n"|g%s|n" |w?' % suggestions[-1:][0]
+                message.append('Maybe you meant %s' % '|w, '.join('|n"|g%s|n"' % each for each in suggestions[:-1]))
+                message.append('|wor |n"|g%s|n" |w?' % suggestions[-1:][0])
         else:
-            message += ' Type |n"|ghelp|n"|w for help.'
-        return message
+            message.append('Type |n"|ghelp|n"|w for help.')
+        return ' '.join(message)
