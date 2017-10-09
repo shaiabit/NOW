@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """
 Characters are (by default) Objects setup to be puppeted by accounts.
 They are what you "see" in game. The Character class in this module
@@ -40,12 +40,51 @@ class Character(DefaultCharacter, Tangible):
     def at_object_creation(self):
         """Initialize a newly-created Character"""
         super(Character, self).at_object_creation()
+        cid, pid = self.id, self.account.id
+        new_locks = '; '.join(
+            ('puppet:id({0}) or pid({1}) or perm(immortal)'.format(cid, pid),
+             'edit:id({0}) or pid({1}) or perm(wizard)'.format(cid, pid),
+             'control:id({0}) or pid({1}) or perm(immortal)'.format(cid, pid),
+             'drop:all(); mail:all(); view:all(); follow:all()',
+             'examine:perm(helpstaff)', 'tell:perm(wizard)',
+             'delete:perm(immortal)', 'call:false(); get:false()'))
+        self.locks.add(new_locks)  # Add these new locks to the character
+        # Check to see if Character has an object dictionary
+        if not self.db.objects:   # Prime non-existent objects attribute
+            self.db.objects = {}  # with empty list
         # Check to see if Character has a home room set.
-        if not self.db.objects:  # Prime non-existent objects attribute
-            self.db.objects = {}  # with empty list, before checking
-        if not self.db.objects.get('home', False):  # if self has no home room,
-            self.assign_room()  # call the assign_room method.
+        homeroom = self.db.objects.get('home')
+        if not homeroom:  # if self has no home room,
+            homeroom = self.assign_room()  # call the assign_room method.
+            self.db.objects['home'] = homeroom  # Set the character's home room
+        self.move_to(homeroom)  # Move new character (likely in Great Fog) to its homeroom.
+        # self.db.last_room = An initial someplace to go.
+        # Next, the character gets a free first object.
+        self.assign_object()  # WOT!  Free object per character, Per Tria request.
 
+    def assign_object(self):
+        """
+        This is where the new character is given a choice to receive one of several
+        new object types, limit one per character. Offer void where prohibited.
+        """
+        #  piece of clothing (or jewelry), dice, canister, weapon, furniture, or plush/soft sculpt critter.
+        choices = ['wearable (jewelry/clothing', 'deluxe RP dice',
+                   'small weapon for defense', 'furnishing for your room',
+                   'plush or soft sculpt huggable creature']
+
+        def scrambled(orig):
+            """
+            Given an iterable, returns a shuffled list of it.
+            """
+            import random  # used for the "scrambled" method.
+            dest = orig[:]
+            random.shuffle(dest)
+            return dest
+
+        self.msg("A {} lands beside you in {}!".format(scrambled(choices).pop(),  # Deal a random choice card.
+                 self.location.get_display_name(self)))
+        # This is an initial test. Choice will be dispensed from a vending machine later.
+        
     def assign_room(self):
         """
         Spawn a new home room for this character.
@@ -55,8 +94,18 @@ class Character(DefaultCharacter, Tangible):
             (self.db.objects['home'] = there)
         Move owner there?
         """
-        # Spawn a new room
-        pass
+        # Spawn a new room with locks:
+        homeroom_name = self.name + "'s place"
+        homeroom_desc = "|nThis is your place. You can always |ghome/room|n to get here. " \
+                        "You may |gdesc/room ...|n to change it, and you can check out some " \
+                        "|g@color ansi|n to spruce it up. "
+        homeroom_locks = 'control:id({0}) or perm(wizard); edit:id({0}) ' \
+                         'or perm(helpstaff)'.format(self.id)
+        homeroom = {'typeclass': 'typeclasses.rooms.Room', 'key': homeroom_name, 'desc': homeroom_desc,
+                    'locks': homeroom_locks}
+        from evennia.utils.spawner import spawn  # Import the spawn utility just before using it.
+        room = spawn(homeroom)  # Calling spawn utility to create the home room.
+        return room[0]  # Return the first (and only) object created, the room.
 
     def at_before_move(self, destination):
         """
