@@ -79,8 +79,6 @@ class VerbHandler:
     def examine(self):
         self.s.account.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
 
-    # def exit(self):  # FIXME: "depart/exit" should be an alias of "leave"
-
     def follow(self):
         """Set following agreement - subject follows object"""
         if self.o == self.s:
@@ -117,7 +115,7 @@ class VerbHandler:
                                          from_obj=self.s, mapping=dict(it=self.o))
             self.o.at_get(self.s)  # calling hook method
 
-    def leave(self):
+    def leave(self):  # FIXME: "depart/exit" should be an alias of "leave"
         if self.s.location != self.o:
             self.s.msg("You are not aboard %s." % self.o.get_display_name(self.s))
             return
