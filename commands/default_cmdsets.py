@@ -162,8 +162,14 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
     def at_cmdset_creation(self):
         """Populates the DefaultUnloggedin cmdset"""
         super(UnloggedinCmdSet, self).at_cmdset_creation()
-        # any commands you add below will overload the default ones.
         self.add(prelogin.CmdWhoUs())
+        self.add(prelogin.CmdUnconnectedEncoding())
+        self.add(prelogin.CmdUnconnectedConnect())
+        self.add(prelogin.CmdUnconnectedCreate())
+        self.add(prelogin.CmdUnconnectedQuit())
+        self.add(prelogin.CmdUnconnectedLook())
+        self.add(prelogin.CmdUnconnectedHelp())
+        self.add(prelogin.CmdUnconnectedScreenreader())
 
 
 class SessionCmdSet(default_cmds.SessionCmdSet):

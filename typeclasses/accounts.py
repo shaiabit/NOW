@@ -93,12 +93,24 @@ class Account(DefaultAccount):
     """
     STYLE = '|[100'
 
+    def at_account_creation(self):
+        """
+        This is called once, the very first time the account is created
+        i.e. first time player registers. Set attributes that all
+        accounts should have, like configuration values etc.
+        """
+        # set an (empty) attribute holding the characters this account has
+        lockstring = 'attrread:perm(wizard);attredit:perm(wizard);' \
+                     'attrcreate:perm(wizard);'
+        self.attributes.add('_playable_characters', [], lockstring=lockstring)
+        self.attributes.add('_saved_protocol_flags', {}, lockstring=lockstring)
+
     def get_display_name(self, looker, **kwargs):
         """Displays the name of the object in a viewer-aware manner."""
-        if self.locks.check_lockstring(looker, "perm(builder)"):
-            return "%s%s|w(#%s)|n" % (self.STYLE, self.name, self.id)
+        if self.locks.check_lockstring(looker, 'perm(builder)'):
+            return '%s%s|w(#%s)|n' % (self.STYLE, self.name, self.id)
         else:
-            return "%s%s|n" % (self.STYLE, self.name)
+            return '%s%s|n' % (self.STYLE, self.name)
 
     def at_post_login(self, session=None):
         welcome = ('''
@@ -109,7 +121,7 @@ class Account(DefaultAccount):
         |r N  N|y  OOO |g  W W
          ''', 'NOW (in large friendly letters)')
         # if the account has saved protocol flags, apply them to this session.
-        protocol_flags = self.attributes.get("_saved_protocol_flags", None)
+        protocol_flags = self.attributes.get('_saved_protocol_flags', None)
         if session and protocol_flags:
             session.update_flags(**protocol_flags)
 
