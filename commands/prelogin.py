@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Commands that are available from the connect screen.
+from evennia/commands/default/unloggedin.py
 """
 import re
 import time
@@ -586,17 +587,21 @@ def _create_character(session, new_account, typeclass, home, permissions):
     """
     try:
         new_character = create.create_object(typeclass, key=new_account.key, home=home, permissions=permissions)
-        # set playable character list
-        new_account.db._playable_characters.append(new_character)
-
-        # allow only the character itself and the account to puppet this character (and immortals).
-        new_character.locks.add('puppet:id(%i) or pid(%i) or perm(immortal) or pperm(immortal)' %
-                                (new_character.id, new_account.id))
-
-        # If no description is set, set a default description
-        if not new_character.db.desc:
-            new_character.db.desc = 'This is an Account.'
-        # We need to set this to have @ic auto-connect to this character
+        new_account.db._playable_characters.append(new_character)  # set playable character list
+        #
+        cid, pid = new_character.id, new_account.id
+        new_locks = ';'.join(
+            # allow only the character itself and the account to puppet this character (and immortals).
+            ('puppet:id({0}) or pid({1}) or perm(immortal)'.format(cid, pid),
+             'edit:id({0}) or pid({1}) or perm(wizard)'.format(cid, pid),
+             # edit, and control this character (and immortals). (wizards can edit)
+             'control:id({0}) or pid({1}) or perm(immortal)'.format(cid, pid)))
+        new_character.locks.add(new_locks)  # Add locks that require knowing the account id.
+        #
+        # If no brief description is set, set a default brief description
+        if not new_character.db.desc_brief:
+            new_character.db.desc_brief = 'It looks like a new creature on the block.'
+        # Required _last_puppet for @ic to auto-connect this character
         new_account.db._last_puppet = new_character
     except Exception as e:
         session.msg('There was an error creating the Character:\n%s\n If this problem persists, contact an admin.' % e)
