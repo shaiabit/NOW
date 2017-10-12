@@ -92,7 +92,10 @@ class CmdTeleport(MuxCommand):
                 if char and char.location and not tel_quietly:
                     char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
-                target = search_as.search(lhs, global_search=True, exact=False)
+                if args == 'home':
+                    target = char.home
+                else:
+                    target = search_as.search(lhs, global_search=True, exact=False)
                 if not target:
                     account.msg("Did not find object to teleport.")
                     return
