@@ -552,12 +552,12 @@ class CmdWall(COMMAND_DEFAULT_CLASS):
     key = '@wall'
     aliases = ['announce']
     locks = 'cmd:perm(wall) or perm(wizard)'
-    help_category = 'Admin'
+    help_category = 'Administration'
 
     def func(self):
         """Implements command"""
         if not self.args:
-            self.caller.msg('Usage: @wall <message>')
+            self.caller.msg('Usage: {} <message>'.format(self.cmdstring))
             return
         message = '### %s%s|n shouts "|w%s|n"' % (self.caller.STYLE, self.caller.name, self.args)
         self.msg("Announcing to all connected accounts ...")
