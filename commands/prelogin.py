@@ -2,6 +2,7 @@
 """
 Commands that are available from the connect screen.
 from evennia/commands/default/unloggedin.py
+commit b2783371729349fb84eb6381a3cc1137b84589b5
 """
 import re
 import time

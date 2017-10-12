@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Command sets
 
@@ -13,7 +14,13 @@ to add/remove commands from the default lineup. You can create your
 own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
+# [Default commands modules]
 from evennia import default_cmds
+# [Default commands modules replacements]
+from commands import account   # Customize Evennia default commands
+from commands import admin     # Customize Evennia default commands
+from commands import building  # Customize Evennia default commands
+from commands import prelogin  # Customize Evennia default commands
 
 # from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
 from evennia.contrib.mail import CmdMail
@@ -23,7 +30,6 @@ from world.clothing import CmdWear, CmdRemove, CmdCover, CmdUncover, CmdGive
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 
 # [commands modules]
-from commands import prelogin
 from commands import exitdirections
 from commands.suntime import CmdAstral
 from commands.say import CmdSay, CmdOoc, CmdSpoof
@@ -74,6 +80,36 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdSetDesc)   # Duplicate subset of functions to CmdDesc
         self.remove(default_cmds.CmdDestroy)   # Reuse instead of destroy database objects.
         self.remove(default_cmds.CmdTeleport)  # Teleport has cost and conditions.
+# [...]
+        self.add(admin.CmdBan)
+        self.add(admin.CmdBoot)
+        self.add(admin.CmdDelAccount)
+        self.add(admin.CmdEmit)
+        self.add(admin.CmdNewPassword)
+        self.add(admin.CmdPerm)
+        self.add(admin.CmdUnban)
+        self.add(admin.CmdWall)
+# [...]
+        self.add(building.CmdSetObjAlias)
+        self.add(building.CmdCopy)
+        self.add(building.CmdCpAttr)
+        self.add(building.CmdMvAttr)
+        self.add(building.CmdDig)
+        self.add(building.CmdTunnel)
+        self.add(building.CmdLink)
+        self.add(building.CmdUnLink)
+        self.add(building.CmdListCmdSets)
+        self.add(building.CmdName)
+        self.add(building.CmdOpen)
+        self.add(building.CmdSetAttribute)
+        self.add(building.CmdTypeclass)
+        self.add(building.CmdWipe)
+        self.add(building.CmdLock)
+        self.add(building.CmdExamine)
+        self.add(building.CmdFind)
+        self.add(building.CmdScript)
+        self.add(building.CmdTag)
+        self.add(building.CmdSpawn)
 # [...]
         self.add(CmdOoc)
         self.add(CmdSay)
@@ -149,6 +185,13 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.add(CmdChannels)
         self.add(CmdSettings)
         self.add(CmdTeleport)
+        self.add(account.CmdIC)
+        self.add(account.CmdOOC)
+        self.add(account.CmdQuell)
+        self.add(account.CmdOption)
+        self.add(account.CmdPassword)
+        self.add(account.CmdSessions)
+        self.add(account.CmdColorTest)
         # self.add(CmdChannelWizard) # TODO: Still under development.
 
 
