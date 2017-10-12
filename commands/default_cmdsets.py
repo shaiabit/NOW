@@ -164,6 +164,7 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.remove(default_cmds.CmdCWho)
         self.remove(default_cmds.CmdCBoot)
         self.remove(default_cmds.CmdPage)
+        self.remove(default_cmds.CmdQuit)
         self.remove(default_cmds.CmdCdesc)
         self.remove(default_cmds.CmdClock)
         self.remove(default_cmds.CmdCemit)
