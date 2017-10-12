@@ -171,6 +171,7 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.remove(default_cmds.CmdDelCom)
         self.remove(default_cmds.CmdAllCom)
         self.remove(default_cmds.CmdCdestroy)
+        self.remove(default_cmds.CmdChannels)
         self.remove(default_cmds.CmdChannelCreate)
         self.add(CmdSay)
         self.add(CmdTry)
