@@ -78,16 +78,15 @@ class CmdDesc(MuxCommand):
         here = char.location
         opt = self.switches
         target = here if 'room' in opt else char
+        if not target.access(char, 'edit'):
+            self.caller.msg("You don't have permission to edit {}.".format(target.get_display_name(char)))
+            return
         self.target = target
         if not here and 'room' in opt:
             self.caller.msg("You cannot edit your room's description while |y@OOC|n. Switch to |y@IC|n first.")
             return
         if 'edit' in opt:
-            if target.access(char, 'edit'):
-                self.edit_handler()
-            else:
-                self.caller.msg("You don't have permission to edit {}.".format(target.get_display_name(char)))
-            return
+            self.edit_handler()
         if not self.args:
             if 'brief' in opt:
                 self.caller.msg("You must supply a brief description (65 characters or less) to describe yourself.")
