@@ -51,7 +51,7 @@ class CmdChange(MuxCommand):
             messages = char.db.messages
             if not messages:
                 char.db.messages = {}
-            messages_filtered = {i: messages[i] for i in messages if i.lower().startswith(arg.lower())} if\
+            messages_filtered = {i: messages[i] for i in messages if i.lower().startswith(args.lower())} if\
                 args else messages
             account.msg('Listing %s message settings: |g%s'
                         % (char.get_display_name(account), '|n, |g'.join('|g%s|n: |c%s|n'
@@ -60,7 +60,7 @@ class CmdChange(MuxCommand):
             settings = char.db.settings
             if not settings:
                 char.db.settings = {}
-            settings_filtered = {i: settings[i] for i in settings if i.lower().startswith(arg.lower())} if\
+            settings_filtered = {i: settings[i] for i in settings if i.lower().startswith(args.lower())} if\
                 args else settings
             account.msg('Listing %s control panel settings: |g%s'
                         % (char.get_display_name(account), '|n, |g'.join('|lcchange %s|lt%s|le|n: |c%s'
