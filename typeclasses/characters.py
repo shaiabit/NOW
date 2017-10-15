@@ -160,9 +160,10 @@ class Character(DefaultCharacter, Tangible):
             if self.location.access(self, 'view'):  # No need to look if moving into Nothingness, locked from looking
                 if not self.db.settings or self.db.settings.get('look arrive', default=True):
                     self.msg(text=(self.at_look(self.location), dict(type='look', window='room')))
-            if source_location and self.db.followers and len(self.db.followers) > 0 and self.ndb.exit_used:
+            followers = self.db.followers
+            if source_location and (not not followers) and self.ndb.exit_used:
                 for each in source_location.contents:
-                    if not each.has_account or each not in self.db.followers or not self.access(each, 'view'):
+                    if not each.has_account or each not in followers or not self.access(each, 'view'):
                         continue  # no account, not on follow list, or can't see character to follow, then do not follow
                     # About to follow - check if follower is riding something:
                     riding = False
