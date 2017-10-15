@@ -44,7 +44,7 @@ class CmdChange(MuxCommand):
         message = char.db.messages or {}
 
         if 'clear' in cmd or 'clear' in opt:  # TODO: clear command/option functionality
-            caller.msg('Functionality not complete. Nothing done.')
+            self.msg('Functionality not complete. Nothing done.')
             return
 
         if 'list' in opt or not args or 'show' in cmd:
