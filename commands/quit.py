@@ -14,16 +14,22 @@ class CmdQuit(MuxAccountCommand):
     /all      disconnect from all sessions.
     """
     key = 'quit'
-    aliases = ['bye', 'disconnect']
+    aliases = ['bye', 'disconnect', 'qhome']
     locks = 'cmd:all()'
     arg_regex = r'^/|\s|$'
-    options = ('all',)
+    options = ('all', 'home')
 
     def func(self):
         """hook function"""
         account = self.account
         bye = '|RDisconnecting|n'
         exit_msg = 'Hope to see you again, soon.'
+        cmd = self.cmdstring
+        opt = self.switches
+        char = caller.character
+        here = char.location
+        if 'qhome' in cmd or 'home' in opt and char and here:  # Go home before quitting.
+            char.cmd_execute('home')
         reason = self.args.strip() + '(Quitting)'
         if reason:
             bye += " ( |w%s|n ) " % reason
