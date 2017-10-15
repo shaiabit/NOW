@@ -33,7 +33,6 @@ from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 from commands import exitdirections
 from commands.suntime import CmdAstral
 from commands.say import CmdSay, CmdOoc, CmdSpoof
-from commands.set import CmdSettings
 from commands.who import CmdWho
 from commands.desc import CmdDesc
 from commands.flag import CmdFlag
@@ -46,6 +45,7 @@ from commands.zeit import CmdTime
 from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
+from commands.change import CmdChange
 from commands.summon import CmdSummon
 from commands.access import CmdAccess
 from commands.whisper import CmdWhisper
@@ -184,8 +184,8 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.add(CmdAbout)
         self.add(CmdSense)
         self.add(CmdAccess)
+        self.add(CmdChange)
         self.add(CmdChannels)
-        self.add(CmdSettings)
         self.add(CmdTeleport)
         self.add(account.CmdIC)
         self.add(account.CmdOOC)
