@@ -29,7 +29,7 @@ class CmdQuit(MuxAccountCommand):
         char = self.character
         here = char.location
         if 'qhome' in cmd or 'home' in opt and char and here:  # Go home before quitting.
-            char.cmd_execute('home')
+            char.execute_cmd('home')
         reason = self.args.strip() + '(Quitting)'
         if reason:
             bye += " ( |w%s|n ) " % reason
