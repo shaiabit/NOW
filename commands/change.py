@@ -65,7 +65,7 @@ class CmdChange(MuxCommand):
             account.msg('Listing %s control panel settings: |g%s'
                         % (char.get_display_name(account), '|n, |g'.join('|lcchange %s|lt%s|le|n: |c%s'
                                                                          % (each, each, settings_filtered[each])
-                                                                         for each in settings_filtered_filtered)))
+                                                                         for each in settings_filtered)))
             return  # Listing messages and settings is done
         # Some other action still needs to be done
         action = 'message' if rhs else 'toggle'
