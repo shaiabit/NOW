@@ -12,6 +12,7 @@ class CmdQuit(MuxAccountCommand):
       quit [reason]
     Switches:
     /all      disconnect from all sessions.
+    /home     go home, first.
     """
     key = 'quit'
     aliases = ['bye', 'disconnect', 'qhome']
