@@ -16,6 +16,7 @@ class CmdAccess(MuxCommand):
     options = ('groups',)
     locks = 'cmd:all()'
     help_category = 'System'
+    account_caller = True
 
     def func(self):
         """Load the permission groups"""
@@ -35,6 +36,6 @@ class CmdAccess(MuxCommand):
         if hasattr(char, 'account'):
             if char.account.attributes.has("_quell"):
                 string += "|r(quelled)|n "
-            string += "Account: (%s: %s) and " % (account.get_display_name(self.session), pperms)
-        string += "Character (%s: %s)" % (char.get_display_name(self.session), cperms)
-        account.msg(string)
+            string += "Account: (%s: %s) and " % (account.get_display_name(char), pperms)
+        string += "Character (%s: %s)" % (char.get_display_name(char), cperms)
+        self.msg(string)
