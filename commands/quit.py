@@ -26,7 +26,7 @@ class CmdQuit(MuxAccountCommand):
         exit_msg = 'Hope to see you again, soon.'
         cmd = self.cmdstring
         opt = self.switches
-        char = caller.character
+        char = self.character
         here = char.location
         if 'qhome' in cmd or 'home' in opt and char and here:  # Go home before quitting.
             char.cmd_execute('home')
