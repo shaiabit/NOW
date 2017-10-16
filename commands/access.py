@@ -23,20 +23,20 @@ class CmdAccess(MuxCommand):
         char = self.character
         account = self.account
         hierarchy_full = settings.PERMISSION_HIERARCHY
-        string = ''
+        info = []  # List of info to output to user
         if 'groups' in self.switches:
-            string = "|wPermission Hierarchy|n (climbing): %s|/" % ", ".join(hierarchy_full)
+            info.append('|wPermission Hierarchy|n (climbing): %s|/' % ", ".join(hierarchy_full))
         if account.is_superuser:
-            pperms = "<|ySuperuser|n> " + ", ".join(account.permissions.all())
-            cperms = ("<|ySuperuser|n> " + ", ".join(char.permissions.all())) if char else None
+            pperms = '<|ySuperuser|n> ' + ', '.join(account.permissions.all())
+            cperms = ('<|ySuperuser|n> ' + ', '.join(char.permissions.all())) if char else None
         else:
-            pperms = ", ".join(account.permissions.all())
-            cperms = (", ".join(char.permissions.all())) if char else None
-        string += '|wYour Account' + ('/Character' if char else '') + ' access|n: '
+            pperms = ', '.join(account.permissions.all())
+            cperms = (', '.join(char.permissions.all())) if char else None
+        info.append('|wYour Account' + ('/Character' if char else '') + ' access|n: ')
         if account:
-            if account.attributes.has("_quell"):
-                string += "|r(quelled)|n "
-            string += "Account: (%s: %s) and " % (account.get_display_name(account), pperms)
+            if account.attributes.has('_quell'):
+                info.append('|r(quelled)|n ')
+            info.append('Account: (%s: %s)' % (account.get_display_name(account), pperms))
         if cperms:
-            string += "Character (%s: %s)" % (char.get_display_name(char), cperms)
-        self.msg(string)
+            info.append(' and Character (%s: %s)' % (char.get_display_name(char), cperms))
+        self.msg(''.join(info))
