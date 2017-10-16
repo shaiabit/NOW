@@ -1,6 +1,7 @@
 import datetime
-from astral import Astral
+import astral
 from django.conf import settings
+from django.utils import timezone
 from commands.command import MuxCommand
 from evennia.utils.evtable import EvTable
 from evennia.utils import logger, utils, gametime, create
@@ -31,8 +32,7 @@ class CmdTime(MuxCommand):
             if x and y:
                 lat, lon = float(y/10000), float(x/10000)
                 print('Using location coordinates: {}, {}'.format(lat, lon))
-
-        place = Astral.Location(info=('', '', lat, lon, 'UTC', ele))
+        place = astral.Location(info=('', '', lat, lon, 'UTC', ele))
         place.solar_depression = 'civil'
 
         def time_dif(at, when):
@@ -70,17 +70,11 @@ class CmdTime(MuxCommand):
             if here.tags.get('past', category='realm'):
                 table1.add_row('Moon phase', moon_phase(moon))
             table1.reformat_column(0, width=20)
-            if past:
+            up = self.cmdstring == 'uptime'  # User asking for uptime mode
+            self.msg(('Current uptime: ' + utils.time_format(gametime.uptime(), 3)) if up else unicode(table1))
+            if past:  # Astral events are to be displayed while in past realm
                 table2 = EvTable("|wEvent", "|wTime until", align="l", width=75)
                 for entry in events:
                     table2.add_row(entry[0], entry[1])
                 table2.reformat_column(0, width=20)
-            if self.cmdstring == 'uptime':
-                self.msg('Current uptime: ' + utils.time_format(gametime.uptime(), 3))
-            else:
-                self.msg(unicode(table1))
-            if past:
-                if self.cmdstring == 'events':
-                    self.msg(unicode(table2))
-                else:
-                    self.msg("\n" + unicode(table2))
+                self.msg(unicode(table2) if self.cmdstring == 'events' else ('\n' + unicode(table2)))
