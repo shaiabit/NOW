@@ -28,14 +28,15 @@ class CmdAccess(MuxCommand):
             string = "|wPermission Hierarchy|n (climbing): %s|/" % ", ".join(hierarchy_full)
         if account.is_superuser:
             pperms = "<|ySuperuser|n> " + ", ".join(account.permissions.all())
-            cperms = "<|ySuperuser|n> " + ", ".join(char.permissions.all())
+            cperms = ("<|ySuperuser|n> " + ", ".join(char.permissions.all())) if char else None
         else:
             pperms = ", ".join(account.permissions.all())
-            cperms = ", ".join(char.permissions.all())
+            cperms = (", ".join(char.permissions.all())) if char else None
         string += "|wYour Account/Character access|n: "
         if hasattr(char, 'account'):
             if char.account.attributes.has("_quell"):
                 string += "|r(quelled)|n "
             string += "Account: (%s: %s) and " % (account.get_display_name(char), pperms)
-        string += "Character (%s: %s)" % (char.get_display_name(char), cperms)
+        if cperms:
+            string += "Character (%s: %s)" % (char.get_display_name(char), cperms)
         self.msg(string)
