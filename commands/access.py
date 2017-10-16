@@ -32,11 +32,11 @@ class CmdAccess(MuxCommand):
         else:
             pperms = ", ".join(account.permissions.all())
             cperms = (", ".join(char.permissions.all())) if char else None
-        string += "|wYour Account/Character access|n: "
+        string += '|wYour Account' + ('/Character' if char else '') + 'access|n: '
         if hasattr(char, 'account'):
-            if char.account.attributes.has("_quell"):
+            if account.attributes.has("_quell"):
                 string += "|r(quelled)|n "
-            string += "Account: (%s: %s) and " % (account.get_display_name(char), pperms)
+            string += "Account: (%s: %s) and " % (account.get_display_name(account), pperms)
         if cperms:
             string += "Character (%s: %s)" % (char.get_display_name(char), cperms)
         self.msg(string)
