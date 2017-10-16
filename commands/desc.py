@@ -34,7 +34,7 @@ class CmdDesc(MuxCommand):
     /side - Adds a side description (inside container, outside of room)
     /room - Adds a room description (update desc of current room)
 
-    Add a description to your character, visible to characters who look at you.
+    Add a description to your character or room, visible to characters who look.
     """
     key = 'desc'
     options = ('edit', 'brief', 'side', 'room')
@@ -87,6 +87,7 @@ class CmdDesc(MuxCommand):
             return
         if 'edit' in opt:
             self.edit_handler()
+            return
         if not self.args:
             if 'brief' in opt:
                 self.caller.msg("You must supply a brief description (65 characters or less) to describe yourself.")
@@ -115,8 +116,5 @@ class CmdDesc(MuxCommand):
         if 'side' in opt:
             char.db.desc_side = self.args
         else:
-            if not target.access(char, 'edit'):
-                self.caller.msg("You don't have permission to edit {}.".format(target.get_display_name(char)))
-                return
             target.db.desc = self.args
         char.msg('You successfully described {}.'.format(target.get_display_name(char)))
