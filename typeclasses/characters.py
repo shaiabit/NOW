@@ -182,7 +182,7 @@ class Character(DefaultCharacter, Tangible):
         called while we are still standing in the old
         location.
         Args:
-            destination (Object): The place we are going to.
+            destination (Object): The place that the object is going
         """
         here = self.location
         if not here:
@@ -197,16 +197,16 @@ class Character(DefaultCharacter, Tangible):
             name = self.get_display_name(viewer, color=False)
             loc_name = self.location.get_display_name(viewer)
             dest_name = destination.get_display_name(viewer)
-            string = '|r%s' % name
+            message = ['|r%s' % name]
             if self.ndb.riders and len(self.ndb.riders) > 0:  # Plural exit message: Riders
                 if len(self.ndb.riders) > 1:
-                    string += ', |r' + '%s|n' % '|n, |r'.join(rider.get_display_name(viewer, color=False)
-                                                              for rider in self.ndb.riders[:-1])
-                string += ' and |r%s|n are ' % self.ndb.riders[-1].get_display_name(viewer, color=False)
+                    message.append(', |r' + '%s|n' % '|n, |r'.join(rider.get_display_name(viewer, color=False))
+                                   for rider in self.ndb.riders[:-1])
+                message.append(' and |r%s|n are ' % self.ndb.riders[-1].get_display_name(viewer, color=False))
             else:  # Singular exit message: no riders
-                string += ' is '
-            string += "leaving %s, heading%s for %s." % (loc_name, direction_name, dest_name)
-            viewer.msg(string)
+                message.append(' is ')
+            message.append('leaving %s, heading%s for %s.' % (loc_name, direction_name, dest_name))
+            viewer.msg(''.join(message))
 
     def announce_move_to(self, source_location):
         """
@@ -219,8 +219,7 @@ class Character(DefaultCharacter, Tangible):
         if not source_location and self.location.has_account:
             # This was created from nowhere and added to a account's
             # inventory; it's probably the result of a create command.
-            string = "You now have %s in your possession." % (self.get_display_name(here))
-            here.msg(string)
+            here.msg('You now have {} in your possession.'.format(self.get_display_name(here)))
             return
         direction_name = ('|lc%s|lt|530%s|n|le' % (self.ndb.moving_from,
                                                    self.ndb.moving_from)) if self.ndb.moving_from else ''
@@ -230,25 +229,25 @@ class Character(DefaultCharacter, Tangible):
             src_name = '|222Nothingness'
             if source_location:
                 src_name = source_location.get_display_name(viewer)
-            string = '|g%s' % self.get_display_name(viewer, color=False)
+            message = ['|g%s' % self.get_display_name(viewer, color=False)]
             if here:
                 depart_name = here.get_display_name(viewer)
             else:
                 depart_name = '|222Nothingness'
             if self.ndb.riders and len(self.ndb.riders) > 0:
                 if len(self.ndb.riders) > 1:
-                    string += ', |g' + '%s' % '|n, |g'.join(rider.get_display_name(viewer, color=False)
-                                                            for rider in self.ndb.riders[:-1])
-                    string += "|n and |g%s|n arrive " % self.ndb.riders[-1].get_display_name(viewer, color=False)
+                    message.append(', |g' + '%s' % '|n, |g'.join(rider.get_display_name(viewer, color=False))
+                                   for rider in self.ndb.riders[:-1])
+                    message.append('|n and |g%s|n arrive ' % self.ndb.riders[-1].get_display_name(viewer, color=False))
                 else:
-                    string += ' and |g%s|n arrive ' % self.ndb.riders[-1].get_display_name(viewer, color=False)
+                    message.append(' and |g%s|n arrive ' % self.ndb.riders[-1].get_display_name(viewer, color=False))
             else:
-                string += ' arrives '
+                message.append(' arrives ')
             if direction_name:
-                string += "to %s|n from the %s from %s|n." % (depart_name, direction_name, src_name)
+                message.append('to %s|n from the %s from %s|n.' % (depart_name, direction_name, src_name))
             else:
-                string += "to %s|n from %s|n." % (depart_name, src_name)
-            viewer.msg(string)
+                message.append('to %s|n from %s|n.' % (depart_name, src_name))
+            viewer.msg(''.join(message))
         if self.ndb.riders and len(self.ndb.riders) > 0:
             for each in self.ndb.riders:
                 success = each.move_to(here, quiet=True, emit_to_obj=None, use_destination=False,
@@ -420,26 +419,26 @@ class Character(DefaultCharacter, Tangible):
             else:
                 if not con.db.worn:
                     things.append(con)
-        string = "\n%s" % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))
+        message = ['\n%s' % self.get_display_name(viewer, mxp='sense %s' % self.get_display_name(viewer, plain=True))]
         if self.location and self.location.tags.get('rp', category='flags'):
             pose = self.db.messages and self.db.messages.get('pose', None)
-            string += ' %s' % pose or ''
+            message.append(' %s' % pose or '')
         if self.traits.mass and self.traits.mass.actual > 0:
-            string += " |y(%s)|n " % mass_unit(self.get_mass())
+            message.append(' |y(%s)|n ' % mass_unit(self.get_mass()))
         if self.traits.health:  # Add character health bar if character has health.
-            gradient = ["|[300", "|[300", "|[310", "|[320", "|[330", "|[230", "|[130", "|[030", "|[030"]
+            gradient = ['|[300', '|[300', '|[310', '|[320', '|[330', '|[230', '|[130', '|[030', '|[030']
             health = make_bar(self.traits.health.actual, self.traits.health.max, 20, gradient)
-            string += " %s\n" % health
+            message.append(' %s\n' % health)
         else:
-            string += "\n"
+            message.append('\n')
         desc = self.db.desc
         desc_brief = self.db.desc_brief
         if desc:
-            string += "%s" % desc
+            message.append('%s' % desc)
         elif desc_brief:
-            string += "%s" % desc_brief
+            message.append('%s' % desc_brief)
         else:
-            string += 'A shimmering illusion shifts from form to form.'
+            message.append('A shimmering illusion shifts from form to form.')
         # ---- Allow clothes wearing to be seen
         worn_string_list = []
         clothes_list = get_worn_clothes(self, exclude_covered=True)
@@ -451,19 +450,19 @@ class Character(DefaultCharacter, Tangible):
             elif garment.db.worn:
                 worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
         if worn_string_list:  # Append worn clothes.
-            string += "|/|/%s is wearing %s." % (self, list_to_string(worn_string_list))
+            message.append('|/|/%s is wearing %s.' % (self, list_to_string(worn_string_list)))
         # ---- List things carried (excludes worn things)
         if users or things:
             user_list = ", ".join(u.get_display_name(viewer) for u in users)
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer) for t in things)
-            string += "\n|wYou see:|n " + user_list + ut_joiner + item_list
+            message.append('\n|wYou see:|n ' + user_list + ut_joiner + item_list)
         # ---- Look Notify system:
         if self != char:
             if not (self.db.settings and 'look notify' in self.db.settings
                     and self.db.settings['look notify'] is False):
                 self.msg("%s just looked at you." % char.get_display_name(self))
-        return string
+        return ''.join(message)
 
 
 class NPC(Character):

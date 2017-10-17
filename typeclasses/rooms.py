@@ -61,35 +61,36 @@ class Room(Tangible):
         for con in visible:
             if con.destination:
                 exits.append(con)
-        string = "\n%s\n" % self.get_display_name(viewer, mxp='sense here')
+        message = ['\n%s\n' % self.get_display_name(viewer, mxp='sense here')]
         desc = self.db.desc  # get description, build string
         desc_brief = self.db.desc_brief
         if desc:
-            string += "%s" % desc
+            message.append('%s' % desc)
         elif desc_brief:
-            string += "%s" % desc_brief
+            message.append('%s' % desc_brief)
         else:
-            string += 'Nothing more than smoke and mirrors appears around you.'
+            message.append('Nothing more than smoke and mirrors appears around you.')
         if self.attributes.has('exits'):
             ways = self.db.exits
         if exits or ways:
-            string += "\n|wVisible exits|n: "
+            message.append('\n|wVisible exits|n: ')
             for e in exits:  # Green or Blue exits
                 exits_simple.append(e.name)
                 exit_color = '|225' if e.tags.get('path', category='flags') or False else e.STYLE  # Blue if path exit
-                exits_complex.append("|lc%s|lt%s%s|n|le" % (e.key, exit_color, e.key))
+                exits_complex.append('|lc%s|lt%s%s|n|le' % (e.key, exit_color, e.key))
             if ways and not ways == {}:  # Orange exits
                 for w in ways:
                     exits_simple.append(way_dir[w])
-                    exits_complex.append("|lc%s|lt|530%s|n|le" % (w, way_dir[w]))
-            string += ", ".join(d for d in sort_exits(exits_simple, exits_complex))
+                    exits_complex.append('|lc%s|lt|530%s|n|le' % (w, way_dir[w]))
+            message.append(', '.join(d for d in sort_exits(exits_simple, exits_complex)))
         elif viewer.db.last_room:
-            string += "\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s." % viewer.db.last_room.get_display_name(viewer)
+            message.append('\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s.'
+                           % viewer.db.last_room.get_display_name(viewer))
         if self.ndb.weather_last:
-            string += '|/|*%s|n' % self.ndb.weather_last
+            message.append('|/|*%s|n' % self.ndb.weather_last)
         if self.return_glance(viewer, bool=True):  # Glance to see what is within the room that can be seen
-            string += ("\n|wHere you find:|n " + self.return_glance(viewer))  # Glance again to list items.
-        return string
+            message.append(("\n|wHere you find:|n " + self.return_glance(viewer)))  # Glance again to list items.
+        return ''.join(message)
 
     def announce_move_from(self, destination):
         """
@@ -101,12 +102,8 @@ class Room(Tangible):
         """
         if not self.location:
             return
-        name = self.name
-        loc_name = self.location.name
-        dest_name = destination.name
-        string = "%s%s|n is leaving %s%s|n, heading for %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
-                                                                    destination.STYLE, dest_name)
-        self.location.msg_contents(string, exclude=self)
+        self.location.msg_contents(text=('{it} is |rleaving|n {here}, heading for {there}.', {'type': 'depart'}),
+                                   mapping=dict(it=self, here=self.location, there=destination), exclude=self)
 
     def announce_move_to(self, source_location):
         """
@@ -115,20 +112,12 @@ class Room(Tangible):
         Args:
             source_location (Object): The place we came from
         """
-        name = self.name
         if not source_location and self.location.has_account:
-            # This was created from nowhere and added to a account's
-            # inventory; it's probably the result of a create command.
-            string = "You now have %s%s|n in your possession." % (self.STYLE, name)
-            self.location.msg(string)
+            # Rooms, if "awake", are told when something arrives.
+            self.location.msg('You now have {} in your possession.'.format(self.location.get_display_name(self)))
             return
-        src_name = "nowhere"
-        loc_name = self.location.name
-        if source_location:
-            src_name = source_location.name
-        string = "%s%s|n arrives to %s%s|n from %s%s|n." % (self.STYLE, name, self.location.STYLE, loc_name,
-                                                            source_location.STYLE, src_name)
-        self.location.msg_contents(string, exclude=self)
+        self.location.msg_contents(text=('{it} |garrives|n to {here} from {there}.', {'type': 'arrive'}),
+                                   mapping=dict(it=self, here=self.location, there=source_location), exclude=self)
 
     def at_object_creation(self):
         """Called when room is first created"""
