@@ -40,6 +40,7 @@ from commands.home import CmdHome
 from commands.menu import CmdMenu
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
+from commands.mydie import CmdRoll
 from commands.verb import CmdTry
 from commands.zeit import CmdTime
 from commands.zone import CmdZone
@@ -234,3 +235,4 @@ class SessionCmdSet(default_cmds.SessionCmdSet):
         """
         super(SessionCmdSet, self).at_cmdset_creation()
         self.add(CmdMenu)
+        self.add(CmdRoll)

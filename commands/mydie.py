@@ -128,3 +128,26 @@ class CmdMyDie(CmdMyDieDefault):
             # Use switches to determine what to do, check for conflict no add & rem
             # Inform use they have create die name they now need to /add faces
             pass  # Design structure of dictionary is shown in EXAMPLE_SET
+
+
+class CmdRoll(CmdMyDieDefault):
+    """
+    Usage:
+      roll
+    """
+    key = 'roll'
+    locks = 'cmd:all()'
+    help_category = 'Game'
+    account_caller = True
+    count, sides = (3, 6)  # count and sides from user-provided input
+
+    def func(self):
+        """
+        Rolls 3d6
+        """
+        result = self.roll_dice(self.count, self.sides, return_tuple=True)
+        total = result[0]
+        rolls = result[3]
+        rolling = len(rolls)
+        rollers = 'dice' if rolling > 1 else 'die'
+        self.msg('{0} imaginary {1} roll {2} for a total of {3}.'.format(rolling, rollers, repr(rolls), total))
