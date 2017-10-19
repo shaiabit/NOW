@@ -84,7 +84,7 @@ class CmdPose(MuxCommand):
         char = self.character
         account = self.account
         here = char.location if char else None
-        power = True if self.cmdstring == 'ppose' or self.cmdstring == 'pp' or self.cmdstring == 'p:' else False
+        power = True if cmd in ('ppose', 'pp', 'p:') else False
 
         def parse_pose(text):
             return_text = []
@@ -108,7 +108,7 @@ class CmdPose(MuxCommand):
                 return_text.append(new_each if not match else (match[0].get_display_name(char) + word_end))
             return ' '.join(return_text)
 
-        raw_pose = rhs if rhs and power else args
+        raw_pose = rhs if rhs and cmd == 'do' or power else args
         raw_pose = parse_pose(raw_pose)
         non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
         magnet = True if raw_pose and raw_pose[0] in non_space_chars or cmd == ";" else False
