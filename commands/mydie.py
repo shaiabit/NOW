@@ -25,7 +25,9 @@ class CmdMyDieDefault(MuxCommand):
         """many sided-dice roller"""
         dice_num = int(dicenum)
         dice_type = int(dicetype)
-        rolls = tuple([randint(1, dice_type) for roll in range(dice_num)])
+        if not (dice_num and dice_type):  # Either can't be 0, None, or False
+            return None
+        rolls = tuple([randint(1, dice_type) for _ in range(dice_num)])
         result = sum(rolls)
         if modifier:  # make sure to check types well before eval
             mod, mod_value = modifier
@@ -133,19 +135,24 @@ class CmdMyDie(CmdMyDieDefault):
 class CmdRoll(CmdMyDieDefault):
     """
     Usage:
-      roll
+      roll [xdy]
+    x number of y-sided dice
     """
     key = 'roll'
     locks = 'cmd:all()'
     help_category = 'Game'
     account_caller = True
-    count, sides = (3, 6)  # count and sides from user-provided input
+    parse_using = 'd'
 
     def func(self):
         """
-        Rolls 3d6
+        Rolls xdy: x number of y-sided dice.
         """
-        result = self.roll_dice(self.count, self.sides, return_tuple=True)
+        lhs, rhs = self.lhs or 1, self.rhs or 6
+        result = self.roll_dice(lhs, rhs, return_tuple=True)
+        if not result:
+            self.msg('Roll: Number of sides and number of dice must be greater than zero.')
+            return
         total = result[0]
         rolls = result[3]
         rolling = len(rolls)
