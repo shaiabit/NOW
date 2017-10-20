@@ -148,7 +148,14 @@ class CmdRoll(CmdMyDieDefault):
         """
         Rolls xdy: x number of y-sided dice.
         """
-        lhs, rhs = self.lhs or 1, self.rhs or 6
+        try:
+            lhs = int(self.lhs)
+        except ValueError:
+            lhs = 1  # Force default of rolling 1 die if user-provided input fails
+        try:
+            rhs = int(self.rhs)
+        except ValueError:
+            rhs = 6  # Force default of 6-sided dice if user-provided input fails
         result = self.roll_dice(lhs, rhs, return_tuple=True)
         if not result:
             self.msg('Roll: Number of sides and number of dice must be greater than zero.')
@@ -157,4 +164,5 @@ class CmdRoll(CmdMyDieDefault):
         rolls = result[3]
         rolling = len(rolls)
         rollers = 'dice' if rolling > 1 else 'die'
-        self.msg('{0} imaginary {1} roll {2} for a total of {3}.'.format(rolling, rollers, repr(rolls), total))
+        self.msg('{0} imaginary {1}-sided {2} roll{3} {4} for a total of {5}.'.format(
+            rolling, rhs, rollers, '' if rolling > 1 else 's', repr(rolls), total))
