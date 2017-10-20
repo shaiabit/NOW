@@ -10,7 +10,7 @@ class CmdHome(MuxCommand):
     Usage:
       home[/option]
     Options:
-    /set <obj> [= home_location]  views or sets <obj>'s home location.
+    /set <obj> [=||to home_location]  views or sets <obj>'s home location.
     /sweep <obj>  send obj home.
     /here  sets current character's home to current location.
     /room  returns a character to its home room, regardless of where home is set.
@@ -26,6 +26,7 @@ class CmdHome(MuxCommand):
     arg_regex = r"^/|\s|$"
     help_category = 'Travel'
     account_caller = True
+    parse_using = ' to '
 
     def func(self):
         """Implement the command"""
