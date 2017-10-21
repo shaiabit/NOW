@@ -162,6 +162,10 @@ class CmdRoll(CmdMyDieDefault):
                 rhs = 6  # Force default of 6-sided dice if user-provided input fails
         else:
             rhs = 6
+        if lhs > 1000 or rhs > 1000000:
+            self.msg('Roll: Number of sides must be less than '
+                     'a million and number of dice must be less than a thousand.')
+            return
         result = self.roll_dice(lhs, rhs, return_tuple=True)
         if not result:
             self.msg('Roll: Number of sides and number of dice must be greater than zero.')
