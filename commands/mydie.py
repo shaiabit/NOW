@@ -137,8 +137,11 @@ class CmdRoll(CmdMyDieDefault):
     Usage:
       roll [xdy]
     x number of y-sided dice, defaults to rolling a single d6
+    Options:
+      /sum  - show intermediate summation values
     """
     key = 'roll'
+    options = ('sum',)
     locks = 'cmd:all()'
     help_category = 'Game'
     account_caller = True
@@ -175,8 +178,12 @@ class CmdRoll(CmdMyDieDefault):
         rolling = len(rolls)
         rollers = 'dice' if rolling > 1 else 'die'
         if rolling > 1:
-            self.msg('{0} imaginary {1}-sided {2} roll {3} for a total of {4}.'.format(
-                rolling, rhs, rollers, repr(rolls), total))
+            if 'sum' not in self.options:
+                self.msg('{0} imaginary {1}-sided {2} roll a total of {3}.'.format(
+                    rolling, rhs, rollers, total))
+            else:
+                self.msg('{0} imaginary {1}-sided {2} roll {3} for a total of {4}.'.format(
+                    rolling, rhs, rollers, repr(rolls), total))
         else:
             self.msg('{0} imaginary {1}-sided {2} rolls {3}.'.format(
                 rolling, rhs, rollers, total))
