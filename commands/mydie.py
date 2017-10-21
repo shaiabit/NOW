@@ -178,12 +178,12 @@ class CmdRoll(CmdMyDieDefault):
         rolling = len(rolls)
         rollers = 'dice' if rolling > 1 else 'die'
         if rolling > 1:
-            if 'sum' not in self.options:
-                self.msg('{0} imaginary {1}-sided {2} roll a total of {3}.'.format(
-                    rolling, rhs, rollers, total))
-            else:
+            if 'sum' in self.switches:
                 self.msg('{0} imaginary {1}-sided {2} roll {3} for a total of {4}.'.format(
                     rolling, rhs, rollers, repr(rolls), total))
+            else:
+                self.msg('{0} imaginary {1}-sided {2} roll a total of {3}.'.format(
+                    rolling, rhs, rollers, total))
         else:
             self.msg('{0} imaginary {1}-sided {2} rolls {3}.'.format(
                 rolling, rhs, rollers, total))
