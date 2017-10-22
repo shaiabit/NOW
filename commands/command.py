@@ -164,6 +164,9 @@ class MuxCommand(default_cmds.MuxCommand):
         by the `cmdhandler` right after `self.parser()` finishes, and so has access
         to all the variables defined therein.
         """
+        if self.args == '#help' and not self.switches:
+            self.account.execute_cmd(('help ' + self.cmdstring).loweer())
+            return
         super(MuxCommand, self).func()
 
     def at_post_cmd(self):
