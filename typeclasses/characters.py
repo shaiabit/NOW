@@ -59,6 +59,9 @@ class Character(DefaultCharacter, Tangible):
         self.move_to(home_room)  # Move new character into its home room.
         self.db.last_room = self.home  # Set back point to global default home
         self.home = home_room  # Set default home to newly created home room
+        #
+        # DEBUG:
+        print('New character {0} has a new home {1}, and home set to {2}'.format(self.key, home_room, self.home.key))
 
     def assign_object(self):
         """
@@ -472,7 +475,10 @@ class NPC(Character):
     def at_object_creation(self):
         """Initialize a newly-created NPC"""
         super(NPC, self).at_object_creation()
-        self.cmdset.add('commands.battle.BattleCmdSet', permanent=True)
+        pass
+
+    def assign_room(self):
+        return self.home  # NPC home is default.
 
     def at_post_puppet(self):
         """
