@@ -8,12 +8,16 @@ class CmdChange(MuxCommand):
     Usage:
       change[/option] [setting] [=|to value]
     Options:
-    /on
-    /off
-    /value
-    /symbol
-    /clear
-    /show
+    /on     Change a setting to 'on'
+    /off    Change a setting to 'off'
+    /value  Change a setting to a numeric value
+    /symbol Change a setting to a single character
+    /clear  Cause a setting to be removed
+    /show   Display the value of settings starting with
+    /name   Change or display the full name of a controlled object
+    /verb   Change or display the key of a verb
+    /detail Set the text for this object's detail entry
+    /sense  Link a sense to a detail entry
 
     Not supplying a setting assumes you just want to view all settings.
     Not supplying a value assumes you just want to toggle the value on/off.
@@ -21,7 +25,7 @@ class CmdChange(MuxCommand):
     key = 'change'
     aliases = ['clear', 'show', 'set']
     locks = 'cmd:all()'
-    options = ('on', 'off', 'value', 'symbol', 'clear', 'show')
+    options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'name', 'verb', 'detail', 'sense')
     parse_using = ' to '
     help_category = 'Building'
     account_caller = True
@@ -44,10 +48,50 @@ class CmdChange(MuxCommand):
         message = char.db.messages or {}
 
         if 'clear' in cmd or 'clear' in opt:  # TODO: clear command/option functionality
+            # The key on the left is removed from storage.  All settings and messages
+            # are arbitrary, and no setting is mandatory, so removal of any setting
+            # by the user has no critical consequence.
+            self.msg('Functionality not complete. Nothing done.')
+            # CHANGE/clear <key>   removes a bool
+            # CHANGE/clear <key> <=| to>   removes a message
+            # CHANGE/clear/value <key> <=| to>   removes a value
+            # CHANGE/clear/symbol <key> <=| to>   removes a symbol
+            return
+
+        if 'name' in opt:  # TODO: name command/option functionality
+            # The name of the object on the left is renamed with the new name on the right.
+            self.msg('Name of {0} changed to {1}.'.format(lhs, rhs))
+            # For this to work, the left side must be matched with a local object.
+            # The local object matching must be controlled by the user,
+            # otherwise access to change the object's name is denied.
             self.msg('Functionality not complete. Nothing done.')
             return
 
-        if 'list' in opt or not args or 'show' in cmd:
+        if 'verb' in opt:  # TODO: verb command/option functionality
+            # The name of the verb on the left is keyed with the lock string on the right.
+            self.msg('Verb {0} key set to {1}.'.format(lhs, rhs))
+            # For this to work, a deeper information structure of verbs must exist.
+            self.msg('Functionality not complete. Nothing done.')
+            return
+
+        if 'detail' in opt:  # TODO: detail command/option functionality
+            # The name of the verb on the left is keyed with the lock string on the right.
+            self.msg('Detail {0} key set to {1}.'.format(lhs, rhs))
+            # The name of the detail is an aspect of the object,
+            # accessible by sensing the possessive form:
+            #   <sense> <object>'s <detail>
+            # omit <object>'s if object is the location (here).
+            self.msg('Functionality not complete. Nothing done.')
+            return
+
+        if 'sense' in opt:  # TODO: sense command/option functionality
+            # The name of the verb on the left is keyed with the lock string on the right.
+            self.msg('Sense {0} key set to {1}.'.format(lhs, rhs))
+            # For this to work, a detail key of the sense's value should already exist.
+            self.msg('Functionality not complete. Nothing done.')
+            return
+
+        if not args or 'show' in cmd or 'show' in opt:
             messages = char.db.messages
             if not messages:
                 char.db.messages = {}
