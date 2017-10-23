@@ -125,6 +125,9 @@ class MuxCommand(default_cmds.MuxCommand):
         """
         This hook is called before self.parse() on all commands
         """
+        if self.args.strip() in ('/help', '#help'):
+            self.account.execute_cmd(('help ' + self.cmdstring).lower())
+            return True
         self.command_time = time.time()
 
     def parse(self):
@@ -164,9 +167,6 @@ class MuxCommand(default_cmds.MuxCommand):
         by the `cmdhandler` right after `self.parser()` finishes, and so has access
         to all the variables defined therein.
         """
-        if self.args == '#help' and not self.switches:
-            self.account.execute_cmd(('help ' + self.cmdstring).loweer())
-            return
         super(MuxCommand, self).func()
 
     def at_post_cmd(self):
