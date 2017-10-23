@@ -125,7 +125,7 @@ class MuxCommand(default_cmds.MuxCommand):
         """
         This hook is called before self.parse() on all commands
         """
-        if self.args.strip() in ('/help', '#help'):
+        if self.args.strip() in ('/help', '#help', 'help', '?'):
             self.account.execute_cmd(('help ' + self.cmdstring).lower())
             return True
         self.command_time = time.time()
@@ -149,7 +149,7 @@ class MuxCommand(default_cmds.MuxCommand):
                 elif len(option_check) == 0:
                     unuse_options += [element]       # or an extraneous option to be ignored.
             if extra_options:
-                self.caller.msg('|g%s|n: |wAmbiguous option used. Did you mean /|C%s|w?' %
+                self.caller.msg('|g%s|n: |wAmbiguous option: Did you mean /|C%s|w?' %
                                 (self.cmdstring, '|nor /|C'.join(extra_options)))
             if valid_options:
                 self.switches = valid_options
