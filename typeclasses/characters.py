@@ -229,14 +229,14 @@ class Character(DefaultCharacter, Tangible):
         for viewer in here.contents:
             if viewer == self:
                 continue
-            src_name = '|222Nothingness'
+            src_name = '|xNo|=gth|=fin|=egn|=des|=css'
             if source_location:
                 src_name = source_location.get_display_name(viewer)
             message = ['|g%s' % self.get_display_name(viewer, color=False)]
             if here:
                 depart_name = here.get_display_name(viewer)
             else:
-                depart_name = '|222Nothingness'
+                depart_name = '|xNo|=gth|=fin|=egn|=des|=css'
             if self.ndb.riders and len(self.ndb.riders) > 0:
                 if len(self.ndb.riders) > 1:
                     message.append(', |g' + '%s' % '|n, |g'.join(rider.get_display_name(viewer, color=False))

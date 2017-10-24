@@ -89,8 +89,8 @@ class CmdSummon(MuxCommand):
                 each.move_to(target[0].location)
             for each in portal_exit.contents:
                 each.move_to(loc)
-            portal_enter.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % portal_enter)
-            portal_exit.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % portal_exit)
+            portal_enter.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % portal_enter)
+            portal_exit.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % portal_exit)
             portal_enter.move_to(None, to_none=True)
             portal_exit.move_to(None, to_none=True)
 

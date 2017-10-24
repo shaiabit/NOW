@@ -68,7 +68,7 @@ class CmdHome(MuxCommand):
                     was = obj.location
                     obj.move_to(home, use_destination=False)
                     if you.location != was:
-                        source_location_name = was.get_display_name(you) if was else '|222Nothingness|n'
+                        source_location_name = was.get_display_name(you) if was else '|xNo|=gth|=fin|=egn|=des|=css|n'
                         you.msg("%s left %s and went home to %s."
                                 % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return

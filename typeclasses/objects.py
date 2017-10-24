@@ -239,7 +239,7 @@ class Object(Tangible):
         if there and there != here:  # TODO: Possible Evennia FIXME:
             string = "|g%s|n arrives to %s%s|n from %s%s|n." % (this, here.STYLE, here.key, there.STYLE, there.key)
         else:
-            string = "|g%s|n suddenly appears in %s%s|n from |222Nothingness|n." % (this, here.STYLE, here.key)
+            string = "|g%s|n suddenly appears in %s%s|n from |xNo|=gth|=fin|=egn|=des|=css|n." % (this, here.STYLE, here.key)
         here.msg_contents(string, exclude=self)
 
     def at_object_creation(self):

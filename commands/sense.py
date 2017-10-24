@@ -31,7 +31,7 @@ class CmdSense(MuxCommand):
         here = char.location if char else None
         account = self.account
         if not (char and here):
-            account.msg('You sense only |222Nothingness|n.')
+            account.msg('You sense only |xNo|=gth|=fin|=egn|=des|=css|n.')
             message = '|gback|n or |ghome' if char else '|g@ic'
             account.msg('(Type %s|n to return to the NOW.)' % message)
             return

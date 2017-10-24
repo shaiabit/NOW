@@ -88,7 +88,7 @@ class CmdTeleport(MuxCommand):
         if to_none:  # teleporting to Nothingness
             if not args and char:
                 target = char
-                account.msg("|*Teleported to Nothingness.|n")
+                account.msg("|*Teleported to |xNo|=gth|=fin|=egn|=des|=css.|n")
                 if char and char.location and not tel_quietly:
                     char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
@@ -100,15 +100,15 @@ class CmdTeleport(MuxCommand):
                     account.msg("Did not find object to teleport.")
                     return
                 if not (account.check_permstring('mage') or target.access(account, 'control')):
-                    account.msg("You must have |wMage|n or higher power to send something into |222Nothingness|n.")
+                    account.msg("You must have |wMage|n or higher power to send something into |xNo|=gth|=fin|=egn|=des|=css|n.")
                     return
                 account.msg("Teleported %s -> None-location." % (target.get_display_name(char)))
                 if target.location and not tel_quietly:
                     if char and char.location == target.location and char != target:
-                        target.location.msg_contents("%s%s|n sends %s%s|n into |222Nothingness|n."
+                        target.location.msg_contents("%s%s|n sends %s%s|n into |xNo|=gth|=fin|=egn|=des|=css|n."
                                                      % (char.STYLE, char, target.STYLE, target))
                     else:
-                        target.location.msg_contents("|r%s|n vanishes into |222Nothingness|n." % target)
+                        target.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % target)
             target.location = None
             return
         if not args:
