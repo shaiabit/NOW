@@ -26,13 +26,18 @@ class CmdSummon(MuxCommand):
       summon/vanish me
     """
     key = 'summon'
-    aliases = ['msummon', 'meet', 'join', 'mjoin']
+    aliases = ['msummon', 'summon', 'meet', 'join', 'mjoin']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
-    locks = 'cmd:perm(summon) or perm(denizen)'
+    locks = 'cmd:perm(denizen)'
     help_category = 'Travel'
 
     def func(self):
-        """Performs the summon, accounting for in-world conditions."""
+        """
+            Performs the summon, accounting for in-world conditions.
+            join: Implies one way portal to target
+            summon: Implies one way portal to summoner
+            meet: Implies two-way portal
+        """
 
         char = self.character
         loc = char.location
@@ -49,6 +54,7 @@ class CmdSummon(MuxCommand):
             return
         session_list = SESSIONS.get_sessions()
         target = []
+        # Move check for available portals here.
         for session in session_list:
             if not (session.logged_in and session.get_puppet()):
                 continue
@@ -56,25 +62,31 @@ class CmdSummon(MuxCommand):
             if lhs.lower() in puppet.get_display_name(char, plain=True).lower():
                 target.append(puppet)
         if len(target) < 1:
-            char.msg("Error: character not found.")
+            char.msg("Error: Specific character name not found.")
             return
-        if len(target) > 1:  # Too many partial matches, try exact matching.
-            char.msg("Error: character not found.")
+        elif len(target) > 1:  # Too many partial matches, try exact matching.
+            char.msg("Error: Unique character name not found.")
             return
         else:
-            target[0].msg("You are being summoned to %s " % loc.get_display_name(target[0]) +
-                          "by %s" % char.get_display_name(target[0]) +
-                          ". A portal should appear soon that will take you to " +
-                          "%s." % char.get_display_name(target[0]))
-            char.msg("You begin to summon a portal between %s" % target[0].get_display_name(char) +
+            meet_message = ('You are being joined by {summoner} from {target}')
+            summon_message = ('You are being summoned to {target} by {summoner}')
+            message = meet_message if 'meet' in cmd else summon_message
+            loc_name = loc.get_display_name(target[0])
+            target_name = target[0].get_display_name(char)
+            char_name = char.get_display_name(target[0])
+            target[0].msg(message.format(summoner=char_name, target=target_name))
+            target[0].msg('A portal should appear soon.')
+            char.msg("You begin to open a portal connecting %s" % target_name +
                      " and your location.")
-        # Check the pool for objects to use.  Filter a list of objects tagged "pool" by those located in None.
+        # Check for available portals start
+        # Check object pool filtered by tagged "pool" and located in None.
         obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
         print('Object pool total: %i' % len(obj_pool))
         if len(obj_pool) < 2:
             char.msg('Portals are currently out of stock or in use elsewhere.')
             return
         portal_enter, portal_exit = obj_pool[-2:]
+        # Check for available portals end
 
         def open_portal():
             """Move inflatable portals into place."""

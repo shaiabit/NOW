@@ -113,13 +113,14 @@ class CmdSpoof(MuxCommand):
     /self <message only to you with full markup>
     """
     key = 'spoof'
-    aliases = ['~', '`', 'sp']
+    aliases = ['.', 'sp']
     locks = 'cmd:all()'
-    options = ('dot', 'center', 'right', 'indent', 'news', 'strip', 'self')
+    options = ('center', 'right', 'indent', 'news', 'strip', 'self')
 
     def func(self):
         """Run the spoof command"""
         char = self.character
+        cmd = self.cmdstring
         here = char.location
         opt = self.switches
         args = self.args
@@ -169,7 +170,7 @@ class CmdSpoof(MuxCommand):
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
                     here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}), options={'raw': True})
-            elif 'dot' in opt:  # Leave leading spacing intact, remove leading dot.
+            elif '.' in cmd:  # Leave leading spacing intact, remove leading dot.
                 spoof = args.lstrip('.')
                 if to_self:
                     char.msg(spoof.rstrip(), options={'raw': True})

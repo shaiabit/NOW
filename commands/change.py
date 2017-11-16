@@ -47,15 +47,30 @@ class CmdChange(MuxCommand):
         setting = char.db.settings or {}
         message = char.db.messages or {}
 
-        if 'clear' in cmd or 'clear' in opt:  # TODO: clear command/option functionality
+        if 'clear' in cmd or 'clear' in opt:
             # The key on the left is removed from storage.  All settings and messages
             # are arbitrary, and no setting is mandatory, so removal of any setting
             # by the user has no critical consequence.
             self.msg('Functionality not complete. Nothing done.')
             # CHANGE/clear <key>   removes a bool
-            # CHANGE/clear <key> <=| to>   removes a message
-            # CHANGE/clear/value <key> <=| to>   removes a value
-            # CHANGE/clear/symbol <key> <=| to>   removes a symbol
+            if not rhs:
+                if rhs is None:
+                    # CHANGE/clear <key> <=| to>   removes a message
+                    was = char.db.settings[lhs].pop
+                    self.msg('Setting {0} ({}) removed.'.format(lhs, was))
+                else:
+                    # TODO: clear command/option functionality for value and symbol
+                    # CHANGE/clear/value <key> <=| to>   removes a value
+                    if 'value' in opt:
+                        self.msg('Functionality not complete. Nothing done.')
+                    # CHANGE/clear/symbol <key> <=| to>   removes a symbol
+                    elif 'symbol' in opt:
+                        self.msg('Functionality not complete. Nothing done.')
+                    else:
+                        was = char.db.messages[lhs].pop
+                        self.msg('Message {0} ({}) removed.'.format(lhs, was))
+            else:
+                self.msg('Functionality not complete. Nothing done.')
             return
 
         if 'name' in opt:  # TODO: name command/option functionality
