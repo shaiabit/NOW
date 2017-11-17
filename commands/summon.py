@@ -26,7 +26,7 @@ class CmdSummon(MuxCommand):
       summon/vanish me
     """
     key = 'summon'
-    aliases = ['msummon', 'summon', 'meet', 'join', 'mjoin']
+    aliases = ['summon', 'meet', 'join']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
     locks = 'cmd:perm(denizen)'
     help_category = 'Travel'
@@ -40,6 +40,7 @@ class CmdSummon(MuxCommand):
         """
 
         char = self.character
+        cmd = self.cmdstring
         loc = char.location
         account = self.account
         args = self.args
