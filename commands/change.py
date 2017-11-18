@@ -46,6 +46,10 @@ class CmdChange(MuxCommand):
         account = self.account
         setting = char.db.settings or {}
         message = char.db.messages or {}
+        
+        if ' to ' in lhs or '=' in lhs:
+            self.msg('Invalid key string:  Key can not contain = or " to ") Nothing done.')
+            return
 
         if 'clear' in cmd or 'clear' in opt:
             # The key on the left is removed from storage.  All settings and messages
