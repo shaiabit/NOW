@@ -122,7 +122,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdPose)
         self.add(CmdZone)
         self.add(CmdSpoof)
-        self.add(CmdSummon)
+        self.add(CmdPortal)
         self.add(CmdWhisper)
         self.add(CmdInventory)
 # [...]
