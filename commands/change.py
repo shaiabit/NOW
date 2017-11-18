@@ -51,7 +51,6 @@ class CmdChange(MuxCommand):
             # The key on the left is removed from storage.  All settings and messages
             # are arbitrary, and no setting is mandatory, so removal of any setting
             # by the user has no critical consequence.
-            self.msg('Functionality not complete. Nothing done.')
             # CHANGE/clear <key>   removes a bool
             if not rhs:
                 if rhs is None:
