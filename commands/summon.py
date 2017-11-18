@@ -58,7 +58,7 @@ class CmdSummon(MuxCommand):
         session_list = SESSIONS.get_sessions()
         target = []
         # Check for private flag on source room. It must be controlled by summoner if private.
-        if loc.tags.get('private', category='flags') and not char.location.access(char.account, 'control'):
+        if loc.tags.get('private', category='flags') and not loc.access(char, 'control'):
             char.msg('Error: This ' + error_private)
             return
         # Check object pool filtered by tagged "pool" and located in None.
@@ -81,8 +81,8 @@ class CmdSummon(MuxCommand):
             char.msg("Error: Unique character name not found.")
             return
         else:
-            # Check for private flag on destination room. If so, check for in/out locks.
             target = target[0]
+            # Check for private flag on destination room. If so, check for in/out locks.
             there = target.location
             if there and there.tags.get('private', category='flags') and not there.access(char.account, 'control'):
                 char.msg("Error: Destination of portal" + error_private)
