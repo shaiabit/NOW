@@ -82,6 +82,7 @@ class CmdSummon(MuxCommand):
             return
         else:
             # Check for private flag on destination room. If so, check for in/out locks.
+            target = target[0]
             there = target.location
             if there and there.tags.get('private', category='flags') and not there.access(char.account, 'control'):
                 char.msg("Error: Destination of portal" + error_private)
@@ -90,18 +91,18 @@ class CmdSummon(MuxCommand):
             meet_message = ('You are being joined by {summoner} from {loc}.')
             summon_message = ('You are being summoned to {loc} by {summoner}.')
             message = meet_message if 'meet' in cmd else summon_message
-            loc_name = loc.get_display_name(target[0])
-            my_name = target[0].get_display_name(target[0])
-            target_name = target[0].get_display_name(char)
-            char_name = char.get_display_name(target[0])
-            target[0].msg(message.format(summoner=char_name, loc=loc_name))
-            target[0].msg('A portal should appear soon.')
+            loc_name = loc.get_display_name(target)
+            my_name = target.get_display_name(target)
+            target_name = target.get_display_name(char)
+            char_name = char.get_display_name(target)
+            target.msg(message.format(summoner=char_name, loc=loc_name))
+            target.msg('A portal should appear soon.')
             char.msg("You begin to open a portal connecting %s" % target_name +
                      " and your location.")
 
         def open_portal():
             """Move inflatable portals into place."""
-            portal_enter.move_to(target[0].location)
+            portal_enter.move_to(target.location)
             portal_exit.move_to(loc)
             # If only in opt, lock entering to the target, only
             # If in or out, meet or summon, lock one portal end, depending.
@@ -112,7 +113,7 @@ class CmdSummon(MuxCommand):
         def close_portal():
             """Remove and store inflatable portals in Nothingness."""
             for each in portal_enter.contents:
-                each.move_to(target[0].location)
+                each.move_to(target.location)
             for each in portal_exit.contents:
                 each.move_to(loc)
             portal_enter.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % portal_enter)
