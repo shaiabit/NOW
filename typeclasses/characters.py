@@ -103,7 +103,7 @@ class Character(DefaultCharacter, Tangible):
         home_room_locks = 'control:id({0}) or perm(wizard);edit:id({0}) ' \
                           'or perm(helpstaff)'.format(self.id)
         home_room = {'typeclass': 'typeclasses.rooms.Room', 'key': home_room_name, 'desc': home_room_desc,
-                     'locks': home_room_locks}
+                     'locks': home_room_locks}  #  Add a private:flags tag.
         from evennia.utils.spawner import spawn  # Import the spawn utility just before using it.
         room = spawn(home_room)  # Calling spawn utility to create the home room.
         return room[0]  # Return the first (and only) object created, the room.

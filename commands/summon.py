@@ -28,7 +28,7 @@ class CmdSummon(MuxCommand):
     key = 'summon'
     aliases = ['meet', 'join']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
-    locks = 'cmd:perm(denizen)'
+    locks = 'cmd:pperm(denizen)'
     help_category = 'Travel'
 
     def func(self):
@@ -45,7 +45,7 @@ class CmdSummon(MuxCommand):
         account = self.account
         args = self.args
         lhs, rhs = self.lhs, self.rhs
-        # opt = self.switches  # TODO - add code to make the switches work.
+        opt = self.switches  # TODO - add code to make the switches work.
 
         if char and char.ndb.currently_moving:
             account.msg("You can not summon while moving. (|rstop|n, then try again.)")
@@ -55,7 +55,15 @@ class CmdSummon(MuxCommand):
             return
         session_list = SESSIONS.get_sessions()
         target = []
-        # Move check for available portals here.
+        # Check for private flag on destination room. If so, check for in/out locks.
+        # Check if A can walk to B, or B to A depending on meet or summon
+        # Check object pool filtered by tagged "pool" and located in None.
+        obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
+        print('Object pool total: %i' % len(obj_pool))
+        if len(obj_pool) < 2:
+            char.msg('Portals are currently out of stock or in use elsewhere.')
+            return
+        portal_enter, portal_exit = obj_pool[-2:]
         for session in session_list:
             if not (session.logged_in and session.get_puppet()):
                 continue
@@ -69,30 +77,25 @@ class CmdSummon(MuxCommand):
             char.msg("Error: Unique character name not found.")
             return
         else:
-            meet_message = ('You are being joined by {summoner} from {target}')
-            summon_message = ('You are being summoned to {target} by {summoner}')
+            meet_message = ('You are being joined by {summoner} from {loc}.')
+            summon_message = ('You are being summoned to {loc} by {summoner}.')
             message = meet_message if 'meet' in cmd else summon_message
             loc_name = loc.get_display_name(target[0])
+            my_name = target[0].get_display_name(target[0])
             target_name = target[0].get_display_name(char)
             char_name = char.get_display_name(target[0])
-            target[0].msg(message.format(summoner=char_name, target=target_name))
+            target[0].msg(message.format(summoner=char_name, loc=loc_name))
             target[0].msg('A portal should appear soon.')
             char.msg("You begin to open a portal connecting %s" % target_name +
                      " and your location.")
-        # Check for available portals start
-        # Check object pool filtered by tagged "pool" and located in None.
-        obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
-        print('Object pool total: %i' % len(obj_pool))
-        if len(obj_pool) < 2:
-            char.msg('Portals are currently out of stock or in use elsewhere.')
-            return
-        portal_enter, portal_exit = obj_pool[-2:]
-        # Check for available portals end
 
         def open_portal():
             """Move inflatable portals into place."""
             portal_enter.move_to(target[0].location)
             portal_exit.move_to(loc)
+            # If only in opt, lock entering to the target, only
+            # If in or out, meet or summon, lock one portal end, depending.
+            # If portal to Nothingness, only send one portal
 
         delay(10, callback=open_portal)  # 10 seconds later, the portal (exit pair) appears.
 
