@@ -57,7 +57,7 @@ class CmdChange(MuxCommand):
                 if rhs is None:
                     # CHANGE/clear <key> <=| to>   removes a message
                     was = (lhs in char.db.settings and char.db.settings.pop(lhs)) or None
-                    self.msg('Setting {0} ({}) removed.'.format(lhs, was))
+                    self.msg('Setting {} ({}) removed.'.format(lhs, was))
                 else:
                     # TODO: clear command/option functionality for value and symbol
                     # CHANGE/clear/value <key> <=| to>   removes a value
@@ -68,7 +68,7 @@ class CmdChange(MuxCommand):
                         self.msg('Functionality not complete. Nothing done.')
                     else:
                         was = (lhs in char.db.messages and char.db.messages.pop(lhs)) or None
-                        self.msg('Message {0} ({}) removed.'.format(lhs, was))
+                        self.msg('Message {} ({}) removed.'.format(lhs, was))
             else:
                 self.msg('Functionality not complete. Nothing done.')
             return
