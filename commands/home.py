@@ -57,11 +57,14 @@ class CmdHome(MuxCommand):
                     you.msg('%s has no home yet.' % obj.get_display_name(account))
                 elif home == obj.location:
                     you.msg('%s is already home!' % obj.get_display_name(account))
-                elif not (obj is you or account.check_permstring('helpstaff') or obj.access(account, 'puppet') or obj.access(you, 'control')):
-                    you.msg("You must have |wHelpstaff|n or higher access to send %s home."
-                            % obj.get_display_name(account))
+                elif obj is not you and not account.check_permstring('helpstaff')\
+                        and not obj.access(account, 'puppet') and not obj.access(you, 'control')\
+                        and not obj.location(you, 'control'):
+                    you.msg("You do not have access to send {} home.".format(obj.get_display_name(account)))
+                    return
                 else:
-                    obj.msg("There's no place like home ... (%s is sending you home.)" % you.get_display_name(obj))
+                    going_home = "There's no place like home ... ({} is sending you home.)"
+                    obj.msg(going_home.format(you.get_display_name(obj)))
                     if you.location:
                         you.location.msg_contents('%s%s|n sends %s%s|n home.'
                                                   % (you.STYLE, you.key, obj.STYLE, obj.key))

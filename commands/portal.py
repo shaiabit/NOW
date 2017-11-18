@@ -5,7 +5,7 @@ from commands.command import MuxCommand
 from evennia.server.sessionhandler import SESSIONS
 
 
-class CmdSummon(MuxCommand):
+class CmdPortal(MuxCommand):
     """
     Open portal from object's location to yours, or location you specify.
     The portal forms 30 seconds later and is, under some circumstances,
@@ -20,13 +20,13 @@ class CmdSummon(MuxCommand):
     /vanish    if set, the portal leads to Nothingness.
                When this option is used, <location> is ignored.
     Examples:
-      summon Tria
-      summon/quiet Rulan=poof
-      summon/only LazyLion
-      summon/vanish me
+      summon/only Tria
+      join Rulan
+      meet/quiet LazyLion
+      portal/vanish me
     """
-    key = 'summon'
-    aliases = ['meet', 'join']
+    key = 'portal'
+    aliases = ['meet', 'join', 'summon']
     options = ('quiet', 'only', 'in', 'out', 'vanish')
     locks = 'cmd:pperm(denizen)'
     help_category = 'Travel'
@@ -36,7 +36,7 @@ class CmdSummon(MuxCommand):
             Performs the summon, accounting for in-world conditions.
             join: Implies one way portal to target
             summon: Implies one way portal to summoner
-            meet: Implies two-way portal
+            meet: Implies two-way portal, both can meet.
         """
 
         char = self.character
@@ -88,11 +88,10 @@ class CmdSummon(MuxCommand):
                 char.msg('Destination of portal is' + error_private)
                 return
         # Check if A can walk to B, or B to A depending on meet or summon
-            meet_message = ('You are being joined by {summoner} from {loc}.')
-            summon_message = ('You are being summoned to {loc} by {summoner}.')
+            meet_message = 'You are being joined by {summoner} from {loc}.'
+            summon_message = 'You are being summoned to {loc} by {summoner}.'
             message = meet_message if 'meet' in cmd else summon_message
             loc_name = loc.get_display_name(target)
-            my_name = target.get_display_name(target)
             target_name = target.get_display_name(char)
             char_name = char.get_display_name(target)
             target.msg(message.format(summoner=char_name, loc=loc_name))

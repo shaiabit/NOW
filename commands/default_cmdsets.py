@@ -47,7 +47,7 @@ from commands.zone import CmdZone
 from commands.about import CmdAbout
 from commands.sense import CmdSense
 from commands.change import CmdChange
-from commands.summon import CmdSummon
+from commands.portal import CmdPortal
 from commands.access import CmdAccess
 from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
