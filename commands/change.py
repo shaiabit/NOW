@@ -162,11 +162,11 @@ class CmdChange(MuxCommand):
             status = setting[args]
         mode = 'messages' if action == 'set' else 'settings'
         if rhs:
-            string = '|wYou %s %s to %s on %s character %s to "%s".' % \
-                      (action, lhs if lhs else 'something', rhs, char.get_display_name(account), mode, status)
+            string = '|wYou %s "%s" to "%s" on %s.' % \
+                      (action, lhs if lhs else 'something', rhs, char.get_display_name(account))
         else:
-            string = '|wYou %s %s on %s character %s to "%s".' %\
-                      (action, args if args else 'something', char.get_display_name(account), mode, status)
+            string = '|wYou %s "%s" on %s to "%s".' %\
+                      (action, args if args else 'something', char.get_display_name(account), status)
         account.msg(string)  # Notify account of character setting changes.
         if action == 'set' and rhs:
             char.db.messages = message
