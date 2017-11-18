@@ -46,17 +46,21 @@ class CmdSummon(MuxCommand):
         args = self.args
         lhs, rhs = self.lhs, self.rhs
         opt = self.switches  # TODO - add code to make the switches work.
+        
+        error_private = 'is in a private room that does not allow portals to form.'
 
         if char and char.ndb.currently_moving:
-            account.msg("You can not summon while moving. (|rstop|n, then try again.)")
+            account.msg("You can not open a portal while moving. (|rstop|n, then try again.)")
             return
         if not args:
-            char.msg("Could not find target to summon. Usage: summon <character or NPC>")
+            char.msg("Could not find target. Usage: {} <character or NPC>".format(cmd))
             return
         session_list = SESSIONS.get_sessions()
         target = []
-        # Check for private flag on destination room. If so, check for in/out locks.
-        # Check if A can walk to B, or B to A depending on meet or summon
+        # Check for private flag on source room. It must be controlled by summoner if private.
+        if loc.tags.get('private', category='flags') and not char.location.access(char.account, 'control'):
+            char.msg('Error: This ' + error_private)
+            return
         # Check object pool filtered by tagged "pool" and located in None.
         obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
         print('Object pool total: %i' % len(obj_pool))
@@ -77,6 +81,12 @@ class CmdSummon(MuxCommand):
             char.msg("Error: Unique character name not found.")
             return
         else:
+            # Check for private flag on destination room. If so, check for in/out locks.
+            there = target.location
+            if there and there.tags.get('private', category='flags') and not there.access(char.account, 'control'):
+                char.msg("Error: Destination of portal" + error_private)
+                return
+        # Check if A can walk to B, or B to A depending on meet or summon
             meet_message = ('You are being joined by {summoner} from {loc}.')
             summon_message = ('You are being summoned to {loc} by {summoner}.')
             message = meet_message if 'meet' in cmd else summon_message
