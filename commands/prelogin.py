@@ -590,7 +590,7 @@ def _create_character(session, new_account, typeclass, home, permissions):
         new_character = create.create_object(typeclass, key=new_account.key, home=home, permissions=permissions)
         new_account.db._playable_characters.append(new_character)  # set playable character list
         print('New character {} created with account {}.'.format(new_character.key, new_account.key)) #  Debug
-        print('New character {} home set to {}.'.format(char=new_character.key, new_character.home.key)) #  Debug
+        print('New character {} home set to {}.'.format(new_character.key, new_character.home.key)) #  Debug
         cid, pid = new_character.id, new_account.id
         new_locks = ';'.join(
             # allow only the character itself and the account to puppet this character (and immortals).
