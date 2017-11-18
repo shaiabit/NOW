@@ -84,7 +84,7 @@ class CmdSummon(MuxCommand):
             target = target[0]
             # Check for private flag on destination room. If so, check for in/out locks.
             there = target.location
-            if there and there.tags.get('private', category='flags') and not there.access(char.account, 'control'):
+            if there and there.tags.get('private', category='flags') and not there.access(char, 'control'):
                 char.msg("Error: Destination of portal" + error_private)
                 return
         # Check if A can walk to B, or B to A depending on meet or summon
