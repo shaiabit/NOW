@@ -23,7 +23,7 @@ class CmdChange(MuxCommand):
     Not supplying a value assumes you just want to toggle the value on/off.
     """
     key = 'change'
-    aliases = ['clear', 'show', 'set']
+    aliases = ['clear', 'show']
     locks = 'cmd:all()'
     options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'name', 'verb', 'detail', 'sense')
     parse_using = ' to '
@@ -48,7 +48,7 @@ class CmdChange(MuxCommand):
         message = char.db.messages or {}
         
         if ' to ' in lhs or '=' in lhs:
-            self.msg('Invalid key string:  Key can not contain = or " to ") Nothing done.')
+            self.msg('Invalid key string:  Key can not contain = or " to ".   Nothing done.')
             return
 
         if 'clear' in cmd or 'clear' in opt:
