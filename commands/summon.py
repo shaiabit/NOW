@@ -47,7 +47,7 @@ class CmdSummon(MuxCommand):
         lhs, rhs = self.lhs, self.rhs
         opt = self.switches  # TODO - add code to make the switches work.
         
-        error_private = 'is in a private room that does not allow portals to form.'
+        error_private = ' in a private room that does not allow portals to form.'
 
         if char and char.ndb.currently_moving:
             account.msg("You can not open a portal while moving. (|rstop|n, then try again.)")
@@ -59,7 +59,7 @@ class CmdSummon(MuxCommand):
         target = []
         # Check for private flag on source room. It must be controlled by summoner if private.
         if loc.tags.get('private', category='flags') and not loc.access(char, 'control'):
-            char.msg('Error: This ' + error_private)
+            char.msg('You are' + error_private)
             return
         # Check object pool filtered by tagged "pool" and located in None.
         obj_pool = [each for each in evennia.search_tag('pool', category='portal') if not each.location]
@@ -75,17 +75,17 @@ class CmdSummon(MuxCommand):
             if lhs.lower() in puppet.get_display_name(char, plain=True).lower():
                 target.append(puppet)
         if len(target) < 1:
-            char.msg("Error: Specific character name not found.")
+            char.msg("Specific character name not found.")
             return
         elif len(target) > 1:  # Too many partial matches, try exact matching.
-            char.msg("Error: Unique character name not found.")
+            char.msg("Unique character name not found.")
             return
         else:
             target = target[0]
             # Check for private flag on destination room. If so, check for in/out locks.
             there = target.location
             if there and there.tags.get('private', category='flags') and not there.access(char, 'control'):
-                char.msg("Error: Destination of portal" + error_private)
+                char.msg('Destination of portal is' + error_private)
                 return
         # Check if A can walk to B, or B to A depending on meet or summon
             meet_message = ('You are being joined by {summoner} from {loc}.')
