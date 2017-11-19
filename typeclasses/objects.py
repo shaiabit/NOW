@@ -180,7 +180,7 @@ class Object(Tangible):
                                  object speaks
 
     """
-    STYLE = '|334'
+    STYLE = '|145'
 
     def basetype_setup(self):
         """
@@ -354,7 +354,7 @@ class Consumable(Object):  # TODO: State and analog decay. (State could be discr
     object, to be consumed and decay, break, be eaten, drank, cast,
     burned, or wear out slowly like clothing or furniture.
     """
-    STYLE = '|321'
+    STYLE = '|420'
 
     def consume(self, caller):
         """
