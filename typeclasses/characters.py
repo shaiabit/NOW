@@ -155,7 +155,8 @@ class Character(DefaultCharacter, Tangible):
             self.msg(self.db.messages.get('location') + loc_name)
         if source_location:  # Is "None" when moving from Nothingness. If so, do nothing.
             self.ndb.last_location = source_location
-            if not source_location.destination:
+            # If the last room was a private room, no going back.
+            if not (source_location.destination or source_location.tags.get('private', category='flags')):
                 self.db.last_room = source_location
         if self.location:  # Things to do after the character moved somewhere
             if self.db.messages:
