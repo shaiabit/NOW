@@ -59,7 +59,7 @@ class CmdHome(MuxCommand):
                     you.msg('%s is already home!' % obj.get_display_name(account))
                 elif obj is not you and not account.check_permstring('helpstaff')\
                         and not obj.access(account, 'puppet') and not obj.access(you, 'control')\
-                        and not obj.location(you, 'control'):
+                        and not obj.location.access(you, 'control'):
                     you.msg("You do not have access to send {} home.".format(obj.get_display_name(account)))
                     return
                 else:

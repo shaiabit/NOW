@@ -8,10 +8,10 @@ from evennia.server.sessionhandler import SESSIONS
 class CmdPortal(MuxCommand):
     """
     Open portal from object's location to yours, or location you specify.
-    The portal forms 30 seconds later and is, under some circumstances,
+    The portal forms after a slight delay and is, under some circumstances,
     one-way only.
     Usage:
-      summon/switch <object>[ = <location>]
+      portal/switch <object>[ = <location>]
     Options:
     /quiet     Portal arrives quietly to others in room.
     /only      Only the summoned object can use the portal exit.
