@@ -58,6 +58,16 @@ class CmdTeleport(MuxCommand):
                 result.append((each, check))
         return True if not result else result
 
+    @staticmethod
+    def special_name(text, who):
+        text = text.lower()
+        if text == 'home':
+            return who.home
+        elif text in ('homeroom', 'home room', 'room'):
+            return who.db.objects['home'] if (who.db.objects and who.db.objects.get('home', False)) else who.home
+        elif text in ('me', 'self'):
+            return who
+
     def func(self):
         """Performs the teleport, accounting for in-world conditions."""
 
@@ -100,7 +110,8 @@ class CmdTeleport(MuxCommand):
                     account.msg("Did not find object to teleport.")
                     return
                 if not (account.check_permstring('mage') or target.access(account, 'control')):
-                    account.msg("You must have |wMage|n or higher power to send something into |xNo|=gth|=fin|=egn|=des|=css|n.")
+                    account.msg("You must have |wMage|n or higher power to "
+                                "send something into |xNo|=gth|=fin|=egn|=des|=css|n.")
                     return
                 account.msg("Teleported %s -> None-location." % (target.get_display_name(char)))
                 if target.location and not tel_quietly:
@@ -115,11 +126,14 @@ class CmdTeleport(MuxCommand):
             account.msg("Usage: teleport[/options] [<obj> =|to] <target>")
             return
         if rhs:
-            target = search_as.search(lhs, global_search=True, exact=False)
-            loc = search_as.search(rhs, global_search=True, exact=False)
+            right_result = self.special_name(rhs, char)
+            left_result = self.special_name(lhs, char)
+            target = search_as.search(lhs, global_search=True, exact=False) if not left_result else left_result
+            loc = search_as.search(rhs, global_search=True, exact=False) if not right_result else right_result
         else:
             target = char
-            loc = search_as.search(lhs, global_search=True, exact=False)
+            left_result = self.special_name(lhs, target)
+            loc = search_as.search(lhs, global_search=True, exact=False) if not left_result else left_result
         if not target:
             account.msg("Did not find object to teleport.")
             return
