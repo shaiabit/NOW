@@ -42,7 +42,7 @@ class CmdHome(MuxCommand):
             else:
                 if home == you.location:
                     if home is room:
-                        you.msg('You are already home, which is the same as your home room')
+                        you.msg('You are already home, which is the same as your home room.')
                         return
                     else:
                         you.msg('You are already home. Sending you to your home room...')
