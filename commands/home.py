@@ -39,9 +39,14 @@ class CmdHome(MuxCommand):
         if not opt or 'room' in opt:
             if not home:
                 you.msg('You have no home yet.')
-            elif home == you.location:
-                you.msg('You are already home!')
             else:
+                if home == you.location:
+                    if home is room:
+                        you.msg('You are already home, which is the same as your home room')
+                        return
+                    else:
+                        you.msg('You are already home. Sending you to your home room...')
+                        home = room
                 you.msg("There's no place like home ...")
                 you.move_to(home, use_destination=False)
         else:
