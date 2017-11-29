@@ -400,7 +400,7 @@ class CmdGridMotion(default_cmds.MuxCommand):
         coord = you.ndb.grid_loc
         min = loc.grid('min')
         max = loc.grid('max')
-        if not coord:  # A default place - this logic should check last crumbs instead.
+        if not coord:  # TODO: A default place - this logic should check last crumbs instead.
             coord = loc.grid('current')
         bound = self.motion(coord)
         into = loc.point(bound, 'into')
@@ -745,14 +745,15 @@ class Grid(Room):
         here = [element for element in visible if element.ndb.grid_loc == coord]
         there = [element for element in visible if element not in here]
         # Contents you can see.  Show here, and then show there (with names).
-        string = ' |/|y%s|n|/%s' % (name, desc or '')
+        overdesc = (self.db.desc if self.db.desc else '') or (self.db.desc_brief if self.db.desc_brief else '')
+        result = ['|/|y%s|n%s%s' % (name, '\n{}\n'.format(overdesc) if overdesc else overdesc, desc or '')]
         if here:
             here_list = ", ".join(each.get_display_name(viewer, pose=True) for each in here).replace('.,', ';')
-            string += '|/Here you find: %s' % here_list  # If something here can be seen, list it
+            result.append('|/Here you find: %s' % here_list)  # If something here can be seen, list it
         if there:
             there_list = ", ".join(each.get_display_name(viewer, pose=True) for each in there).replace('.,', ';')
-            string += '|/Elsewhere: %s' % there_list  # If something there can be seen, list it
-        return string
+            result.append('|/Elsewhere: %s' % there_list)  # If something there can be seen, list it
+        return ''.join(result)
 
     def grid(self, key=None, value=None, **kwargs):
         """Read/Write dictionary in the grid attribute for persistence.
