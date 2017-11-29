@@ -5,10 +5,14 @@ from evennia.utils import utils, search
 
 class CmdHome(MuxCommand):
     """
-    Takes you to your home, if you have one. home/set will show you
-    where your home is set, or provide a what and where to set its home.
+    Takes you to your home, if you have one. If you're already home,
+    takes you to your home room. home/set will show you where your
+    home is set, or provide a what and where to set its home.
+    home/here will set your home here, if the location allows it.
     Usage:
       home[/option]
+      sweep <object>
+      abode
     Options:
     /set <obj> [=||to home_location]  views or sets <obj>'s home location.
     /sweep <obj>  send obj home.
@@ -21,6 +25,7 @@ class CmdHome(MuxCommand):
     It is also a convenient target of the "home" command.
     """
     key = 'home'
+    aliases = ['sweep', 'abode', 'room']
     options = ('set', 'sweep', 'here', 'room')
     locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
@@ -33,10 +38,12 @@ class CmdHome(MuxCommand):
         you = self.character
         account = self.account
         opt = self.switches
+        cmd = self.cmdstring
         # you potentially has two homes.
         room = you.db.objects['home'] if you.db.objects and you.db.objects.get('home', False) else you.home
-        home = room if 'room' in opt else you.home  # Or home room, to handle /room option
-        if not opt or 'room' in opt:
+        home = room if 'room' in opt or 'room' in cmd else you.home
+        abode = 'abode' in cmd or 'here' in opt  # Setting home here.
+        if not opt or 'room' in opt or 'room' in cmd:
             if not home:
                 you.msg('You have no home yet.')
             else:
@@ -56,7 +63,7 @@ class CmdHome(MuxCommand):
                 obj = you.search(self.lhs, global_search=True)
             if not obj:
                 return
-            if 'sweep' in opt:
+            if 'sweep' in opt or 'sweep' in cmd:
                 home = obj.home
                 if not home:
                     you.msg('%s has no home yet.' % obj.get_display_name(account))
@@ -80,7 +87,7 @@ class CmdHome(MuxCommand):
                         you.msg("%s left %s and went home to %s."
                                 % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return
-            if not self.rhs and 'here' not in opt:  # just view the destination set as home
+            if not self.rhs and not abode:  # just view the destination set as home
                 if obj != you and not account.check_permstring('helpstaff') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wHelpstaff|n or higher power to view the home of %s."
                             % obj.get_display_name(account))
@@ -94,7 +101,7 @@ class CmdHome(MuxCommand):
                 if obj != you and not account.check_permstring('mage') and not obj.access(account, 'puppet'):
                     you.msg("You must have |wmage|n or higher powers to change the home of %s." % obj)
                     return
-                if self.rhs and 'here' not in opt:
+                if self.rhs and not abode:
                     new_home = you.search(self.rhs, global_search=True)
                 else:
                     new_home = you.location
@@ -102,9 +109,14 @@ class CmdHome(MuxCommand):
                     return
                 old_home = obj.home
                 obj.home = new_home
+                obj_name = obj.get_display_name(you)
+                old_home_name = old_home.get_display_name(you)
                 if old_home:
-                    string = "%s's home location was changed from %s to %s." % (obj, old_home.get_display_name(you),
-                                                                                new_home.get_display_name(you))
+                    if old_home is new_home:
+                        string = "%s's home location is already set to %s." % (obj_name, old_home_name)
+                    else:
+                        string = "%s's home location was changed from %s to %s." % (obj_name, old_home_name,
+                                                                                    new_home.get_display_name(you))
                 else:
-                    string = "%s' home location was set to %s." % (obj, new_home.get_display_name(you))
+                    string = "%s' home location was set to %s." % (obj_name, new_home.get_display_name(you))
             you.msg(string)
