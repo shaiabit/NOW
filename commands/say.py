@@ -49,18 +49,21 @@ class CmdSay(MuxCommand):
         else:
             speech = args
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
+            say_prepend = char.db.messages and char.db.messages.get('say prepend')
+            prepend = say_prepend if say_prepend else '|w'
             if 'ooc' in opt:
-                here.msg_contents(text=('[OOC] {char} says, "|w%s|n"' % escape_braces(speech),
+                here.msg_contents(text=('[OOC] {char} says, |n"|w%s|n"' % escape_braces(speech),
                                         {'type': 'say', 'ooc': True}), from_obj=char, mapping=dict(char=char))
                 if here.has_account:
-                    here.msg(text=('[OOC] %s says, "|w%s|n"' % (char.get_display_name(here), escape_braces(speech)),
+                    here.msg(text=('[OOC] %s says, |n"|w%s|n"' % (char.get_display_name(here), escape_braces(speech)),
                                    {'type': 'say', 'ooc': True}), from_obj=char)
             else:
-                here.msg_contents(text=('{char} %s, "|w%s|n"' % (escape_braces(verb), escape_braces(speech)),
+                here.msg_contents(text=('{char} %s, |n"%s%s|n"' % (escape_braces(verb), escape_braces(prepend),
+                                                                   escape_braces(speech)),
                                         {'type': 'say'}), from_obj=char, mapping=dict(char=char))
                 if here.has_account:
-                    here.msg(text=('From inside you, %s %s, "|w%s|n"' %
-                                   (char.get_display_name(here), escape_braces(verb),
+                    here.msg(text=('From inside you, %s %s, |n"%s%s|n"' %
+                                   (char.get_display_name(here), escape_braces(verb), escape_braces(prepend),
                                     escape_braces(speech)), {'type': 'say'}), from_obj=char)
 
 
