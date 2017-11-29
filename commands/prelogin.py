@@ -589,8 +589,12 @@ def _create_character(session, new_account, typeclass, home, permissions):
     try:
         new_character = create.create_object(typeclass, key=new_account.key, home=home, permissions=permissions)
         new_account.db._playable_characters.append(new_character)  # set playable character list
-        print('New character {} created with account {}.'.format(new_character.key, new_account.key)) #  Debug
-        print('New character {} home set to {}.'.format(new_character.key, new_character.home.key)) #  Debug
+        home_room = new_character.ndb.home_room
+        if home_room:
+            new_character.home = home_room  # Overwrite default home with home room
+            new_character.move_to(home_room)  # Move new character into its home room.
+        print('New character {} created with account {}.'.format(new_character.key, new_account.key))  # Debug
+        print('New character {} home set to {}.'.format(new_character.key, new_character.home.key))  # Debug
         cid, pid = new_character.id, new_account.id
         new_locks = ';'.join(
             # allow only the character itself and the account to puppet this character (and immortals).
@@ -599,7 +603,6 @@ def _create_character(session, new_account, typeclass, home, permissions):
              # edit, and control this character (and immortals). (wizards can edit)
              'control:id({0}) or pid({1}) or perm(immortal)'.format(cid, pid)))
         new_character.locks.add(new_locks)  # Add locks that require knowing the account id.
-        #
         # If no brief description is set, set a default brief description
         if not new_character.db.desc_brief:
             new_character.db.desc_brief = 'It looks like a new creature on the block.'

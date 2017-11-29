@@ -45,23 +45,17 @@ class Character(DefaultCharacter, Tangible):
              'examine:perm(helpstaff)', 'tell:perm(wizard)',
              'delete:perm(immortal)', 'call:false(); get:false()'))
         self.locks.add(new_locks)  # Add these new locks to the character
-        #
         # Check to see if Character has an object dictionary
         if not self.db.objects:   # Prime non-existent objects attribute
             self.db.objects = {}  # with empty list
-        #
         # Check to see if Character has a home room set.
         home_room = self.db.objects.get('home')
         if not home_room:  # if self has no home room,
             home_room = self.assign_room()  # call the assign_room method.
             self.db.objects['home'] = home_room  # Set the character's home room
-        #
-        self.move_to(home_room)  # Move new character into its home room.
         self.db.last_room = self.home  # Set back point to global default home
-        self.home = home_room  # Set default home to newly created home room
-        #
-        # DEBUG:
-        print('New character {0} has a new home {1}, and home set to {2}'.format(self.key, home_room, self.home.key))
+        self.home = home_room  # Set home to home room
+        self.ndb.home_room = home_room  # Store for user later.
 
     def assign_object(self):
         """
@@ -97,13 +91,14 @@ class Character(DefaultCharacter, Tangible):
         """
         # Spawn a new room with locks:
         home_room_name = self.name + "'s place"
-        home_room_desc = "|nThis is your place. You can always |ghome/room|n to get here. " \
+        home_room_desc = "|nYou can always type '|groom|n' to get here. " \
                          "You may |gdesc/room ...|n to change it, and you can check out some " \
-                         "|g@color ansi|n to spruce it up. "
+                         "|gcolor ansi|n to spruce it up. "
         home_room_locks = 'control:id({0}) or perm(wizard);edit:id({0}) ' \
                           'or perm(helpstaff)'.format(self.id)
+        home_room_tags = [('private', 'flags')]
         home_room = {'typeclass': 'typeclasses.rooms.Room', 'key': home_room_name, 'desc': home_room_desc,
-                     'locks': home_room_locks}  #  Add a private:flags tag.
+                     'locks': home_room_locks, 'tags': home_room_tags}
         from evennia.utils.spawner import spawn  # Import the spawn utility just before using it.
         room = spawn(home_room)  # Calling spawn utility to create the home room.
         return room[0]  # Return the first (and only) object created, the room.
