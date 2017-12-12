@@ -190,8 +190,8 @@ class MuxCommand(default_cmds.MuxCommand):
         command_time = time.time() - self.command_time
         if account:
             account.db._command_time_total = (0 if account.db._command_time_total is None
-                                             else account.db._command_time_total) + command_time
-        if char:
+                                              else account.db._command_time_total) + command_time
+        if char and hasattr(char, 'traits'):
             if char.traits.ct is None:
                 char.traits.add('ct', 'Core Time', 'counter')
             if char.traits.cc is None:
