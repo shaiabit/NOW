@@ -15,9 +15,9 @@ class CmdHome(MuxCommand):
       abode
     Options:
     /set <obj> [=||to home_location]  views or sets <obj>'s home location.
-    /sweep <obj>  send obj home.
-    /here  sets current character's home to current location.
-    /room  returns a character to its home room, regardless of where home is set.
+    /sweep <obj>  send obj home. (same as using sweep command)
+    /here  sets current character's home to current location (same as abode command)
+    /room  returns a character to its home room (same as room command)
     
     The "home" location is a "safety" location for objects; they will be
     moved there if their current location ceases to exist. All objects
@@ -37,13 +37,19 @@ class CmdHome(MuxCommand):
         """Implement the command"""
         you = self.character
         account = self.account
-        opt = self.switches
         cmd = self.cmdstring
+        opt = self.switches
+        if 'sweep' in cmd:
+            opt.append('sweep')
+        if 'abode' in cmd:
+            opt.append('here')
+        if 'room' in cmd:
+            opt.append('room')
         # you potentially has two homes.
         room = you.db.objects['home'] if you.db.objects and you.db.objects.get('home', False) else you.home
-        home = room if 'room' in opt or 'room' in cmd else you.home
-        abode = 'abode' in cmd or 'here' in opt  # Setting home here.
-        if not opt or 'room' in opt or 'room' in cmd:
+        home = room if 'room' in opt else you.home
+        abode = 'here' in opt  # Command to set home here
+        if 'room' in opt:
             if not home:
                 you.msg('You have no home yet.')
             else:
@@ -63,7 +69,7 @@ class CmdHome(MuxCommand):
                 obj = you.search(self.lhs, global_search=True)
             if not obj:
                 return
-            if 'sweep' in opt or 'sweep' in cmd:
+            if 'sweep' in opt:
                 home = obj.home
                 if not home:
                     you.msg('%s has no home yet.' % obj.get_display_name(account))
@@ -75,6 +81,9 @@ class CmdHome(MuxCommand):
                     you.msg("You do not have access to send {} home.".format(obj.get_display_name(account)))
                     return
                 else:
+                    if obj.db.worn:  # If object is being worn, do not send anywhere
+                        you.msg('%s is still being worn.' % obj.get_display_name(account))
+                        return
                     going_home = "There's no place like home ... ({} is sending you home.)"
                     obj.msg(going_home.format(you.get_display_name(obj)))
                     if you.location:
