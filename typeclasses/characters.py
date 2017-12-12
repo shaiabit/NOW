@@ -15,6 +15,7 @@ from evennia.utils import list_to_string
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 from evennia.comms.models import ChannelDB, Msg  # To find and
 from evennia.comms.channelhandler import CHANNELHANDLER  # Send to public channel
+import time  # Check time since last visit
 
 
 class Character(DefaultCharacter, Tangible):
@@ -292,7 +293,17 @@ class Character(DefaultCharacter, Tangible):
         """
         sessions = self.sessions.get()
         session = sessions[-1] if sessions else None
-        if len(sessions) == 1:
+        if len(sessions) == 1:  # Skip doing this is the object is already puppeted.
+            # After an account connects to a character, set the character's timestamp on:
+            # Add object to "puppeted" attribute dictionary on self, keyed by self.account.
+            # Value is (timestamp on, timestamp off, puppet_count)
+            now = int(time.time())
+            last_entry = (self.db.puppeted and self.db.puppeted.get(self.account)) or (now, now, 0)
+            puppet_count = (last_entry[2] + 1)
+            if self.db.puppeted:
+                self.db.puppeted[self.account] = (now, None, puppet_count)
+            else:
+                self.db.puppeted = {self.account: (now, None, puppet_count)}
             channel = ChannelDB.objects.channel_search('Public')
             if channel[0]:
                 channel[0].msg('|c%s |gis now active.' % self.key, keep_log=True)
@@ -335,6 +346,15 @@ class Character(DefaultCharacter, Tangible):
                 each.msg('|r%s|n %s.' % (self.get_display_name(each, color=False), text), from_obj=self)
             self.db.prelogout_location = self.location
             if not self.has_account:  # if no sessions control it anymore...
+                # After an account disconnects from a character, set the character's timestamp off:
+                # Add object to "puppeted" attribute dictionary on self, keyed by account.
+                # Value is (timestamp on, timestamp off, puppet_count)
+                now = int(time.time())
+                last_entry = (self.db.puppeted and self.db.puppeted.get(account)) or (now, now, 0)
+                if self.db.puppeted:
+                    self.db.puppeted[account] = (last_entry[0], now, last_entry[2])
+                else:
+                    self.db.puppeted = {account: (last_entry[0], now, last_entry[2])}
                 channel = ChannelDB.objects.channel_search('Public')
                 if channel[0]:
                     channel[0].msg('|c%s |ris now inactive.' % self.key, keep_log=True)
@@ -491,6 +511,16 @@ class NPC(Character):
                     continue
                 each.msg("%s looks more awake." % self.get_display_name(each), from_obj=self)
         else:
+            # After an account connects to a character, set the NPC's timestamp on:
+            # Add object to "puppeted" attribute dictionary on self, keyed by self.account.
+            # Value is (timestamp on, timestamp off, puppet_count)
+            now = int(time.time())
+            last_entry = (self.db.puppeted and self.db.puppeted.get(self.account)) or (now, now, 0)
+            puppet_count = (last_entry[2] + 1)
+            if self.db.puppeted:
+                self.db.puppeted[self.account] = (now, None, puppet_count)
+            else:
+                self.db.puppeted = {self.account: (now, None, puppet_count)}
             for each in self.location.contents:
                 if not each.access(self, 'view'):
                     continue
@@ -515,6 +545,15 @@ class NPC(Character):
                         continue
                     each.msg("%s looks sleepier." % (self.get_display_name(each)), from_obj=self)
             else:  # Show as sleeping if NPC has no account logged in.
+                # After an account disconnects from a character, set the NPC's timestamp off:
+                # Add object to "puppeted" attribute dictionary on self, keyed by account.
+                # Value is (timestamp on, timestamp off, puppet_count)
+                now = int(time.time())
+                last_entry = (self.db.puppeted and self.db.puppeted.get(account)) or (now, now, 0)
+                if self.db.puppeted:
+                    self.db.puppeted[account] = (last_entry[0], now, last_entry[2])
+                else:
+                    self.db.puppeted = {account: (last_entry[0], now, last_entry[2])}
                 for each in self.location.contents:
                     if not each.access(self, 'view'):
                         continue
