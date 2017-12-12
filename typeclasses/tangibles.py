@@ -3,7 +3,7 @@ from evennia import DefaultObject
 from evennia.utils import inherits_from
 from evennia.utils.utils import lazy_property
 from traits import TraitHandler
-# from effects import EffectHandler
+import time  # Check time since last visit
 
 
 class Tangible(DefaultObject):
@@ -21,6 +21,25 @@ class Tangible(DefaultObject):
     def traits(self):
         return TraitHandler(self)
 
+    def at_object_receive(self, new_arrival, source_location):
+        """
+        When an object enters another.
+
+        Args:
+            new_arrival (Object): the object that just entered this room.
+            source_location (Object): the previous location of new_arrival.
+        """
+        # Add object to "hosted" attribute dictionary on self, keyed by object.
+        # Value is (timestamp, source_location, visit_count)
+        now = int(time.time())
+        last_entry = (self.db.hosted and self.db.hosted.get(new_arrival)) or (now, source_location, 0)
+        visit_count = (last_entry[2] + 1)
+        new_arrival.ndb.last_visit = (last_entry[0], source_location)
+        if self.db.hosted:
+            self.db.hosted[new_arrival] = (now, source_location, visit_count)
+        else:
+            self.db.hosted = {new_arrival: (now, source_location, visit_count)}
+
     def get_display_name(self, viewer, **kwargs):
         """
         Displays the name of the object in a viewer-aware manner.
@@ -33,7 +52,7 @@ class Tangible(DefaultObject):
             pose Return pose appended to name if True
             color Return includes color style markup prefix if True
             mxp Return includes mxp command markup prefix if provided
-            db_id Return includes database id to privliged viewers if True
+            db_id Return includes database id to privileged viewers if True
             plain Return does not include database id or color
         Returns:
             name (str): A string of the sdesc containing the name of the object,
