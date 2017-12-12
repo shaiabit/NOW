@@ -12,11 +12,11 @@ html, body, #clientwrapper { height: 100% }
 body {
     margin: 0;
     padding: 0;
-    background: #000;
+    background: #010101;
     color: #ccc;
     font-size: .9em;
     font-family: 'DejaVu Sans Mono', Consolas, Inconsolata, 'Lucida Console', monospace;
-    line-height: 0.9em;
+    line-height: 1.25em;
     overflow: hidden;
 }
 
@@ -48,12 +48,9 @@ div {margin:0;}
 
 .underline { text-decoration: underline; }
 
-/* Inverse - this will make a dotted outline. is there a more
- * ANSI-similar way? */
-.inverse {
-    outline-style: dotted;
-    outline-color: invert;
-}
+/* Inverse - this will make black text on white.
+/*  is there a more ANSI-similar way? */
+.inverse { color: #000; background: #fff}
 
 /* Create blinking text */
 .blink {
@@ -98,10 +95,9 @@ div {margin:0;}
 #inputform {
     position: absolute;
     width: 100%;
-    padding: 0;
+    padding: 0 0 5px 0;
     bottom: 0;
     margin: 0;
-    padding-bottom: 10px;
     border-top: 1px solid #555;
 }
 
