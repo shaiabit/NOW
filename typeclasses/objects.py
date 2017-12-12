@@ -230,16 +230,18 @@ class Object(Tangible):
         this = self.name
         here = self.location
         there = source_location
-        print(there)
         if not there and here.has_account:
-            # This was created from nowhere and added to an account's
-            # inventory; it's probably the result of a create command.
+            # When arriving from nowhere and added to an awake object's
+            # inventory, it may be the result of a create command.
             here.msg("You now have %s%s|n in your possession." % (self.STYLE, this))
             return
-        if there and there != here:  # TODO: Possible Evennia FIXME:
+        if there is here:  # No distance traveled, no announce.
+            return
+        if there:  # Travelled from somewhere
             string = "|g%s|n arrives to %s%s|n from %s%s|n." % (this, here.STYLE, here.key, there.STYLE, there.key)
-        else:
-            string = "|g%s|n suddenly appears in %s%s|n from |xNo|=gth|=fin|=egn|=des|=css|n." % (this, here.STYLE, here.key)
+        else:  # Travelled from nowhere
+            string = "|g%s|n suddenly appears in %s%s|n from |xNo|=gth|=fin|=egn|=des|=css|n." %\
+                     (this, here.STYLE, here.key)
         here.msg_contents(string, exclude=self)
 
     def at_object_creation(self):
