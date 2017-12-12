@@ -105,9 +105,9 @@ class CmdSpoof(MuxCommand):
     """
     Send a spoofed message to your current location.
     Usage:
-      spoof <message>
+      spoof <message>   or
+      .<literal text>
     Switches:
-    /dot . <msg>  Remove leading dot, but preserve leading spaces after it
     /center <msg> [ = position ]  Center msg at position
     /right <msg> [ = position ]   Align right at position
     /indent <msg> [ = position ]  Begin msg starting at position
@@ -173,12 +173,13 @@ class CmdSpoof(MuxCommand):
                     char.msg(spoof.rstrip(), options={'raw': True})
                 else:
                     here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}), options={'raw': True})
-            elif '.' in cmd:  # Leave leading spacing intact, remove leading dot.
-                spoof = args.lstrip('.')
+            elif '.' in cmd:  # Leave leading spacing intact by using self.raw and not stripping left whitespace
+                # Adding <pre> and </pre> to all output in case one of the viewers is using webclient
+                spoof = self.raw.rstrip()
                 if to_self:
-                    char.msg(spoof.rstrip(), options={'raw': True})
+                    char.msg(('<code>' + spoof + '</code>', {'type': 'spoof'}), options={'raw': True})
                 else:
-                    here.msg_contents(text=(escape_braces(spoof.rstrip()), {'type': 'spoof'}), options={'raw': True})
+                    here.msg_contents(text=('<code>' + spoof + '</code>', {'type': 'spoof'}), options={'raw': True})
             else:
                 if to_self:
                     char.msg(args.rstrip())
