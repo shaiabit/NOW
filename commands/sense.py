@@ -27,6 +27,8 @@ class CmdSense(MuxCommand):
 
     def func(self):
         """Handle sensing objects in different ways, including look."""
+        sessions = self.account.sessions.get()
+        session = sessions[-1] if sessions else None
         char = self.character
         here = char.location if char else None
         account = self.account
@@ -73,19 +75,19 @@ class CmdSense(MuxCommand):
 
                 if aspect:
                     account.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
-                               (cmd, style, obj_string, aspect))
+                                (cmd, style, obj_string, aspect))
                 else:
                     account.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
-                               (cmd, style, obj_string))
+                                (cmd, style, obj_string))
             else:
                 # TODO: Add and verify intent with switches. Mock-up command without switches.
                 account.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
                 if aspect:
                     account.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
-                               (cmd, style, obj_string, aspect, rhs))
+                                (cmd, style, obj_string, aspect, rhs))
                 else:
                     account.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
-                               (cmd, style, obj_string, rhs))
+                                (cmd, style, obj_string, rhs))
             return
         if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
             if 'sense' in cmd:
@@ -182,5 +184,8 @@ class CmdSense(MuxCommand):
         if not obj.access(char, 'view'):
             char.msg("You are unable to sense '%s'." % args)
             return
-        account.msg(obj.return_appearance(char))  # get object's appearance as seen by char
+        if session.protocol_key == 'websocket':
+            account.msg((obj.return_appearance(char), {'type': 'help'}))  # get object's appearance as seen by char
+        else:
+            account.msg(obj.return_appearance(char))  # get object's appearance as seen by char
         obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.
