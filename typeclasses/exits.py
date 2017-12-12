@@ -190,6 +190,7 @@ class Exit(DefaultExit, Tangible):
             self.destination.msg_contents('|b%s|n: %s' % (self.key, text))
         return True
 
+
 SPEED_DESCS = dict(stroll='strolling', walk='walking', run='running', sprint='sprinting', scamper='scampering')
 
 
