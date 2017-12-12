@@ -87,7 +87,7 @@ class Room(Tangible):
             message.append('\n|wVisible exits|n: |lcback|lt|gBack|n|le to %s.'
                            % viewer.db.last_room.get_display_name(viewer))
         if self.ndb.weather_last:
-            message.append('|/|*%s|n' % self.ndb.weather_last)
+            message.append('|/|X|[w%s|n' % self.ndb.weather_last)
         if self.return_glance(viewer, bool=True):  # Glance to see what is within the room that can be seen
             message.append(("\n|wHere you find:|n " + self.return_glance(viewer)))  # Glance again to list items.
         return ''.join(message)
@@ -134,6 +134,7 @@ class Room(Tangible):
             new_arrival (Object): the object that just entered this room.
             source_location (Object): the previous location of new_arrival.
         """
+        super(Room, self).at_object_receive(new_arrival, source_location)
         if self.tags.get('rp', category='flags') and not new_arrival.attributes.has('_sdesc'):
             sdesc = self.db.messages and self.db.messages.get('species') or new_arrival.key
             new_arrival.sdesc.add(sdesc)
@@ -347,17 +348,17 @@ class RealmEntry(Room):
         self.db.desc_brief = "An entry point for the realm, this room checks " \
                              "the realm-specific requirements before allowing entry."
 
-    def at_object_receive(self, character, source_location):
+    def at_object_receive(self, new_arrival, source_location):
         """Assign properties on characters"""
-
-        if character.is_superuser:
+        super(RealmEntry, self).at_object_receive(new_arrival, source_location)
+        if new_arrival.is_superuser:
             string = "-" * 78 +\
-                     "|/WARNING: You are playing while superuser. Use the {quell} command|/" \
+                     "|/WARNING: You are playing while superuser. Use the |lc@quell|lt|gquell|le |rcommand|/" \
                      " to play without superuser privileges (many functions and locks are bypassed|/" \
                      " by default by the presence of a superuser, making this mode really only useful|/" \
                      " for exploring things behind the scenes later or entering to make modifications).|/"\
                      + "-" * 78
-            character.msg("|r%s|n" % string.format(quell="|w@quell|r"))
+            new_arrival.msg("|r%s|n" % string.format(quell="|w@quell|r"))
         else:  # setup character for the particular realm:
             pass
 
@@ -819,6 +820,7 @@ class Grid(Room):
             source_location (Object): the previous location of new_arrival.
         """
         super(Grid, self).at_object_receive(new_arrival, source_location)
+        # new_arrival should be placed by last breadcrumb.
 
     def at_object_creation(self):
         """called when the object is first created"""
