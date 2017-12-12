@@ -38,6 +38,7 @@ from commands.desc import CmdDesc
 from commands.flag import CmdFlag
 from commands.home import CmdHome
 from commands.menu import CmdMenu
+from commands.page import CmdPage
 from commands.pose import CmdPose
 from commands.quit import CmdQuit
 from commands.mydie import CmdRoll
@@ -119,6 +120,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdFlag)
         self.add(CmdGive)
         self.add(CmdHome)
+        self.add(CmdPage)
         self.add(CmdPose)
         self.add(CmdZone)
         self.add(CmdSpoof)
@@ -179,6 +181,7 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.add(CmdTry)
         self.add(CmdWho)
         self.add(CmdMail)
+        self.add(CmdPage)
         self.add(CmdPose)
         self.add(CmdQuit)
         self.add(CmdTime)
