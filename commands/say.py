@@ -42,12 +42,35 @@ class CmdSay(MuxCommand):
                                     {'type': 'pose', 'action': True}),
                               from_obj=char, mapping=dict(char=char))
             return
+
+        def parse_say(text):
+            return_text = []
+            for each in text.split():
+                match = None
+                new_each = each
+                word_end = ''
+                if each.startswith('/'):  # A possible substitution to test
+                    if each.endswith('/'):  # Skip this one, it's /italic/
+                        return_text.append(new_each)
+                        continue
+                    search_word = each[1:]
+                    if search_word.startswith('/'):  # Skip this one, it's being escaped
+                        new_each = each[1:]
+                    else:  # Marked for substitution, try to find a match
+                        if "'" in each:  # Test for possessive or contraction:  's  (apostrophe before end of grouping)
+                            pass
+                        if each[-1] in ".,!?":
+                            search_word, word_end = search_word[:-1], each[-1]
+                        match = char.search(search_word, quiet=True)
+                return_text.append(new_each if not match else (match[0].get_display_name(char) + word_end))
+            return ' '.join(return_text)
+
         if 'quote' in opt:
             if len(args) > 2:
                 char.quote = args  # Not yet implemented.
                 return
         else:
-            speech = args
+            speech = parse_say(args)
             verb = char.attributes.get('say-verb') if char.attributes.has('say-verb') else 'says'
             say_prepend = char.db.messages and char.db.messages.get('say prepend')
             prepend = say_prepend if say_prepend else '|w'
