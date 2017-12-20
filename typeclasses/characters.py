@@ -293,7 +293,7 @@ class Character(DefaultCharacter, Tangible):
         """
         sessions = self.sessions.get()
         session = sessions[-1] if sessions else None
-        if len(sessions) == 1:  # Skip doing this is the object is already puppeted.
+        if len(sessions) == 1:  # Skip re-stamping if the object is already puppeted.
             # After an account connects to a character, set the character's timestamp on:
             # Add object to "puppeted" attribute dictionary on self, keyed by self.account.
             # Value is (timestamp on, timestamp off, puppet_count)
