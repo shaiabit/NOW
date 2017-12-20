@@ -24,8 +24,14 @@ class CmdAbout(MuxCommand):
         """Display information about server or target"""
         sessions = self.account.sessions.get()
         session = sessions[-1] if sessions else None
-        char = self.character
-        # account = self.account
+        account = self.account
+        char = self.character or account.db._last_puppet
+        if not char:
+            if account.db._playable_characters[0]:
+                char = account.db._playable_characters[0]
+            else:
+                self.msg('You must have a character to interact with objects.')
+                return
         cmd = self.cmdstring
         opt = self.switches
         args = unicode(self.args).strip()
