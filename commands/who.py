@@ -116,11 +116,11 @@ class CmdWho(MuxAccountCommand):
                 for session in session_list:
                     if not session.logged_in:
                         continue
-                    delta_cmd = time.time() - session.cmd_last_visible
-                    delta_conn = time.time() - session.conn_time
                     character = session.get_puppet()
                     if not character:
                         continue
+                    delta_cmd = time.time() - session.cmd_last_visible
+                    delta_conn = time.time() - session.conn_time
                     table.add_row(character.get_display_name(you), utils.time_format(delta_conn, 0),
                                   utils.time_format(delta_cmd, 1))
         is_one = account_count == 1
