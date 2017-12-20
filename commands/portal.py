@@ -83,9 +83,10 @@ class CmdPortal(MuxCommand):
         if there and there.tags.get('private', category='flags') and not there.access(char, 'control'):
             char.msg('Destination of portal is' + message_private)
             return
-        # Check if A can walk to B, or B to A depending on meet or summon
-        join_message = 'You are being invited to meet {summoner} in {loc}.'
-        meet_message = 'You are being joined by {summoner} from {loc}.'
+        # Check if A can walk to B, or B to A depending on meet or summon,
+        # because sometimes a portal might not be needed.
+        meet_message = 'You are being invited to meet {summoner} in {loc}.'
+        join_message = 'You are being joined by {summoner} from {loc}.'
         summon_message = 'You are being summoned to {loc} by {summoner}.'
         message = meet_message if 'meet' in cmd else (summon_message if 'summon' in cmd else join_message)
         loc_name = loc.get_display_name(target)
@@ -120,14 +121,17 @@ class CmdPortal(MuxCommand):
 
         def close_portal():
             """Remove and store inflatable portals in Nothingness."""
+            vanish_message = '|r{}|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n.'
             for every in portal_enter.contents:
                 every.move_to(target.location)
             for every in portal_exit.contents:
                 every.move_to(loc)
             # if not quiet:
-            portal_enter.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % portal_enter)
-            portal_exit.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % portal_exit)
-            portal_enter.move_to(None, to_none=True)  # , quiet=quiet)
-            portal_exit.move_to(None, to_none=True)  # , quiet=quiet)
+            if portal_enter.location:
+                portal_enter.location.msg_contents(vanish_message.format(portal_enter))
+                portal_enter.move_to(None, to_none=True)  # , quiet=quiet)
+            if portal_exit.location:
+                portal_exit.location.msg_contents(vanish_message.format(portal_exit))
+                portal_exit.move_to(None, to_none=True)  # , quiet=quiet)
 
         delay(180, callback=close_portal)  # Wait, then move portal objects to the portal pool in Nothingness
