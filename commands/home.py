@@ -39,17 +39,17 @@ class CmdHome(MuxCommand):
         account = self.account
         cmd = self.cmdstring
         opt = self.switches
-        if 'sweep' in cmd:
+        args = self.args
+        if 'sweep' in cmd:  # Command to send something home
             opt.append('sweep')
-        if 'abode' in cmd:
+        if 'abode' in cmd:  # Command to set home
             opt.append('here')
-        if 'room' in cmd:
+        if 'room' in cmd:  # Command to go to room
             opt.append('room')
-        # you potentially has two homes.
         room = you.db.objects['home'] if you.db.objects and you.db.objects.get('home', False) else you.home
         home = room if 'room' in opt else you.home
-        abode = 'here' in opt  # Command to set home here
-        if 'room' in opt:
+        abode = 'here' in opt
+        if 'room' in opt or not (opt or args):  # Command to go home or to room
             if not home:
                 you.msg('You have no home yet.')
             else:
@@ -63,15 +63,15 @@ class CmdHome(MuxCommand):
                 you.msg("There's no place like home ...")
                 you.move_to(home, use_destination=False)
         else:
-            if not self.args:
-                obj = you
+            if not args:  # If nothing is specified to send home, then
+                obj = you  # send you home
             else:
-                obj = you.search(self.lhs, global_search=True)
+                obj = you.search(self.lhs, global_search=True)  # send something else home
             if not obj:
                 return
-            if 'sweep' in opt:
-                home = obj.home
-                if not home:
+            if 'sweep' in opt:  # If the option is sweeping,
+                home = obj.home  # then something is going to its home
+                if not home:  # (assuming it has a home)
                     you.msg('%s has no home yet.' % obj.get_display_name(account))
                 elif home == obj.location:
                     you.msg('%s is already home!' % obj.get_display_name(account))
