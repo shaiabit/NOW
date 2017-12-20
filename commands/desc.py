@@ -98,16 +98,19 @@ class CmdDesc(MuxCommand):
                 if not user_input.strip():
                     self.caller.msg('|yNo description given - |wcurrent description unchanged.')
                     return
-                msg = "%s's appearance begins to change." % self.character.get_display_name(caller.sessions)
+                msg = "{}'s appearance begins to change."
                 contents = caller.location.contents
                 for obj in contents:
-                    obj.msg(msg)
+                    obj.msg(msg.format(target.get_display_name(obj)))
                 if 'side' in opt:
                     caller.db.desc_side = user_input.strip()
+                elif 'room' in opt:
+                    target.db.desc = user_input.strip()
                 else:
                     caller.db.desc = user_input.strip()
 
-            get_input(char, "Type your description now, and then |g[enter]|n: ", desc_callback)
+            get_input(char, "Type a description for {} now, and then |g[enter]|n: ".format(
+                target.get_display_name(char)), desc_callback)
             return
         if 'brief' in opt:
             self.caller.db.desc_brief = self.args[0:65].strip()
