@@ -59,17 +59,17 @@ class Tangible(DefaultObject):
             if this is defined.
                 including the DBREF if viewer is privileged to control this.
         """
-        if type(viewer) is 'ServerSession':
+        name = self.key
+        if not viewer:
             viewer = viewer.get_puppet_or_account
         if inherits_from(viewer, "evennia.accounts.accounts.DefaultAccount"):
             viewer = viewer.get_puppet(viewer.sessions.all()[0])  # viewer is an Account, convert to tangible
-        if not viewer or not viewer.has_account:
-            return ''
+        if not (viewer and viewer.has_account):
+            return '{}{}|n'.format(self.STYLE, name)
         color, pose = [kwargs.get('color', True), kwargs.get('pose', False)]  # Read kwargs, set defaults.
         mxp, db_id = [kwargs.get('mxp', False), kwargs.get('db_id', True)]
         if kwargs.get('plain', False):  # "plain" means "without color, without db_id"
             color, db_id = [False, False]
-        name = self.key
         display_name = ("%s%s|n" % (self.STYLE, name)) if color else name
         if mxp:
             display_name = "|lc%s|lt%s|le" % (mxp, display_name)
