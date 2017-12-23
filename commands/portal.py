@@ -71,13 +71,15 @@ class CmdPortal(MuxCommand):
             puppet = session.get_puppet()
             if lhs.lower() in puppet.get_display_name(char, plain=True).lower():
                 target.append(puppet)
+        first_target = target[0]
+        target = list(set(target))  # Remove duplicate character sessions
         if len(target) < 1:
             char.msg("Specific character name not found.")
             return
         elif len(target) > 1:  # Too many partial matches, try exact matching.
             char.msg("Unique character name not found.")
             return
-        target = target[0]
+        target = first_target
         # Check for private flag on destination room. If so, check for in/out locks.
         there = target.location
         if there and there.tags.get('private', category='flags') and not there.access(char, 'control'):
