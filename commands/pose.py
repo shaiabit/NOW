@@ -38,6 +38,7 @@ class CmdPose(MuxCommand):
     # (optional success message if anvil can be lifted.)
     key = 'pose'
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
+    arg_regex = None
     options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
     locks = 'cmd:all()'
     account_caller = True

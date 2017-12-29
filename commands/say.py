@@ -17,6 +17,7 @@ class CmdSay(MuxCommand):
     """
     key = 'say'
     aliases = ['"', "'"]
+    arg_regex = None
     locks = 'cmd:all()'
     options = ('ooc', 'quote', 'verb')
 
@@ -100,6 +101,7 @@ class CmdOoc(MuxCommand):
     """
     key = 'ooc'
     aliases = ['_']
+    arg_regex = None
     locks = 'cmd:all()'
 
     def func(self):
@@ -140,6 +142,7 @@ class CmdSpoof(MuxCommand):
     """
     key = 'spoof'
     aliases = ['.', 'sp']
+    arg_regex = None
     locks = 'cmd:all()'
     options = ('center', 'right', 'indent', 'news', 'strip', 'self')
 
