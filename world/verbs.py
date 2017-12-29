@@ -45,6 +45,23 @@ class VerbHandler:
             self.s.location.msg_contents('{object} %s' % self.o.db.messages[self.v],
                                          mapping=dict(object=self.o))
 
+    def audit(self):
+        """Implements viewing visitor log for this object."""
+        hosted = self.o.db.hosted
+        if hosted:
+            import time
+            from evennia.utils import utils
+            now = int(time.time())
+            loc_name = self.o.get_display_name(self.s)
+            for each in hosted:
+                delta_t = now - hosted[each][0]
+                v_name = each.get_display_name(self.s)
+                v_count = hosted[each][2]
+                plural = 's' if v_count != 1 else ''
+                from_name = hosted[each][1].get_display_name(self.s) if hosted[each][1] else 'here'
+                self.s.msg('{} visited {} {} time{}, last visited {} ago from {}.'.format(
+                    v_name, loc_name, v_count, plural, utils.time_format(delta_t, 2), from_name))
+
     def destroy(self):
         """Implements destroying this object."""
         if not self.o.tags.get('pool'):
@@ -78,6 +95,9 @@ class VerbHandler:
 
     def examine(self):
         self.s.account.execute_cmd('examine %s' % self.o.get_display_name(self.s, plain=True))
+
+    def exit(self):
+        self.leave()
 
     def follow(self):
         """Set following agreement - subject follows object"""
@@ -115,7 +135,7 @@ class VerbHandler:
                                          from_obj=self.s, mapping=dict(it=self.o))
             self.o.at_get(self.s)  # calling hook method
 
-    def leave(self):  # FIXME: "depart/exit" should be an alias of "leave"
+    def leave(self):
         if self.s.location != self.o:
             self.s.msg("You are not aboard %s." % self.o.get_display_name(self.s))
             return
