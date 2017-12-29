@@ -57,7 +57,7 @@ class CmdWho(MuxAccountCommand):
                 location = place.get_display_name(you) if place else (settings.NOTHINGNESS + '|n')
                 table.add_row(len(locations[place]), location, '?',
                               ', '.join(each.get_display_name(you) for each in locations[place]),
-                              'Summon or walk')
+                              '')  # TODO - Directions to location
         elif cmd == 'ws':
             my_character = self.caller.get_puppet(self.session)
             if not (my_character and my_character.location):
@@ -104,11 +104,11 @@ class CmdWho(MuxAccountCommand):
                         continue
                     account = session.get_account()
                     puppet = session.get_puppet()
+                    address = isinstance(session.address, tuple) and session.address[0] or session.address
                     table.add_row(puppet.get_display_name(you) if puppet else 'None',
                                   account.get_display_name(you),
                                   '|gYes|n' if account.attributes.get('_quell') else '|rNo|n',
-                                  session.cmd_total, session.protocol_key,
-                                  isinstance(session.address, tuple) and session.address[0] or session.address)
+                                  session.cmd_total, session.protocol_key, address)
             else:  # unprivileged info shown to everyone, including Immortals and higher when quelled
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
                 table.reformat_column(0, width=40, align='l')
