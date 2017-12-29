@@ -3,6 +3,7 @@ import evennia
 from evennia.utils.utils import delay
 from commands.command import MuxCommand
 from evennia.server.sessionhandler import SESSIONS
+from django.conf import settings
 
 
 class CmdPortal(MuxCommand):
@@ -71,14 +72,14 @@ class CmdPortal(MuxCommand):
             puppet = session.get_puppet()
             if lhs.lower() in puppet.get_display_name(char, plain=True).lower():
                 target.append(puppet)
-        first_target = target[0]
-        target = list(set(target))  # Remove duplicate character sessions
         if len(target) < 1:
             char.msg("Specific character name not found.")
             return
         elif len(target) > 1:  # Too many partial matches, try exact matching.
             char.msg("Unique character name not found.")
             return
+        first_target = target[0]
+        target = list(set(target))  # Remove duplicate character sessions
         target = first_target
         # Check for private flag on destination room. If so, check for in/out locks.
         there = target.location
@@ -116,14 +117,14 @@ class CmdPortal(MuxCommand):
             if quiet:
                 target.msg('{} quietly appears in {}.'.format(portal_enter.get_display_name(target), loc_name))
                 char.msg('{} quietly appears in {}.'.format(portal_exit.get_display_name(char),
-                                                             loc.get_display_name(char)))
+                                                            loc.get_display_name(char)))
             portal_exit.move_to(loc, quiet=quiet)
 
         delay(10, callback=open_portal)  # 10 seconds later, the portal (exit pair) appears.
 
         def close_portal():
             """Remove and store inflatable portals in Nothingness."""
-            vanish_message = '|r{}|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n.'
+            vanish_message = '|r{}|n vanishes into ' + settings.NOTHINGNESS + '.'
             for every in portal_enter.contents:
                 every.move_to(target.location)
             for every in portal_exit.contents:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from commands.command import MuxAccountCommand
+from django.conf import settings
 from evennia.server.sessionhandler import SESSIONS
 from evennia.utils import ansi, utils, create, search, evtable
 
@@ -53,7 +54,7 @@ class CmdWho(MuxAccountCommand):
                     locations[character.location] = []
                 locations[character.location].append(character)  # Build the list of who's in a location
             for place in locations:
-                location = place.get_display_name(you) if place else '|xNo|=gth|=fin|=egn|=des|=css|n'
+                location = place.get_display_name(you) if place else (settings.NOTHINGNESS + '|n')
                 table.add_row(len(locations[place]), location, '?',
                               ', '.join(each.get_display_name(you) for each in locations[place]),
                               'Summon or walk')

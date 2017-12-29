@@ -15,6 +15,7 @@ from evennia.utils import list_to_string
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 from evennia.comms.models import ChannelDB, Msg  # To find and
 from evennia.comms.channelhandler import CHANNELHANDLER  # Send to public channel
+from django.conf import settings
 import time  # Check time since last visit
 
 
@@ -226,14 +227,14 @@ class Character(DefaultCharacter, Tangible):
         for viewer in here.contents:
             if viewer == self:
                 continue
-            src_name = '|xNo|=gth|=fin|=egn|=des|=css'
+            src_name = settings.NOTHINGNESS
             if source_location:
                 src_name = source_location.get_display_name(viewer)
             message = ['|g%s' % self.get_display_name(viewer, color=False)]
             if here:
                 depart_name = here.get_display_name(viewer)
             else:
-                depart_name = '|xNo|=gth|=fin|=egn|=des|=css'
+                depart_name = settings.NOTHINGNESS
             if self.ndb.riders and len(self.ndb.riders) > 0:
                 if len(self.ndb.riders) > 1:
                     message.append(', |g' + '%s' % '|n, |g'.join(rider.get_display_name(viewer, color=False))

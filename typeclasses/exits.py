@@ -10,6 +10,7 @@ from evennia import utils, Command
 from evennia import DefaultExit
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
+from django.conf import settings
 from traits import TraitHandler
 
 
@@ -88,7 +89,7 @@ class Exit(DefaultExit, Tangible):
         else:
             leads_to = self.destination.get_display_name(
                 viewer, mxp='sense ' + self.destination.key) if self.destination else\
-                '|xNo|=gth|=fin|=egn|=des|=css|n. |lcback|ltGo |gback|le.'
+                (settings.NOTHINGNESS + '|n. |lcback|ltGo |gback|le.')
             desc_seen += "leads to %s" % leads_to
         if exits:
             desc_seen += "\n|wExits: " + ", ".join(e.get_display_name(viewer) for e in exits)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from commands.command import MuxCommand
+from django.conf import settings
 
 
 class CmdTeleport(MuxCommand):
@@ -98,7 +99,7 @@ class CmdTeleport(MuxCommand):
         if to_none:  # teleporting to Nothingness
             if not args and char:
                 target = char
-                account.msg("|*Teleported to |xNo|=gth|=fin|=egn|=des|=css.|n")
+                account.msg('Teleported to ' + settings.NOTHINGNESS + '|n.')
                 if char and char.location and not tel_quietly:
                     char.location.msg_contents("|r%s|n vanishes." % char, exclude=char)
             else:
@@ -107,19 +108,20 @@ class CmdTeleport(MuxCommand):
                 else:
                     target = search_as.search(lhs, global_search=True, exact=False)
                 if not target:
-                    account.msg("Did not find object to teleport.")
+                    account.msg('Did not find object to teleport.')
                     return
                 if not (account.check_permstring('mage') or target.access(account, 'control')):
-                    account.msg("You must have |wMage|n or higher power to "
-                                "send something into |xNo|=gth|=fin|=egn|=des|=css|n.")
+                    account.msg('You must have |wMage|n or higher power to '
+                                'send something into ' + settings.NOTHINGNESS + '|n.')
                     return
-                account.msg("Teleported %s -> None-location." % (target.get_display_name(char)))
+                account.msg('Teleported %s -> None-location.' % (target.get_display_name(char)))
                 if target.location and not tel_quietly:
                     if char and char.location == target.location and char != target:
-                        target.location.msg_contents("%s%s|n sends %s%s|n into |xNo|=gth|=fin|=egn|=des|=css|n."
-                                                     % (char.STYLE, char, target.STYLE, target))
+                        target.location.msg_contents('%s%s|n sends %s%s|n into ' %
+                                                     (char.STYLE, char, target.STYLE, target)
+                                                     + settings.NOTHINGNESS + '|n.')
                     else:
-                        target.location.msg_contents("|r%s|n vanishes into |xNo|=gth|=fin|=egn|=des|=css|n." % target)
+                        target.location.msg_contents('|r%s|n vanishes into' % target + settings.NOTHINGNESS + '|n.')
             target.location = None
             return
         if not args:

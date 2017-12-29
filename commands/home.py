@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from commands.command import MuxCommand
 from evennia.utils import utils, search
+from django.conf import settings
 
 
 class CmdHome(MuxCommand):
@@ -92,7 +93,7 @@ class CmdHome(MuxCommand):
                     was = obj.location
                     obj.move_to(home, use_destination=False)
                     if you.location != was:
-                        source_location_name = was.get_display_name(you) if was else '|xNo|=gth|=fin|=egn|=des|=css|n'
+                        source_location_name = was.get_display_name(you) if was else (settings.NOTHINGNESS + '|n')
                         you.msg("%s left %s and went home to %s."
                                 % (obj.get_display_name(you), source_location_name, home.get_display_name(you)))
                 return

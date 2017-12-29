@@ -2365,8 +2365,8 @@ class CmdTeleport(COMMAND_DEFAULT_CLASS):
                 return
             caller.msg("Teleported %s -> None-location." % obj_to_teleport)
             if obj_to_teleport.location and not tel_quietly:
-                obj_to_teleport.location.msg_contents("%s teleported %s into |xNo|=gth|=fin|=egn|=des|=css."
-                                                      % (caller, obj_to_teleport),
+                obj_to_teleport.location.msg_contents('%s teleported %s into %s.'
+                                                      % (caller, obj_to_teleport, settings.NOTHINGNESS),
                                                       exclude=caller)
             obj_to_teleport.location = None
             return

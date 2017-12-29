@@ -14,6 +14,7 @@ from traits import TraitHandler
 from evennia.utils.evmenu import get_input
 from world.helpers import make_bar, mass_unit
 from commands.poll import PollCmdSet
+from django.conf import settings
 
 
 class Junk(DefaultObject):
@@ -240,8 +241,8 @@ class Object(Tangible):
         if there:  # Travelled from somewhere
             string = "|g%s|n arrives to %s%s|n from %s%s|n." % (this, here.STYLE, here.key, there.STYLE, there.key)
         else:  # Travelled from nowhere
-            string = "|g%s|n suddenly appears in %s%s|n from |xNo|=gth|=fin|=egn|=des|=css|n." %\
-                     (this, here.STYLE, here.key)
+            string = "|g%s|n suddenly appears in %s%s|n from %s|n." %\
+                     (this, here.STYLE, here.key, settings.NOTHINGNESS)
         here.msg_contents(string, exclude=self)
 
     def at_object_creation(self):
