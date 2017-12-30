@@ -93,9 +93,7 @@ class Character(DefaultCharacter, Tangible):
         """
         # Spawn a new room with locks:
         home_room_name = self.name + "'s place"
-        home_room_desc = "|nYou can always type '|groom|n' to get here. " \
-                         "You may |gdesc/room ...|n to change it, and you can check out some " \
-                         "|gcolor ansi|n to spruce it up. "
+        home_room_desc = settings.HOME_ROOM_DESC
         home_room_locks = 'control:id({0}) or perm(wizard);edit:id({0}) ' \
                           'or perm(helpstaff)'.format(self.id)
         home_room_tags = [('private', 'flags')]
