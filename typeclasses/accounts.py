@@ -140,7 +140,7 @@ class Account(DefaultAccount):
             text += ('\n|wSuccessful login. Welcome, %s!' % self.key)
             if webclient:
                 session.msg(
-                    image=['http://marketingland.com/wp-content/ml-loads/2014/08/google-now-fade-1920-800x450.jpg'])
+                    image=['http://216.158.234.197:8000/static/website/images/nowlogo.png'])
             session.msg(text)
             session.execute_cmd('@ic')
 
