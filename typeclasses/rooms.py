@@ -159,7 +159,7 @@ class Room(Tangible):
                             channel[0].msg('* %s\'s %s experience * %s%s' % (new_arrival.key, tick[4], notice, show),
                                            keep_log=False)
                 if counter == 0:  # No weather ticker! Add a weather ticker.
-                    interval = random.randint(12, 30) * 10
+                    interval = random.randint(24, 60) * 10
                     TICKER_HANDLER.add(interval=interval, callback=self.update_weather, idstring='Weather')
             for obj in self.contents_get(exclude=new_arrival):
                 if hasattr(obj, 'at_new_arrival'):
@@ -213,9 +213,9 @@ class Room(Tangible):
         if empty_room:
             return
         if slow_room:
-            self.attempt_weather_update(0.05)  # only attempt update 5% of the time
+            self.attempt_weather_update(0.02)  # only attempt update 2% of the time
         else:
-            self.attempt_weather_update(0.20)
+            self.attempt_weather_update(0.15)
 
     @classmethod
     def get_room_at(cls, x, y, z):
