@@ -67,8 +67,11 @@ class CmdHome(MuxCommand):
             if not args:  # If nothing is specified to send home, then
                 obj = you  # send you home
             else:
-                obj = you.search(self.lhs, global_search=True)  # send something else home
-            if not obj:
+                afar = account.check_permstring('helpstaff')  # helpstaff can sweep from afar.
+                obj = you.search(self.lhs, global_search=afar)  # send something else home
+            if not obj or not obj.location:  # Tangibles in nothingness remain there
+                if obj:
+                    self.msg('{} remains in {}.'.format(obj.get_display_name(you), settings.NOTHINGNESS))
                 return
             if 'sweep' in opt:  # If the option is sweeping,
                 home = obj.home  # then something is going to its home
