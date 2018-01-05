@@ -43,7 +43,6 @@ class CmdDesc(MuxCommand):
 
     def edit_handler(self):
         char = self.character
-        opt = self.switches
         target = self.target
         if self.args:
             self.msg("|yYou may specify a description, or use the edit switch, "

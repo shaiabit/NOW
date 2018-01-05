@@ -14,7 +14,6 @@ class CmdChange(MuxCommand):
     /symbol Change a setting to a single character
     /clear  Cause a setting to be removed
     /show   Display the value of settings starting with
-    /name   Change or display the full name of a controlled object
     /verb   Change or display the key of a verb
     /detail Set the text for this object's detail entry
     /sense  Link a sense to a detail entry
@@ -25,7 +24,7 @@ class CmdChange(MuxCommand):
     key = 'change'
     aliases = ['clear', 'show']
     locks = 'cmd:all()'
-    options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'name', 'verb', 'detail', 'sense')
+    options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'verb', 'detail', 'sense')
     parse_using = ' to '
     help_category = 'Building'
     account_caller = True
@@ -46,7 +45,15 @@ class CmdChange(MuxCommand):
         account = self.account
         setting = char.db.settings or {}
         message = char.db.messages or {}
-        
+
+        if lhs == 'desc':
+            extra = (' ' + rhs) if rhs else ''
+            char.execute_cmd('desc' + extra)
+            return
+        if lhs == 'name':
+            extra = (' ' + rhs) if rhs else ''
+            char.execute_cmd('name' + extra)
+            return
         if ' to ' in lhs or '=' in lhs:
             self.msg('Invalid key string:  Key can not contain = or " to ".   Nothing done.')
             return
@@ -115,19 +122,23 @@ class CmdChange(MuxCommand):
                 char.db.messages = {}
             messages_filtered = {i: messages[i] for i in messages if i.lower().startswith(args.lower())} if\
                 args else messages
-            account.msg('Listing %s message settings: |g%s'
-                        % (char.get_display_name(account), '|n, |g'.join('|g%s|n: |c%s|n'
-                                                                         % (each, messages_filtered[each])
-                                                                         for each in messages_filtered)))
+            if messages_filtered:
+                account.msg('Listing %s message settings: |g%s' % (
+                    char.get_display_name(account), '|n, |g'.join('|g%s|n: |c%s|n' % (each, messages_filtered[each])
+                                                                  for each in messages_filtered)))
+            else:
+                account.msg('No messages to change yet.')
             settings = char.db.settings
             if not settings:
                 char.db.settings = {}
             settings_filtered = {i: settings[i] for i in settings if i.lower().startswith(args.lower())} if\
                 args else settings
-            account.msg('Listing %s control panel settings: |g%s'
-                        % (char.get_display_name(account), '|n, |g'.join('|lcchange %s|lt%s|le|n: |c%s'
-                                                                         % (each, each, settings_filtered[each])
-                                                                         for each in settings_filtered)))
+            if settings_filtered:
+                account.msg('Listing %s control panel settings: |g%s' % (
+                    char.get_display_name(account), '|n, |g'.join('|lcchange %s|lt%s|le|n: |c%s' % (
+                        each, each, settings_filtered[each]) for each in settings_filtered)))
+            else:
+                account.msg('No toggle settings to change yet.')
             return  # Listing messages and settings is done
         # Some other action still needs to be done
         action = 'message' if rhs else 'toggle'
