@@ -40,6 +40,8 @@ INLINEFUNC_ENABLED = False  # Needs testing before use.
 
 IDLE_TIMEOUT = 5 * 60 * 60  # 5 hours
 
+DELAY_CMD_LOGINSTART = 0.6
+
 MULTISESSION_MODE = 1
 
 IRC_ENABLED = True  # @irc2chan Public = irc.furnet.org 7000 #NOW NOW
