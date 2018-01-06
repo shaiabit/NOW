@@ -113,7 +113,7 @@ class Tangible(DefaultObject):
             message += text
         self.msg(message)
 
-    def return_glance(self, viewer, bool=False):
+    def return_glance(self, viewer, bool=False, oob=False):
         """
         Displays the name or sdesc of the object with its room pose in a viewer-aware manner.
         If self is in Nothingness, shows inventory contents instead of room contents.
@@ -123,6 +123,7 @@ class Tangible(DefaultObject):
             viewer (TypedObject): The object or account that is looking
                 at/getting information for this object.
             bool (bool): Return True instead of a string list.
+            oob (bool): Include viewer as if out of body.
 
         Returns:
             name (str): A string of the name or sdesc containing the name of the objects
@@ -131,9 +132,9 @@ class Tangible(DefaultObject):
         """
         users, things = [], []
         if self.location:
-            visible = (con for con in [self] + self.contents if con != viewer and con.access(viewer, 'view'))
+            visible = (con for con in [self] + self.contents if con.access(viewer, 'view'))
         else:
-            visible = (con for con in self.contents if con != viewer and con.access(viewer, 'view'))
+            visible = (con for con in self.contents if (con != viewer or oob) and con.access(viewer, 'view'))
         for con in visible:
             if con.has_account:
                 users.append(con)
@@ -147,7 +148,7 @@ class Tangible(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
-            return True if bool else (user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';')
+            return True if bool else ((user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';') + '.')
         return False if bool else '%sYou|n see nothing here.' % viewer.STYLE
 
     def return_detail(self, detail_key, detail_sense):

@@ -22,14 +22,15 @@ class CmdSense(MuxCommand):
     """
     key = 'sense'
     aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen', 'glance']
+    options = ('all',)
     locks = 'cmd:all()'
-    arg_regex = r'\s|$'
 
     def func(self):
         """Handle sensing objects in different ways, including look."""
         sessions = self.account.sessions.get()
         session = sessions[-1] if sessions else None
         char = self.character
+        opt = self.switches
         here = char.location if char else None
         account = self.account
         if not (char and here):
@@ -59,7 +60,8 @@ class CmdSense(MuxCommand):
         if cmd == 'glance':
             if here and not args:
                 obj = here
-            sights = obj.return_glance(char)
+            oob = 'all' in opt
+            sights = obj.return_glance(char, oob=oob)
             if sights:
                 account.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
             else:
