@@ -199,8 +199,8 @@ class Character(DefaultCharacter, Tangible):
             message = ['|r%s' % name]
             if self.ndb.riders and len(self.ndb.riders) > 0:  # Plural exit message: Riders
                 if len(self.ndb.riders) > 1:
-                    message.append(', |r' + '%s|n' % '|n, |r'.join(rider.get_display_name(viewer, color=False))
-                                   for rider in self.ndb.riders[:-1])
+                    for rider in self.ndb.riders[:-1]:
+                        message.append('|n, |r' + rider.get_display_name(viewer, color=False))
                 message.append(' and |r%s|n are ' % self.ndb.riders[-1].get_display_name(viewer, color=False))
             else:  # Singular exit message: no riders
                 message.append(' is ')
