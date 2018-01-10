@@ -54,6 +54,7 @@ from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
 from commands.teleport import CmdTeleport
 from commands.inventory import CmdInventory
+from commands.prelogin import CmdUnconnectedAbout
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -217,6 +218,7 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
         self.add(prelogin.CmdUnconnectedCreate())
         self.add(prelogin.CmdUnconnectedQuit())
         self.add(prelogin.CmdUnconnectedLook())
+        self.add(prelogin.CmdUnconnectedAbout())
         self.add(prelogin.CmdUnconnectedHelp())
         self.add(prelogin.CmdUnconnectedScreenreader())
 

@@ -22,8 +22,8 @@ from evennia.commands.cmdhandler import CMD_LOGINSTART
 COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
 
 # limit symbol import for API
-__all__ = ('CmdWhoUs', 'CmdUnconnectedConnect', 'CmdUnconnectedCreate',
-           'CmdUnconnectedQuit', 'CmdUnconnectedLook', 'CmdUnconnectedHelp')
+__all__ = ('CmdWhoUs', 'CmdUnconnectedConnect', 'CmdUnconnectedCreate', 'CmdUnconnectedQuit',
+           'CmdUnconnectedLook', 'CmdUnconnectedAbout', 'CmdUnconnectedHelp')
 
 MULTISESSION_MODE = settings.MULTISESSION_MODE
 CONNECTION_SCREEN_MODULE = settings.CONNECTION_SCREEN_MODULE
@@ -394,6 +394,27 @@ class CmdUnconnectedQuit(COMMAND_DEFAULT_CLASS):
         """Simply close the connection."""
         session = self.caller
         session.sessionhandler.disconnect(session, "Good bye! Disconnecting.")
+
+
+class CmdUnconnectedAbout(COMMAND_DEFAULT_CLASS):
+    """
+    about when in unlogged-in state
+
+    Usage:
+      about
+
+    This is an unconnected version of the about command for simplicity.
+
+    This is called by the server and kicks everything in gear.
+    All it does is display the about screen.
+    """
+    key = 'about'
+    aliases = ['a']
+    locks = 'cmd:all()'
+
+    def func(self):
+        """Show the about text."""
+        self.caller.msg(settings.ABOUT_TEXT)
 
 
 class CmdUnconnectedLook(COMMAND_DEFAULT_CLASS):

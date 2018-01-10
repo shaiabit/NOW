@@ -86,6 +86,8 @@ HOME_ROOM_DESC = 'You may |gdesc/room ...|n to change it, and ' \
                  'Use |ghelp|n with only the 1st word of each of those.'
 # Other settings
 ######################################################################
+ABOUT_TEXT = 'NOW is an alpha build mu* made possible by early adopters, ' \
+             'testers, and designers who show up regularly, and believe.'
 NOTHINGNESS = '|=zNo|=wth|=min|=jgn|=ies|=ds|n'
 RAINBOW = '|Rr|430a|yi|Gn|bb|co|mw'
 APPLE = '|r((|g`|r)|n'
