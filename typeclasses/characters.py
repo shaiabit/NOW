@@ -304,7 +304,7 @@ class Character(DefaultCharacter, Tangible):
             else:
                 self.db.puppeted = {self.account: (now, None, puppet_count)}
             channel = ChannelDB.objects.channel_search('Public')
-            if channel[0]:
+            if channel and channel[0]:
                 channel[0].msg('|c%s |gis now active.' % self.key, keep_log=True)
             text = 'fades into view' if self.location != self.home else 'awakens'
             for each in self.location.contents:
@@ -355,7 +355,7 @@ class Character(DefaultCharacter, Tangible):
                 else:
                     self.db.puppeted = {account: (last_entry[0], now, last_entry[2])}
                 channel = ChannelDB.objects.channel_search('Public')
-                if channel[0]:
+                if channel and channel[0]:
                     channel[0].msg('|c%s |ris now inactive.' % self.key, keep_log=True)
                 if not at_home:  # ... and its not home...
                     self.location = None  # store in Nothingness.
