@@ -148,7 +148,7 @@ class Room(Tangible):
                     if tick[0] == self and tick[1] == 'update_weather':
                         notice = ''
                         counter += 1
-                        show = '20%% chance every %s seconds in ' % tick[3]
+                        show = '15%% chance every %s seconds in ' % tick[3]
                         show += "%s%s" % (tick[0] or "[None]", tick[0] and " (#%s)" %
                                           (tick[0].id if hasattr(tick[0], 'id') else '') or '')
                         if counter > 1:
@@ -194,7 +194,7 @@ class Room(Tangible):
     def update_weather(self, *args, **kwargs):
         """
         Called by the tickerhandler at regular intervals. Even so, we
-        only update 20% of the time, picking a random weather message
+        only update 15% of the time, picking a random weather message
         when we do. The tickerhandler requires that this hook accepts
         any arguments and keyword arguments (hence the *args, **kwargs
         even though we don't actually use them in this example)
@@ -401,8 +401,8 @@ class CmdGridMotion(default_cmds.MuxCommand):
         coord = you.ndb.grid_loc
         min = loc.grid('min')
         max = loc.grid('max')
-        if not coord:  # TODO: A default place - this logic should check last crumbs instead.
-            coord = loc.grid('current')
+        if not coord:  # Entered without coordinates, try using last_at
+            coord = loc.last_at(you)
         bound = self.motion(coord)
         into = loc.point(bound, 'into')
         empty = loc.point(bound, 'empty')
@@ -780,6 +780,7 @@ class Grid(Room):
         return results
 
     def point(self, loc, key=None, value=None, **kwargs):
+        """TODO: Docstring here."""
         push, pop = [kwargs.get('push', False), kwargs.get('pop', False)]  # Read kwargs, set defaults.
         entries = self.grid(loc) or {}
         if value:  # Writing an entry.
@@ -799,13 +800,40 @@ class Grid(Room):
         else:  # Reading an entry.
             return entries.get(key, None) if key else entries  # return requested entry or all entries
 
-    def crumbs(self, traveller):
+    def stamps(self, traveller=None):
         """
+        Object within grid leaves stamps as it moves. This method
+        retrieves a list of the stamps in chronological order, so
+        the path through the grid (and which grid areas were and
+        were not visited) can be determined.
 
         Returns:
-            list of breadcrumbs, latest to oldest
+            tuple of coordinates and timestamps, latest to oldest.
+            If traveller is None, return all timestamps. TODO
+            If traveller is not found, return an empty list []
         """
-        pass
+        if traveller is None:
+            return 'TODO'
+        gather = []
+        grid = self.db.grid
+        for each in grid.keys():
+            if each in ('min', 'max', 'current', 'base'):
+                continue
+            for every in grid[each]:
+                if every is traveller:
+                    gather.append((each, grid[each][traveller]))
+        return sorted(gather, key=lambda tup: tup[1], reverse=True)
+
+    def last_at(self, traveller):
+        """
+        Which grid coordinate the traveller last occupied, or
+        traveller is set to be at grid base coordinate.
+        """
+        trail = self.stamps(traveller)
+        if not traveller.ndb.grid_loc and not trail:
+            traveller.ndb.grid_loc = self.grid('base')
+            return self.grid('base')
+        return trail[0][0] if trail else self.grid('base')
 
     def at_object_receive(self, new_arrival, source_location):
         """
@@ -820,7 +848,7 @@ class Grid(Room):
             source_location (Object): the previous location of new_arrival.
         """
         super(Grid, self).at_object_receive(new_arrival, source_location)
-        # new_arrival should be placed by last breadcrumb.
+        self.last_at(new_arrival)
 
     def at_object_creation(self):
         """called when the object is first created"""
