@@ -126,6 +126,8 @@ class CmdSense(MuxCommand):
                                                   (name, obj.get_display_name(char, plain=True), name))
                         elif show_red:
                             collector_list.append("|r%s|n " % name)
+                    if obj is char.location:  # If sensing here, include an OOB glance
+                        char.msg(obj.return_glance(char, oob=True))
                     char.msg(verb_msg + ''.join(collector_list))
             elif 'taste' in cmd or 'touch' in cmd or 'smell' in cmd or 'listen' in cmd:  # Specific sense (not look)
                 if not obj:

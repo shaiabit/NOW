@@ -148,8 +148,15 @@ class Tangible(DefaultObject):
             ut_joiner = ', ' if users and things else ''
             item_list = ", ".join(t.get_display_name(viewer, mxp='sense %s' % t.get_display_name(
                 viewer, plain=True), pose=True) for t in things)
-            return True if bool else ((user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';') + '.')
-        return False if bool else '%sYou|n see nothing here.' % viewer.STYLE
+            if bool:
+                return True
+            glance_result = ((user_list + ut_joiner + item_list).replace('\n', '').replace('.,', ';'))
+            end_character = '' if glance_result[-1:] in ('.', '!', '?', ';', ':') else '.'
+            return glance_result + end_character
+        if bool:
+            return False
+        # See your own pose if OOB mode, else there's nothing here except you.
+        return viewer.get_display_name(viewer, pose=True) if oob else '%sYou|n see no items here.' % viewer.STYLE
 
     def return_detail(self, detail_key, detail_sense):
         """
