@@ -52,7 +52,7 @@ from commands.portal import CmdPortal
 from commands.access import CmdAccess
 from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
-from commands.teleport import CmdTeleport
+from commands.building import CmdTeleport
 from commands.inventory import CmdInventory
 from commands.prelogin import CmdUnconnectedAbout
 
