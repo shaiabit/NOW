@@ -54,6 +54,7 @@ from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
 from commands.building import CmdTeleport
 from commands.inventory import CmdInventory
+from commands.helpstaff import CmdAudit
 from commands.prelogin import CmdUnconnectedAbout
 
 
@@ -187,6 +188,7 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         self.add(CmdQuit)
         self.add(CmdTime)
         self.add(CmdAbout)
+        self.add(CmdAudit)
         self.add(CmdSense)
         self.add(CmdAccess)
         self.add(CmdChange)
