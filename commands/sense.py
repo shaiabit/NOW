@@ -29,11 +29,11 @@ class CmdSense(MuxCommand):
         """Handle sensing objects in different ways, including look."""
         sessions = self.account.sessions.get()
         session = sessions[-1] if sessions else None
-        char = self.character
         sess = self.session
+        char = self.character
+        account = self.account
         opt = self.switches
         here = char.location if char else None
-        account = self.account
         if not (char and here):
             sess.msg('You sense only {}|n.'.format(settings.NOTHINGNESS))
             message = '|gback|n or |ghome' if char else '|g@ic'

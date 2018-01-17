@@ -82,6 +82,7 @@ class CmdPose(MuxCommand):
         opt = self.switches
         args = unicode(self.args).strip()
         lhs, rhs = self.lhs, self.rhs
+        sess = self.session
         char = self.character
         account = self.account
         here = char.location if char else None
@@ -164,7 +165,7 @@ class CmdPose(MuxCommand):
                 if args:
                     account.execute_cmd('pub :%s' % pose)
                 else:
-                    account.msg('Usage: pose <message>   to pose to public channel.')
+                    sess.msg('Usage: pose <message>   to pose to public channel.')
                 return
             if args:
                 if power and self.rhs and 'o' not in self.switches:

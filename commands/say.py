@@ -23,16 +23,17 @@ class CmdSay(MuxCommand):
 
     def func(self):
         """Run the say command"""
+        sess = self.session
+        account = self.account
         char = self.character
         here = char.location if char else None
-        account = self.account
         opt = self.switches
         args = self.args.strip()
         if not (here and char):
             if args:
                 account.execute_cmd('pub %s' % args)
             else:
-                account.msg('Usage: say <message>   to speak on public channel.')
+                sess.msg('Usage: say <message>   to speak on public channel.')
             return
         if not args:
             account.execute_cmd("help say")
