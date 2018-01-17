@@ -29,15 +29,14 @@ class CmdSense(MuxCommand):
         """Handle sensing objects in different ways, including look."""
         sessions = self.account.sessions.get()
         session = sessions[-1] if sessions else None
-        sess = self.session
         char = self.character
         account = self.account
         opt = self.switches
         here = char.location if char else None
         if not (char and here):
-            sess.msg('You sense only {}|n.'.format(settings.NOTHINGNESS))
+            self.msg('You sense only {}|n.'.format(settings.NOTHINGNESS))
             message = '|gback|n or |ghome' if char else '|g@ic'
-            sess.msg('(Type %s|n to return to the NOW.)' % message)
+            self.msg('(Type %s|n to return to the NOW.)' % message)
             return
         args = self.args.strip()
         cmd = self.cmdstring
@@ -64,9 +63,9 @@ class CmdSense(MuxCommand):
             oob = 'all' in opt
             sights = obj.return_glance(char, oob=oob)
             if sights:
-                sess.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
+                self.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
             else:
-                sess.msg('|/You glance at %s, but see nothing.' % obj.get_display_name(char))
+                self.msg('|/You glance at %s, but see nothing.' % obj.get_display_name(char))
             return
         # senses = obj.db.senses
         # details = obj.db.details
@@ -74,23 +73,23 @@ class CmdSense(MuxCommand):
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 # Scan senses before deleting details - make sure not to remove detail if another sense uses it.
-                sess.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+                self.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
 
                 if aspect:
-                    sess.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
-                                (cmd, style, obj_string, aspect))
+                    self.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
+                             (cmd, style, obj_string, aspect))
                 else:
-                    sess.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
-                                (cmd, style, obj_string))
+                    self.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
+                             (cmd, style, obj_string))
             else:
                 # TODO: Add and verify intent with switches. Mock-up command without switches.
-                sess.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
+                self.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
                 if aspect:
-                    sess.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
-                                (cmd, style, obj_string, aspect, rhs))
+                    self.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
+                             (cmd, style, obj_string, aspect, rhs))
                 else:
-                    sess.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
-                                (cmd, style, obj_string, rhs))
+                    self.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
+                             (cmd, style, obj_string, rhs))
             return
         if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
             if 'sense' in cmd:
@@ -190,7 +189,7 @@ class CmdSense(MuxCommand):
             char.msg("You are unable to sense '%s'." % args)
             return
         if session.protocol_key == 'websocket':
-            sess.msg((obj.return_appearance(char), {'type': 'help'}))  # get object's appearance as seen by char
+            self.msg((obj.return_appearance(char), {'type': 'help'}))  # get object's appearance as seen by char
         else:
-            sess.msg(obj.return_appearance(char))  # get object's appearance as seen by char
+            self.msg(obj.return_appearance(char))  # get object's appearance as seen by char
         obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.

@@ -31,12 +31,12 @@ class CmdSay(MuxCommand):
         args = self.args.strip()
         if not (here and char):
             if args:
-                account.execute_cmd('pub %s' % args)
+                account.execute_cmd('pub %s' % args, session=ses)
             else:
-                sess.msg('Usage: say <message>   to speak on public channel.')
+                self.msg('Usage: say <message>   to speak on public channel.')
             return
         if not args:
-            account.execute_cmd("help say")
+            account.execute_cmd("help say", session=sess)
             return
         if 'verb' in opt:
             char.attributes.add('say-verb', args)
@@ -107,17 +107,18 @@ class CmdOoc(MuxCommand):
 
     def func(self):
         """Run the ooc command"""
-        char = self.character
+        sess = self.session
         account = self.account
+        char = self.character
         here = char.location
         args = self.args.strip()
         if not args:
-            account.execute_cmd('help ooc')
+            account.execute_cmd('help ooc', session=sess)
             return
         elif args[0] == '"' or args[0] == "'":
-            account.execute_cmd('say/o ' + args[1:])
+            account.execute_cmd('say/o ' + args[1:], session=sess)
         elif args[0] == ':' or args[0] == ';':
-            account.execute_cmd('pose/o %s' % args[1:])
+            account.execute_cmd('pose/o %s' % args[1:], session=sess)
         else:
             here.msg_contents(text=('[OOC {char}] %s' % escape_braces(args), {'type': 'ooc', 'ooc': True}),
                               from_obj=char, mapping=dict(char=char))
@@ -156,7 +157,7 @@ class CmdSpoof(MuxCommand):
         args = self.args
         to_self = 'self' in opt or not here
         if not args:
-            self.account.execute_cmd('help spoof')
+            self.account.execute_cmd('help spoof', session=self.session)
             return
         # Optionally strip any markup /or/ just escape it,
         stripped = ansi.strip_ansi(args)

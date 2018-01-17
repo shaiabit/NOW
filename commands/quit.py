@@ -50,21 +50,21 @@ class CmdQuit(MuxAccountCommand):
                     session.msg(bye + reason + '/ALL|/' + exit_msg, session=session)
                     account.disconnect_session_from_account(session, reason + '/ALL')
             if boot:
-                sess.msg(bye + 'all other sessions. |gThis session remains connected.|n')
+                self.msg(bye + 'all other sessions. |gThis session remains connected.|n')
         else:
             session_count = len(account.sessions.all())
             online = utils.time_format(time.time() - sess.conn_time, 1)
             if session_count == 2:
                 msg = bye
                 others = [x for x in self.account.sessions.get() if x is not sess]
-                sess.msg(msg + 'after ' + online + ' online.', session=sess)
-                sess.msg(msg + 'your other session. |gThis session remains connected.|n', session=others)
+                self.msg(msg + 'after ' + online + ' online.')
+                self.msg(msg + 'your other session. |gThis session remains connected.|n', session=others)
             elif session_count > 2:
                 msg = bye + "%i sessions are still connected."
-                sess.msg(msg % (session_count - 1))
+                self.msg(msg % (session_count - 1))
             else:
                 # If quitting the last available session, give connect time.
                 msg = bye + 'after ' + online + ' online. '
-                sess.msg(msg, session=sess)
-            sess.msg(exit_msg, session=sess)
+                self.msg(msg)
+            self.msg(exit_msg)
             account.disconnect_session_from_account(sess, reason)

@@ -154,7 +154,7 @@ class CmdPose(MuxCommand):
             elif not rhs:
                 self.set_doing(char, pose)  # Setting temp doing message on the setter...
                 if args and not ('silent' in opt or 'quiet' in opt) and char is target:  # Allow set without posing
-                    account.execute_cmd(';%s' % pose)  # pose to the room like a normal pose would.
+                    account.execute_cmd(';%s' % pose, session=sess)  # pose to the room like a normal pose would.
             char.msg("Pose now set to: '%s'" % target.get_display_name(char, pose=True))  # Display name with pose.
         else:  # ---- Action pose, not static Room Pose. ---------------------
             if '|/' in pose:
@@ -163,14 +163,14 @@ class CmdPose(MuxCommand):
                 char.msg("Pose magnet glyphs are %s." % non_space_chars)
             if not (here and char):
                 if args:
-                    account.execute_cmd('pub :%s' % pose)
+                    account.execute_cmd('pub :%s' % pose, session=sess)
                 else:
-                    sess.msg('Usage: pose <message>   to pose to public channel.')
+                    self.msg('Usage: pose <message>   to pose to public channel.')
                 return
             if args:
                 if power and self.rhs and 'o' not in self.switches:
                     char.ndb.power_pose = pose
-                    account.execute_cmd(self.rhs)
+                    account.execute_cmd(self.rhs, session=sess)
                 else:
                     ooc = 'ooc' in self.switches
                     prepend_ooc = '[OOC] ' if ooc else ''
@@ -178,4 +178,4 @@ class CmdPose(MuxCommand):
                                        {'type': 'pose', 'ooc': ooc}),
                                       from_obj=char, mapping=dict(char=char))
             else:
-                account.execute_cmd('help pose')
+                account.execute_cmd('help pose', session=sess)

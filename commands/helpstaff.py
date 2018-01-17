@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+The commands for helpstaff level are gathered here.
+Helpstaff is the lowest level of staff, and one step higher than builder,
+so typically requires knowledge of building commands to be effective.
+"""
 from commands.command import MuxCommand
 from django.conf import settings
 from evennia import utils
