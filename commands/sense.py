@@ -30,13 +30,14 @@ class CmdSense(MuxCommand):
         sessions = self.account.sessions.get()
         session = sessions[-1] if sessions else None
         char = self.character
+        sess = self.session
         opt = self.switches
         here = char.location if char else None
         account = self.account
         if not (char and here):
-            account.msg('You sense only {}|n.'.format(settings.NOTHINGNESS))
+            sess.msg('You sense only {}|n.'.format(settings.NOTHINGNESS))
             message = '|gback|n or |ghome' if char else '|g@ic'
-            account.msg('(Type %s|n to return to the NOW.)' % message)
+            sess.msg('(Type %s|n to return to the NOW.)' % message)
             return
         args = self.args.strip()
         cmd = self.cmdstring
@@ -63,9 +64,9 @@ class CmdSense(MuxCommand):
             oob = 'all' in opt
             sights = obj.return_glance(char, oob=oob)
             if sights:
-                account.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
+                sess.msg('|/You glance at %s and see: %s ' % (obj.get_display_name(char), sights))
             else:
-                account.msg('|/You glance at %s, but see nothing.' % obj.get_display_name(char))
+                sess.msg('|/You glance at %s, but see nothing.' % obj.get_display_name(char))
             return
         # senses = obj.db.senses
         # details = obj.db.details
@@ -73,22 +74,22 @@ class CmdSense(MuxCommand):
             if not self.rhs:  # Nothing on the right side
                 # TODO: Delete and verify intent with switches. Mock-up command without switches.
                 # Scan senses before deleting details - make sure not to remove detail if another sense uses it.
-                account.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
+                sess.msg('Functionality to delete aspects and details is not yet implemented.' % self.switches)
 
                 if aspect:
-                    account.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
+                    sess.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |r (detail removed)" %
                                 (cmd, style, obj_string, aspect))
                 else:
-                    account.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
+                    sess.msg("|w%s|n (object) %s%s|n  =  |r (detail removed)" %
                                 (cmd, style, obj_string))
             else:
                 # TODO: Add and verify intent with switches. Mock-up command without switches.
-                account.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
+                sess.msg('Functionality to add aspects and details is not yet implemented.' % self.switches)
                 if aspect:
-                    account.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
+                    sess.msg("|w%s|n (object) %s%s|n's |g%s|n (aspect)  =  |c%s|n (detail)" %
                                 (cmd, style, obj_string, aspect, rhs))
                 else:
-                    account.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
+                    sess.msg("|w%s|n (object) %s%s|n  =  |c%s|n (detail)" %
                                 (cmd, style, obj_string, rhs))
             return
         if cmd != 'l' and 'look' not in cmd:  # Doing non-LOOK stuff in here.
@@ -189,7 +190,7 @@ class CmdSense(MuxCommand):
             char.msg("You are unable to sense '%s'." % args)
             return
         if session.protocol_key == 'websocket':
-            account.msg((obj.return_appearance(char), {'type': 'help'}))  # get object's appearance as seen by char
+            sess.msg((obj.return_appearance(char), {'type': 'help'}))  # get object's appearance as seen by char
         else:
-            account.msg(obj.return_appearance(char))  # get object's appearance as seen by char
+            sess.msg(obj.return_appearance(char))  # get object's appearance as seen by char
         obj.at_desc(looker=char)  # the object's at_desc() method - includes look-notify.
