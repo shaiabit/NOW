@@ -47,7 +47,7 @@ class CmdQuit(MuxAccountCommand):
                         session.msg(exit_msg + reason + '/BOOT', session=session)
                         account.disconnect_session_from_account(session, reason + '/BOOT')
                 else:  # Disconnect them all!
-                    session.msg(exit_msg + reason + '/ALL', session=session)
+                    session.msg(bye + reason + '/ALL|/' + exit_msg, session=session)
                     account.disconnect_session_from_account(session, reason + '/ALL')
             if boot:
                 sess.msg(bye + 'all other sessions. |gThis session remains connected.|n')
