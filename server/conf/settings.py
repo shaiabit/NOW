@@ -86,6 +86,14 @@ HOME_ROOM_DESC = 'You may |gdesc/room ...|n to change it, and ' \
                  'Use |ghelp|n with only the 1st word of each of those.'
 # Other settings
 ######################################################################
+WELCOME_URL = 'http://lazylion.ddns.net:8000/static/website/images/nowlogo.png'
+WELCOME_TEXT = ('''
+        |rN  N |y  OOO |g W   W
+        |rNN  N|y OO OO|g W   W
+        |rN N N|y O   O|g W W W
+        |rN  NN|y OO OO|g W W W
+        |r N  N|y  OOO |g  W W
+         ''', 'NOW (in large friendly letters)')
 ABOUT_TEXT = 'NOW is an alpha build mu* made possible by early adopters, ' \
              'testers, and designers who show up regularly, and believe.'
 NOTHINGNESS = '|=zNo|=wth|=min|=jgn|=ies|=ds|n'

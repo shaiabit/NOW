@@ -21,6 +21,7 @@ possibility to connect with a guest account. The setting file accepts
 several more options for customizing the Guest account system.
 """
 from evennia import DefaultAccount, DefaultGuest
+from django.conf import settings
 
 
 class Account(DefaultAccount):
@@ -113,13 +114,6 @@ class Account(DefaultAccount):
             return '%s%s|n' % (self.STYLE, self.name)
 
     def at_post_login(self, session=None):
-        welcome = ('''
-        |rN  N |y  OOO |g W   W
-        |rNN  N|y OO OO|g W   W
-        |rN N N|y O   O|g W W W
-        |rN  NN|y OO OO|g W W W
-        |r N  N|y  OOO |g  W W
-         ''', 'NOW (in large friendly letters)')
         # if the account has saved protocol flags, apply them to this session.
         protocol_flags = self.attributes.get('_saved_protocol_flags', None)
         if session and protocol_flags:
@@ -136,11 +130,11 @@ class Account(DefaultAccount):
                 self.locks.reset()
         if session:
             webclient = session.protocol_key == 'websocket'
-            text = '' if webclient else welcome[0]
+            text = '' if webclient else settings.WELCOME_TEXT[0]
             text += ('\n|wSuccessful login. Welcome, %s!' % self.key)
             if webclient:
                 session.msg(
-                    image=['http://216.158.234.197:8000/static/website/images/nowlogo.png'])
+                    image=[settings.WELCOME_URL])
             session.msg(text)
             session.execute_cmd('@ic')
 
