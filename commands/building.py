@@ -89,6 +89,9 @@ from evennia.commands.default.building import CmdLock
 from evennia.commands.default.building import CmdExamine
 from evennia.commands.default.building import CmdFind
 from commands.command import MuxCommand  # Used in CmdTeleport
+from evennia.commands.default.building import CmdScript
+from evennia.commands.default.building import CmdTag
+from evennia.commands.default.building import CmdSpawn
 
 
 class CmdTeleport(MuxCommand):
@@ -268,11 +271,6 @@ class CmdTeleport(MuxCommand):
             if target.location != loc:
                 account.msg("|rFailed to teleport %s to %s." % (target.get_display_name(char),
                                                                 loc.get_display_name(char)))
-
-
-from evennia.commands.default.building import CmdScript
-from evennia.commands.default.building import CmdTag
-from evennia.commands.default.building import CmdSpawn
 
 
 # To use the prototypes with the @spawn function set
