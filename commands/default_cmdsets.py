@@ -17,10 +17,10 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 # [Default commands modules]
 from evennia import default_cmds
 # [Default commands modules replacements]
-from commands import account   # Customize Evennia default commands
-from commands import admin     # Customize Evennia default commands
-from commands import building  # Customize Evennia default commands
-from commands import prelogin  # Customize Evennia default commands
+from commands import account   # Use Evennia default commands in account group
+from commands import admin     # Use Evennia default commands in admin group
+from commands import building  # Use Evennia default commands in building group
+from commands import prelogin  # Use Evennia default commands in prelogin group
 
 # from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
 from evennia.contrib.mail import CmdMail
@@ -30,8 +30,6 @@ from world.clothing import CmdWear, CmdRemove, CmdCover, CmdUncover, CmdGive
 from typeclasses.exits import CmdStop, CmdContinue, CmdBack, CmdSpeed
 
 # [commands modules]
-from commands import exitdirections
-from commands.suntime import CmdAstral
 from commands.say import CmdSay, CmdOoc, CmdSpoof
 from commands.who import CmdWho
 from commands.desc import CmdDesc
@@ -140,17 +138,6 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdBack)
         self.add(CmdSpeed)
         self.add(CmdContinue)
-# [...]
-        self.add(exitdirections.CmdExitNorth())
-        self.add(exitdirections.CmdExitSouth())
-        self.add(exitdirections.CmdExitEast())
-        self.add(exitdirections.CmdExitWest())
-        self.add(exitdirections.CmdExitNortheast())
-        self.add(exitdirections.CmdExitNorthwest())
-        self.add(exitdirections.CmdExitSoutheast())
-        self.add(exitdirections.CmdExitSouthwest())
-        self.add(exitdirections.CmdExitUp())
-        self.add(exitdirections.CmdExitDown())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
