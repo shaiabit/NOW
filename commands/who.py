@@ -8,16 +8,24 @@ from evennia.utils import ansi, utils, create, search, evtable
 
 class CmdWho(MuxAccountCommand):
     """
-    Shows who is currently online.
+    Shows who is currently online
+    with optional sorting and
+    starts-with filter.
     Usage:
-      who    - basic view
-      where  - includes location
-      what   - includes doing
-      ws     - includes species
-      wa     - same as 'where'
+      who[/option] [filter]   - basic view
+      where[/option] [filter] - includes location
+      what[/option] [filter]  - includes doing
+      ws[/option] [filter]    - includes species
+      wa[/option] [filter]    - same as 'where'
+    Options:
+    /alpha   - sort table alphabetically
+    /on      - sort table by online time
+    /idle    - sort table by idle time
+    /reverse - sort in reverse order
     """
     key = 'who'
     aliases = ['ws', 'where', 'wa', 'what', 'wot']
+    options = ('alpha', 'on', 'idle', 'reverse')
     locks = 'cmd:all()'
 
     def func(self):
@@ -44,6 +52,8 @@ class CmdWho(MuxAccountCommand):
             table.reformat_column(3, width=16, pad_right=1, align='l')
             table.reformat_column(4, width=20, align='l')
             locations = {}  # Create an empty dictionary to gather locations information.
+            session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
+            session_list = option_sort(session_list, 'alpha')
             for session in session_list:  # Go through connected list and see who's where.
                 if not session.logged_in:
                     continue
@@ -79,14 +89,16 @@ class CmdWho(MuxAccountCommand):
                 table.add_row(name + ', ' + gend.lower() + fill + type if type else name,
                               utils.time_format(delta_con, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
+            session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
+            session_list = option_sort(session_list, 'idle', True)
             table.add_header('|wCharacter  - Doing', '|wIdle')
             table.reformat_column(0, width=72, align='l')
             table.reformat_column(1, width=7, align='r')
             for session in session_list:
-                if not session.logged_in or not session.get_puppet():
+                character = session.get_puppet()
+                if not session.logged_in or not character:
                     continue
                 delta_cmd = time.time() - session.cmd_last_visible
-                character = session.get_puppet()
                 doing = character.get_display_name(you, pose=True)
                 table.add_row(doing, utils.time_format(delta_cmd, 1))
         else:  # Default to displaying who
@@ -98,10 +110,7 @@ class CmdWho(MuxAccountCommand):
                 table.reformat_column(3, width=6, pad_right=1, align='r')
                 table.reformat_column(4, width=11, align='l')
                 table.reformat_column(5, width=16, align='r')
-                session_list = sorted(session_list, key=lambda o: o.account.key)
                 for session in session_list:
-                    if not session.logged_in:
-                        continue
                     account = session.get_account()
                     puppet = session.get_puppet()
                     address = isinstance(session.address, tuple) and session.address[0] or session.address
@@ -110,6 +119,8 @@ class CmdWho(MuxAccountCommand):
                                   '|gYes|n' if account.attributes.get('_quell') else '|rNo|n',
                                   session.cmd_total, session.protocol_key, address)
             else:  # unprivileged info shown to everyone, including Immortals and higher when quelled
+                session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
+                session_list = option_sort(session_list, 'alpha')
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
                 table.reformat_column(0, width=40, align='l')
                 table.reformat_column(1, width=8, align='l')
@@ -131,3 +142,13 @@ class CmdWho(MuxAccountCommand):
         string += 'account%s logged in.' % plural
         self.msg(table)
         self.msg(string)
+
+
+def option_sort(to_sort, sort_type='alpha', reverse=False):
+    if sort_type == 'alpha':
+        to_sort = sorted(to_sort, reverse=reverse, key=lambda sess: sess.get_puppet().key.lower())
+    elif sort_type == 'on':
+        pass
+    elif sort_type == 'idle':
+        pass
+    return to_sort
