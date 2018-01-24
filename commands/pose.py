@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from commands.command import MuxCommand
-from world.helpers import escape_braces
+from world.helpers import escape_braces, substitute_objects
 from evennia.utils import ansi
 
 
@@ -87,31 +87,8 @@ class CmdPose(MuxCommand):
         account = self.account
         here = char.location if char else None
         power = True if cmd in ('ppose', 'pp', 'p:') else False
-
-        def parse_pose(text):
-            return_text = []
-            for each in text.split():
-                match = None
-                new_each = each
-                word_end = ''
-                if each.startswith('/'):  # A possible substitution to test
-                    if each.endswith('/'):  # Skip this one, it's /italic/
-                        return_text.append(new_each)
-                        continue
-                    search_word = each[1:]
-                    if search_word.startswith('/'):  # Skip this one, it's being escaped
-                        new_each = each[1:]
-                    else:  # Marked for substitution, try to find a match
-                        if "'" in each:  # Test for possessive or contraction:  's  (apostrophe before end of grouping)
-                            pass
-                        if each[-1] in ".,!?":
-                            search_word, word_end = search_word[:-1], each[-1]
-                        match = char.search(search_word, quiet=True)
-                return_text.append(new_each if not match else (match[0].get_display_name(char) + word_end))
-            return ' '.join(return_text)
-
         raw_pose = rhs if rhs and cmd == 'do' or power else args
-        raw_pose = parse_pose(raw_pose)
+        raw_pose = substitute_objects(raw_pose, char)
         non_space_chars = ['®', '©', '°', '·', '~', '@', '-', "'", '’', ',', ';', ':', '.', '?', '!', '…']
         magnet = True if raw_pose and raw_pose[0] in non_space_chars or cmd == ";" else False
         doing = True if 'do' in cmd or 'rp' in cmd else False
