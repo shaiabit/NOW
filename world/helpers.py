@@ -50,7 +50,7 @@ def escape_braces(text):
 def substitute_objects(text, puppet):
     candidates = [puppet] + puppet.contents
     if puppet.location:
-        candidates = list(set([puppet.location] + puppet.location.contents + self.contents +
+        candidates = list(set([puppet.location] + puppet.location.contents + puppet.contents +
                               (puppet.location.db.hosted.keys() if puppet.location.db.hosted else [])))
     return_text = []
     for each in text.split():
