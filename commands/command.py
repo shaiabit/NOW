@@ -77,7 +77,7 @@ class Command(BaseCommand):
         by the `cmdhandler` right after `self.parser()` finishes, and so has access
         to all the variables defined therein.
         """
-        self.caller.msg('Command "%s" called!' % self.cmdstring)
+        self.msg('Command "%s" called!' % self.cmdstring)
 
     def at_post_cmd(self):
         """
@@ -149,14 +149,14 @@ class MuxCommand(default_cmds.MuxCommand):
                 elif len(option_check) == 0:
                     unuse_options += [element]       # or an extraneous option to be ignored.
             if extra_options:
-                self.caller.msg('|g%s|n: |wAmbiguous option: Did you mean /|C%s|w?' %
-                                (self.cmdstring, '|nor /|C'.join(extra_options)))
+                self.msg('|g%s|n: |wAmbiguous option: Did you mean /|C%s|w?' %
+                         (self.cmdstring, '|nor /|C'.join(extra_options)))
             if valid_options:
                 self.switches = valid_options
             if unuse_options:
                 plural = '' if len(unuse_options) == 1 else 's'
-                self.caller.msg('|g%s|n: |wExtra option%s "/|C%s|w" ignored.' %
-                                (self.cmdstring, plural, '|n, /|C'.join(unuse_options)))
+                self.msg('|g%s|n: |wExtra option%s "/|C%s|w" ignored.' %
+                         (self.cmdstring, plural, '|n, /|C'.join(unuse_options)))
         # Now parse left/right sides using a custom delimiter, if provided.
         if self.parse_using and self.parse_using in self.args:
             self.lhs, self.rhs = self.args.split(self.parse_using, 1)  # At most, split once, into left and right parts.
