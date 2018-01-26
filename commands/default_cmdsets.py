@@ -21,6 +21,7 @@ from commands import account   # Use Evennia default commands in account group
 from commands import admin     # Use Evennia default commands in admin group
 from commands import building  # Use Evennia default commands in building group
 from commands import prelogin  # Use Evennia default commands in prelogin group
+from commands import system    # Use Evennia default commands in system group
 
 # from world.rpsystem import CmdSdesc, CmdEmote, CmdRecog, CmdMask  # RP commands used to be here.
 from evennia.contrib.mail import CmdMail
@@ -112,6 +113,16 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(building.CmdScript)
         self.add(building.CmdTag)
         self.add(building.CmdSpawn)
+# [...]
+        self.add(system.CmdReload)
+        self.add(system.CmdReset)
+        self.add(system.CmdShutdown)
+        self.add(system.CmdAccounts)
+        self.add(system.CmdObjects)
+        self.add(system.CmdPy)
+        self.add(system.CmdScripts)
+        self.add(system.CmdServerLoad)
+        self.add(system.CmdService)
 # [...]
         self.add(CmdOoc)
         self.add(CmdSay)
