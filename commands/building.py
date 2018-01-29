@@ -51,28 +51,10 @@ from evennia.commands.default.building import CmdCpAttr
 from evennia.commands.default.building import CmdMvAttr
 from evennia.commands.default.building import CmdCreate
 
+from evennia.commands.default.building import _desc_load
+from evennia.commands.default.building import _desc_save
+from evennia.commands.default.building import _desc_quit
 
-def _desc_load(caller):
-    return caller.db.evmenu_target.db.desc or ""
-
-
-def _desc_save(caller, buf):
-    """
-    Save line buffer to the desc prop. This should
-    return True if successful and also report its status to the user.
-    """
-    caller.db.evmenu_target.db.desc = buf
-    caller.msg("Saved.")
-    return True
-
-
-def _desc_quit(caller):
-    caller.attributes.remove("evmenu_target")
-    caller.msg("Exited editor.")
-
-
-from evennia.commands.default.building import CmdDesc  # Not used.
-from evennia.commands.default.building import CmdDestroy  # Not used.
 from evennia.commands.default.building import CmdDig
 from evennia.commands.default.building import CmdTunnel
 from evennia.commands.default.building import CmdLink
