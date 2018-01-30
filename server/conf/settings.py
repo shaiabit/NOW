@@ -46,6 +46,14 @@ MULTISESSION_MODE = 1
 
 IRC_ENABLED = True  # @irc2chan Public = irc.furnet.org 7000 #NOW NOW
 
+SSH_ENABLED = True  # Activate SSH protocol communication (SecureShell)
+
+SSH_PORTS = [3699]  # Ports to use for SSH
+
+SSL_ENABLED = False  # Activate Telnet+SSL protocol (SecureSocketLibrary) for supporting clients
+
+SSL_PORTS = [1612]  # Ports to use for Telnet+SSL
+
 IN_GAME_ERRORS = False  # Errors in console are sufficient.
 
 SEARCH_MULTIMATCH_REGEX = r'(?P<number>[0-9]+) (?P<name>.*)'
