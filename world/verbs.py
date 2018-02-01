@@ -141,11 +141,10 @@ class VerbHandler:
         Implements the read command. This simply looks for an
         Attribute "readable_text" on the object and displays that.
         """
-        pose = self.o.ndb.power_pose
+        # pose = self.o.ndb.power_pose
         read_text = self.o.db.readable_text or self.o.db.desc_brief or self.o.db.desc
         if read_text:  # Attribute read_text is defined.
-            self.s.location.msg_contents("%s |g{s}|n reads {o}." % pose,
-                                         mapping=dict(s=self.s, o=self.o))
+            self.s.location.msg_contents('{s} reads {o}.', mapping=dict(s=self.s, o=self.o))
             string = read_text
         else:
             string = "There is nothing to read on %s." % self.o.get_display_name(self.s)
