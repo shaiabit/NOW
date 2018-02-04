@@ -7,6 +7,7 @@ so typically requires knowledge of building commands to be effective.
 from commands.command import MuxCommand
 from django.conf import settings
 from evennia import utils
+from evennia.server.sessionhandler import SESSIONS  # Used for CmdWall
 
 # error return function, needed for search
 _AT_SEARCH_RESULT = utils.variable_from_module(*settings.SEARCH_AT_RESULT.rsplit('.', 1))
