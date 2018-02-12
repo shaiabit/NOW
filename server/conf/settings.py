@@ -30,7 +30,7 @@ from evennia.settings_default import *
 
 SERVERNAME = 'NOW'
 
-TELNET_PORTS = [4000, 8888]
+TELNET_PORTS = [4000]
 
 WEBSERVER_PORTS = [(8000, 8001)]
 
@@ -50,9 +50,9 @@ SSH_ENABLED = True  # Activate SSH protocol communication (SecureShell)
 
 SSH_PORTS = [3699]  # Ports to use for SSH
 
-SSL_ENABLED = False  # Activate Telnet+SSL protocol (SecureSocketLibrary) for supporting clients
+SSL_ENABLED = True  # Activate Telnet+SSL protocol (SecureSocketLibrary) for supporting clients
 
-SSL_PORTS = [1612]  # Ports to use for Telnet+SSL
+SSL_PORTS = [8888]  # Ports to use for Telnet+SSL
 
 IN_GAME_ERRORS = False  # Errors in console are sufficient.
 
