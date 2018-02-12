@@ -42,7 +42,10 @@ class CmdTry(MuxCommand):
                     here.msg_contents('%s = %s' % (char.ndb.power_pose, args))  # Display as normal pose.
                     char.nattributes.remove('power_pose')  # Flush power pose
                 else:
-                    char.msg(self.suggest_command())
+                    if char.db.settings and char.db.settings.get('auto-say') is True:
+                        account.execute_cmd('say {}'.format(args))
+                    else:
+                        char.msg(self.suggest_command())
                 return
             else:
                 good_targets = self.verb_list(verb)
