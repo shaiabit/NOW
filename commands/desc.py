@@ -74,16 +74,17 @@ class CmdDesc(MuxCommand):
     def func(self):
         """Add the description."""
         char = self.character
-        here = char.location
+        here = None if char is None else char.location
         opt = self.switches
         target = here if 'room' in opt else char
+        if not here and 'room' in opt:
+            self.caller.msg("You cannot edit the location's description while |y@OOC|n and outside the room."
+                            " Switch to |y@IC|n first.")
+            return
         if not target.access(char, 'edit'):
             self.caller.msg("You don't have permission to edit {}.".format(target.get_display_name(char)))
             return
         self.target = target
-        if not here and 'room' in opt:
-            self.caller.msg("You cannot edit your room's description while |y@OOC|n. Switch to |y@IC|n first.")
-            return
         if 'edit' in opt:
             self.edit_handler()
             return

@@ -41,6 +41,9 @@ class CmdWhisper(MuxCommand):
     def func(self):
         """Run the whisper command"""
         char = self.character
+        if not char or char.location is None:
+            self.msg('Unable to whisper while outside of character or world.')
+            return
         here = char.location
         opt = self.switches
         message = self.args.strip() if not self.rhs else self.rhs.strip()  # If no equals sign, use args for message

@@ -30,7 +30,7 @@ class CmdQuit(MuxAccountCommand):
         cmd = self.cmdstring
         opt = self.switches
         char = self.character
-        here = char.location
+        here = None if char is None else char.location
         sess = self.session
         if 'qhome' in cmd or 'home' in opt and char and here:  # Go home before quitting.
             char.execute_cmd('home')
