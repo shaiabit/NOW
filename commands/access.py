@@ -8,9 +8,10 @@ class CmdAccess(MuxCommand):
     Usage:
       access      -  Display your account and character access level.
       hierarchy   -  Displays the system's permission groups hierarchy.
+      levels      -  Alias for hierarchy.
     """
     key = 'access'
-    aliases = ['hierarchy']
+    aliases = ['hierarchy', 'levels']
     locks = 'cmd:all()'
     help_category = 'Information'
     account_caller = True
@@ -21,7 +22,7 @@ class CmdAccess(MuxCommand):
         account = self.account
         hierarchy_full = settings.PERMISSION_HIERARCHY
         info = []  # List of info to output to user
-        if 'hierarchy' in self.cmdstring:
+        if 'hierarchy' in self.cmdstring or 'levels' in self.cmdstring:
             info.append('|wPermission Hierarchy|n (climbing): %s|/' % ", ".join(hierarchy_full))
         else:
             if account.is_superuser:
