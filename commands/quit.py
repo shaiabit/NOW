@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from commands.command import MuxAccountCommand
+from django.conf import settings
 from evennia.utils import utils
 import time
 
@@ -25,8 +26,7 @@ class CmdQuit(MuxAccountCommand):
         """hook function"""
         account = self.account
         bye = '|RDisconnecting|n'
-        exit_msg = 'Hope to see you again, soon!' \
-                   '|/A survey is available at https://goo.gl/forms/yCyLpF6JsAhhUgGz2 for your thoughts'
+        quit_msg = settings.QUIT_MESSAGE
         cmd = self.cmdstring
         opt = self.switches
         char = self.character
@@ -44,10 +44,10 @@ class CmdQuit(MuxAccountCommand):
                     if session is sess:
                         continue  # Exclude booting current session
                     else:  # and boot the rest.
-                        session.msg(exit_msg + reason + '/BOOT', session=session)
+                        session.msg(quit_msg + reason + '/BOOT', session=session)
                         account.disconnect_session_from_account(session, reason + '/BOOT')
                 else:  # Disconnect them all!
-                    session.msg(bye + reason + '/ALL|/' + exit_msg, session=session)
+                    session.msg(bye + reason + '/ALL|/' + quit_msg, session=session)
                     account.disconnect_session_from_account(session, reason + '/ALL')
             if boot:
                 self.msg(bye + 'all other sessions. |gThis session remains connected.|n')
@@ -66,5 +66,5 @@ class CmdQuit(MuxAccountCommand):
                 # If quitting the last available session, give connect time.
                 msg = bye + 'after ' + online + ' online. '
                 self.msg(msg)
-            self.msg(exit_msg)
+            self.msg(quit_msg)
             account.disconnect_session_from_account(sess, reason)

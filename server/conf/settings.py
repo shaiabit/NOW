@@ -104,6 +104,8 @@ WELCOME_TEXT = ('''
          ''', 'NOW (in large friendly letters)')
 ABOUT_TEXT = 'NOW is an alpha build mu* made possible by early adopters, ' \
              'testers, and designers who show up regularly, and believe.'
+QUIT_MESSAGE = 'Hope to see you again, soon!' \
+               '|/A survey is available at http://nowsurvey.supernormality.net/ for your thoughts'
 NOTHINGNESS = '|=zNo|=wth|=min|=jgn|=ies|=ds|n'
 RAINBOW = '|Rr|430a|yi|Gn|bb|co|mw'
 APPLE = '|r((|g`|r)|n'
