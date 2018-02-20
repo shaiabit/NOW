@@ -22,19 +22,35 @@ class CmdWho(MuxAccountCommand):
     /on      - sort table by online time
     /idle    - sort table by idle time
     /reverse - sort in reverse order
+    /exact   - Only match exact when filtering
     """
     key = 'who'
     aliases = ['ws', 'where', 'wa', 'what', 'wot']
-    options = ('alpha', 'on', 'idle', 'reverse')
+    options = ('alpha', 'on', 'idle', 'reverse', 'exact')
+    arg_regex = None
     locks = 'cmd:all()'
 
     def func(self):
         """Get all connected accounts by polling session."""
         you = self.account
+        opt = self.switches
+        args = self.args
         session_list = SESSIONS.get_sessions()
+        notice = ''
+        if args:
+            char = self.caller.get_puppet(self.session)
+            if 'exact' in opt:
+                session_list = [sess for sess in session_list if sess.get_puppet()
+                                and sess.get_puppet().get_display_name(char, plain=True) == args]
+                notice = '  Showing exact matches for "{}"'.format(args)
+            else:
+                args = args.lower()
+                session_list = [sess for sess in session_list if sess.get_puppet()
+                                and sess.get_puppet().get_display_name(char, plain=True).lower().startswith(args)]
+                notice = '  Showing matches that begin with "{}"'.format(args)
+        sessions_using_puppets = [sess for sess in session_list if sess.get_puppet()]
         cmd = self.cmdstring
         show_session_data = you.check_permstring('immortal') and not you.attributes.has('_quell')
-        account_count = (SESSIONS.account_count())
         table = evtable.EvTable(border='none', pad_width=0, border_width=0, maxwidth=79)
         if cmd == 'wa' or cmd == 'where':
             # Example output expected:
@@ -52,14 +68,9 @@ class CmdWho(MuxAccountCommand):
             table.reformat_column(3, width=16, pad_right=1, align='l')
             table.reformat_column(4, width=20, align='l')
             locations = {}  # Create an empty dictionary to gather locations information.
-            session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
-            session_list = option_sort(session_list, 'alpha')
-            for session in session_list:  # Go through connected list and see who's where.
-                if not session.logged_in:
-                    continue
+            sessions_using_puppets = self.option_sort(sessions_using_puppets, 'alpha')
+            for session in sessions_using_puppets:  # Go through connected list and see who's where.
                 character = session.get_puppet()
-                if not character:
-                    continue
                 if character.location not in locations:
                     locations[character.location] = []
                 locations[character.location].append(character)  # Build the list of who's in a location
@@ -89,8 +100,7 @@ class CmdWho(MuxAccountCommand):
                 table.add_row(name + ', ' + gend.lower() + fill + type if type else name,
                               utils.time_format(delta_con, 0), utils.time_format(delta_cmd, 1))
         elif cmd == 'what' or cmd == 'wot':
-            session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
-            session_list = option_sort(session_list, 'idle', True)
+            session_list = self.option_sort(sessions_using_puppets, 'idle', True)
             table.add_header('|wCharacter  - Doing', '|wIdle')
             table.reformat_column(0, width=72, align='l')
             table.reformat_column(1, width=7, align='r')
@@ -119,8 +129,7 @@ class CmdWho(MuxAccountCommand):
                                   '|gYes|n' if account.attributes.get('_quell') else '|rNo|n',
                                   session.cmd_total, session.protocol_key, address)
             else:  # unprivileged info shown to everyone, including Immortals and higher when quelled
-                session_list[:] = (sess for sess in session_list if sess.get_puppet)  # Remove non-puppeted sessions
-                session_list = option_sort(session_list, 'alpha')
+                session_list = self.option_sort(sessions_using_puppets, 'alpha')
                 table.add_header('|wCharacter', '|wOn for', '|wIdle')
                 table.reformat_column(0, width=40, align='l')
                 table.reformat_column(1, width=8, align='l')
@@ -135,20 +144,22 @@ class CmdWho(MuxAccountCommand):
                     delta_conn = time.time() - session.conn_time
                     table.add_row(character.get_display_name(you), utils.time_format(delta_conn, 0),
                                   utils.time_format(delta_cmd, 1))
+        account_count = (SESSIONS.account_count())
         is_one = account_count == 1
         string = '%s' % 'A' if is_one else str(account_count)
         string += ' single ' if is_one else ' unique '
         plural = ' is' if is_one else 's are'
         string += 'account%s logged in.' % plural
-        self.msg(table)
-        self.msg(string)
+        self.msg(unicode(table))
+        self.msg(string + notice)
 
-
-def option_sort(to_sort, sort_type='alpha', reverse=False):
-    if sort_type == 'alpha':
-        to_sort = sorted(to_sort, reverse=reverse, key=lambda sess: sess.get_puppet().key.lower())
-    elif sort_type == 'on':
-        pass
-    elif sort_type == 'idle':
-        pass
-    return to_sort
+    def option_sort(self, to_sort, sort_type='alpha', reverse=False):
+        opt = self.switches
+        if not (sort_type == 'alpha' and 'alpha' in opt):
+            to_sort = sorted(to_sort, reverse=not ('reverse' in opt and reverse),
+                             key=lambda sess: sess.get_puppet().key.lower())
+        elif not (sort_type == 'on' and 'on' in opt):
+            pass
+        elif not (sort_type == 'idle' and 'idle' in opt):
+            pass
+        return to_sort
