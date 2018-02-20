@@ -24,8 +24,10 @@ class CmdInventory(MuxCommand):
         """
         you = self.character
         items = you.contents
+        if not items:
+            self.msg('You are not carrying anything.')
+            return
         items_not_worn = []
-
         wear_table = evtable.EvTable(border="header")
         for item in items:
             if item.db.worn:
@@ -46,4 +48,4 @@ class CmdInventory(MuxCommand):
                   mass_unit(my_total_mass), table)
         if not wear_table.nrows == 0:
             string += "|/|wYou are wearing:\n%s" % wear_table
-        you.msg(string)
+        self.msg(string)
