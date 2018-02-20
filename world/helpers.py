@@ -48,9 +48,11 @@ def escape_braces(text):
 
 
 def substitute_objects(text, puppet):
+    if '/' not in text:
+        return text
     candidates = [puppet] + puppet.contents
     if puppet.location:
-        candidates = list(set([puppet.location] + puppet.location.contents + puppet.contents +
+        candidates = list(set(candidates + [puppet.location] + puppet.location.contents +
                               (puppet.location.db.hosted.keys() if puppet.location.db.hosted else [])))
     return_text = []
     for each in text.split():
