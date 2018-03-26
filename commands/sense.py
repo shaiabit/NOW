@@ -22,7 +22,7 @@ class CmdSense(MuxCommand):
     """
     key = 'sense'
     aliases = ['l', 'look', 'taste', 'touch', 'smell', 'listen', 'glance']
-    options = ('all',)
+    switch_options = ('all',)
     locks = 'cmd:all()'
 
     def func(self):

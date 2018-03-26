@@ -18,9 +18,9 @@ class CmdQuit(MuxAccountCommand):
     """
     key = 'quit'
     aliases = ['bye', 'disconnect', 'qhome', '@bootme']
+    switch_options = ('all', 'home', 'boot')
     locks = 'cmd:all()'
     arg_regex = r'^/|\s|$'
-    options = ('all', 'home', 'boot')
 
     def func(self):
         """hook function"""

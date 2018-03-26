@@ -35,7 +35,7 @@ class CmdWhisper(MuxCommand):
     """
     key = 'whisper'
     aliases = ['wh', '""', "''"]
-    options = ('version',)
+    switch_options = ('version',)
     locks = 'cmd:all()'
 
     def func(self):

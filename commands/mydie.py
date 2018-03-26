@@ -141,7 +141,7 @@ class CmdRoll(CmdMyDieDefault):
       /sum  - show intermediate summation values
     """
     key = 'roll'
-    options = ('sum',)
+    switch_options = ('sum',)
     locks = 'cmd:all()'
     help_category = 'Game'
     account_caller = True

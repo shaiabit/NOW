@@ -27,12 +27,12 @@ class CmdHome(MuxCommand):
     """
     key = 'home'
     aliases = ['sweep', 'abode', 'room']
-    options = ('set', 'sweep', 'here', 'room')
+    switch_options = ('set', 'sweep', 'here', 'room')
     locks = 'cmd:all()'
     arg_regex = r"^/|\s|$"
     help_category = 'Travel'
     account_caller = True
-    parse_using = ' to '
+    rhs_split = ('=', ' to ')
 
     def func(self):
         """Implement the command"""

@@ -25,7 +25,7 @@ class CmdPortal(MuxCommand):
     """
     key = 'portal'
     aliases = ['meet', 'join', 'summon']
-    options = ('quiet', 'silent', 'only', 'in', 'out', 'vanish')
+    switch_options = ('quiet', 'silent', 'only', 'in', 'out', 'vanish')
     locks = 'cmd:pperm(denizen)'
     help_category = 'Travel'
 

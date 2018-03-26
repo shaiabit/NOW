@@ -24,7 +24,7 @@ class CmdChange(MuxCommand):
     key = 'change'
     aliases = ['clear', 'show']
     locks = 'cmd:all()'
-    options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'verb', 'detail', 'sense')
+    switch_options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'verb', 'detail', 'sense')
     parse_using = ' to '
     help_category = 'Building'
     account_caller = True

@@ -39,7 +39,7 @@ class CmdPose(MuxCommand):
     key = 'pose'
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
     arg_regex = None
-    options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
+    switch_options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
     locks = 'cmd:all()'
     account_caller = True
 
@@ -131,7 +131,9 @@ class CmdPose(MuxCommand):
             elif not rhs:
                 self.set_doing(char, pose)  # Setting temp doing message on the setter...
                 if args and not ('silent' in opt or 'quiet' in opt) and char is target:  # Allow set without posing
+                    # FIXME: Do not execute the pose if not permitted to room pose it.
                     account.execute_cmd(';%s' % pose, session=sess)  # pose to the room like a normal pose would.
+                    # return  # Having executed the pose in a different way, work in this command instance is done.
             char.msg("Pose now set to: '%s'" % target.get_display_name(char, pose=True))  # Display name with pose.
         else:  # ---- Action pose, not static Room Pose. ---------------------
             if '|/' in pose:

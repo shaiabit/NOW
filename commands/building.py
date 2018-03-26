@@ -102,10 +102,10 @@ class CmdTeleport(MuxCommand):
     """
     key = 'teleport'
     aliases = ['tport', 'tel']
-    options = ('quiet', 'silent', 'into', 'vanish')
+    switch_options = ('quiet', 'silent', 'into', 'vanish')
     locks = 'cmd:perm(teleport) or perm(builder)'
     help_category = 'Travel'
-    parse_using = ' to '
+    rhs_split = ('=', ' to ')
 
     @staticmethod
     def stop_check(target):

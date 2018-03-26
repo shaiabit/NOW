@@ -26,7 +26,7 @@ class CmdWho(MuxAccountCommand):
     """
     key = 'who'
     aliases = ['ws', 'where', 'wa', 'what', 'wot']
-    options = ('alpha', 'on', 'idle', 'reverse', 'exact')
+    switch_options = ('alpha', 'on', 'idle', 'reverse', 'exact')
     arg_regex = None
     locks = 'cmd:all()'
 

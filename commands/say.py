@@ -17,9 +17,9 @@ class CmdSay(MuxCommand):
     """
     key = 'say'
     aliases = ['"', "'"]
+    switch_options = ('ooc', 'quote', 'verb')
     arg_regex = None
     locks = 'cmd:all()'
-    options = ('ooc', 'quote', 'verb')
 
     def func(self):
         """Run the say command"""
@@ -121,9 +121,9 @@ class CmdSpoof(MuxCommand):
     """
     key = 'spoof'
     aliases = ['.', 'sp']
+    switch_options = ('center', 'right', 'indent', 'news', 'strip', 'self')
     arg_regex = None
     locks = 'cmd:all()'
-    options = ('center', 'right', 'indent', 'news', 'strip', 'self')
 
     def func(self):
         """Run the spoof command"""

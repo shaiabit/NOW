@@ -37,7 +37,7 @@ class CmdDesc(MuxCommand):
     Add a description to your character or room, visible to characters who look.
     """
     key = 'desc'
-    options = ('edit', 'brief', 'side', 'room')
+    switch_options = ('edit', 'brief', 'side', 'room')
     locks = 'cmd:all()'
     arg_regex = r'^/|\s|$'
 
