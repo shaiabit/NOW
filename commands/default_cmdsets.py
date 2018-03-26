@@ -24,7 +24,7 @@ from evennia.commands.default.account import CmdCharCreate
 from evennia.commands.default.account import CmdOption
 from evennia.commands.default.account import CmdSessions
 from evennia.commands.default.account import CmdColorTest
-# from evennia.commands.default.account import CmdQuell
+from evennia.commands.default.account import CmdQuell
 #
 # Use Evennia default commands in admin group
 from evennia.commands.default.admin import CmdBoot
@@ -79,7 +79,6 @@ from commands.sense import CmdSense
 from commands.change import CmdChange
 from commands.portal import CmdPortal
 from commands.access import CmdAccess
-from commands.account import CmdQuell
 from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
 from commands.inventory import CmdInventory
