@@ -15,7 +15,7 @@ from evennia.commands.cmdhandler import get_and_merge_cmdsets
 from evennia.utils import create, utils, search
 from evennia.utils.utils import inherits_from, class_from_module
 from evennia.utils.eveditor import EvEditor
-from evennia.utils.spawner import spawn
+#from evennia.utils.spawner import spawn
 from evennia.utils.ansi import raw
 
 COMMAND_DEFAULT_CLASS = class_from_module(settings.COMMAND_DEFAULT_CLASS)
@@ -102,10 +102,10 @@ class CmdTeleport(MuxCommand):
     """
     key = 'teleport'
     aliases = ['tport', 'tel']
-    switch_options = ('quiet', 'silent', 'into', 'vanish')
+    options = ('quiet', 'silent', 'into', 'vanish')
     locks = 'cmd:perm(teleport) or perm(builder)'
     help_category = 'Travel'
-    rhs_split = ('=', ' to ')
+    parse_using = ' to '
 
     @staticmethod
     def stop_check(target):
