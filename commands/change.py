@@ -24,7 +24,7 @@ class CmdChange(MuxCommand):
     key = 'change'
     aliases = ['clear', 'show']
     locks = 'cmd:all()'
-    switch_options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'verb', 'detail', 'sense')
+    options = ('on', 'off', 'value', 'symbol', 'clear', 'show', 'verb', 'detail', 'sense')
     parse_using = ' to '
     help_category = 'Building'
     account_caller = True
@@ -178,7 +178,22 @@ class CmdChange(MuxCommand):
         else:
             string = '|wYou %s "%s" on %s to "%s".' %\
                       (action, args.replace('|', '||') if args else 'something', char.get_display_name(account), status)
-        account.msg(string)  # Notify account of character setting changes.
+
+        special_message = {
+             'broadcast commands/True': "|wYou broadcast commmands now.",
+             'broadcast commands/False': "|wYou don't broadcast commands now.",
+             'see commands/True': "|wYou see broadcasted commands now.",
+             'see commands/False': "|wYou don't see broadcasted commands now.",
+             'look arrive/True': "|wYou look when you arrive in a new location.",
+             'look arrive/False': "|wYou don't look when you arrive in a new location.",
+             'look notify/True': "|wYou are notified when someone looks at you.",
+             'look notify/False': "|wYou are not notified when someone looks at you.",
+             'carry others/True': "|wTou allow others to follow you.",
+             'carry others/False': "|wYou don't allow others to follow you."
+            }
+
+        account.msg(special_message.get(f'{args}/{status}', string))
+
         if action == 'set' and rhs:
             char.db.messages = message
         else:
