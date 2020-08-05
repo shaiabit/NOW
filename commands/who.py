@@ -26,7 +26,7 @@ class CmdWho(MuxAccountCommand):
     """
     key = 'who'
     aliases = ['ws', 'where', 'wa', 'what', 'wot']
-    switch_options = ('alpha', 'on', 'idle', 'reverse', 'exact')
+    options = ('alpha', 'on', 'idle', 'reverse', 'exact')
     arg_regex = None
     locks = 'cmd:all()'
 
@@ -55,7 +55,7 @@ class CmdWho(MuxAccountCommand):
         if cmd == 'wa' or cmd == 'where':
             # Example output expected:
             # Occ, Location,  Avg Time, Top 3 Active, Directions
-            # #3 	Park 		5m 		Rulan, Amber, Tria		Taxi, Park
+            # #3        Park            5m              Rulan, Amber, Tria              Taxi, Park
             # Other possible sort methods: Alphabetical by name, by occupant count, by activity, by distance
             # Nick = Global Nick (no greater than five A/N or randomly created if not a Global Nick
             #
@@ -150,7 +150,8 @@ class CmdWho(MuxAccountCommand):
         string += ' single ' if is_one else ' unique '
         plural = ' is' if is_one else 's are'
         string += 'account%s logged in.' % plural
-        self.msg(unicode(table))
+#        self.msg(unicode(table))
+        self.msg(table)
         self.msg(string + notice)
 
     def option_sort(self, to_sort, sort_type='alpha', reverse=False):
