@@ -14,7 +14,7 @@ class CmdPose(MuxCommand):
       pose[/option]'s <pose text>
       do[/option] <pose text>
       do[/option] <target>=<pose text>
-      pp[/option] <parse> = <pose text> 
+      pp[/option] <parse> = <pose text>
     Options:
     /ooc  (Out-of-character to the room or channel.)
     /magnet  (Show which characters remove name/pose space.)
@@ -39,13 +39,13 @@ class CmdPose(MuxCommand):
     key = 'pose'
     aliases = ['p:', 'pp', 'ppose', ':', ';', 'rp', 'do', 'doing']
     arg_regex = None
-    switch_options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
+    options = ('ooc', 'magnet', 'do', 'reset', 'default', 'quiet', 'silent')
     locks = 'cmd:all()'
     account_caller = True
 
     def set_doing(self, setter, pose, target=None, default=False):
         """
-        
+
         Args:
             self:  (Cmd)
             setter: (Tangible) object setting pose
@@ -80,7 +80,7 @@ class CmdPose(MuxCommand):
         """Basic pose, power pose, room posing - all in one"""
         cmd = self.cmdstring
         opt = self.switches
-        args = unicode(self.args).strip()
+        args = self.args.strip()
         lhs, rhs = self.lhs, self.rhs
         sess = self.session
         char = self.character
@@ -131,9 +131,7 @@ class CmdPose(MuxCommand):
             elif not rhs:
                 self.set_doing(char, pose)  # Setting temp doing message on the setter...
                 if args and not ('silent' in opt or 'quiet' in opt) and char is target:  # Allow set without posing
-                    # FIXME: Do not execute the pose if not permitted to room pose it.
                     account.execute_cmd(';%s' % pose, session=sess)  # pose to the room like a normal pose would.
-                    # return  # Having executed the pose in a different way, work in this command instance is done.
             char.msg("Pose now set to: '%s'" % target.get_display_name(char, pose=True))  # Display name with pose.
         else:  # ---- Action pose, not static Room Pose. ---------------------
             if '|/' in pose:
