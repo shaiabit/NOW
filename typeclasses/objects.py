@@ -10,7 +10,7 @@ so by editing the Tangible class in tangibles.py.
 from evennia import DefaultObject
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
-from traits import TraitHandler
+from typeclasses.traits import TraitHandler
 from evennia.utils.evmenu import get_input
 from world.helpers import make_bar, mass_unit
 from commands.poll import PollCmdSet
@@ -266,7 +266,7 @@ class Object(Tangible):
         if not self.attributes.has('surface'):
             self.db.surface = {}
         surface = self.db.surface
-        if caller in surface:         
+        if caller in surface:
             return False
         surface[caller] = connection
         self.db.locked = True
