@@ -8,7 +8,7 @@ from math import sqrt  # Distance formula for coordinate
 from evennia.server.sessionhandler import SESSIONS  # Checking sessions for active accounts in room
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
-from traits import TraitHandler
+from typeclasses.traits import TraitHandler
 from evennia import TICKER_HANDLER  # TICKERS for weather events
 from evennia.comms.models import ChannelDB, Msg  # Sending active/inactive status to public channel
 from evennia.comms.channelhandler import CHANNELHANDLER
@@ -1118,7 +1118,7 @@ class CmdGridWest(CmdGridMotion):
 class Grid(Room):
     """
     Grid Rooms are like any Room, except they have sub locations within
-    by default. Objects dropped here are associated with a specific 
+    by default. Objects dropped here are associated with a specific
     location preventing them from being picked up unless the character
     is next to them.
     """
@@ -1169,8 +1169,7 @@ class Grid(Room):
         if not self.db.grid:
             self.db.grid = {}
         results = {}
-        # for k, v in kwargs.items():  # Use this after update to Python 3
-        for k, v in kwargs.iteritems():  # Use this until update to Python 3
+        for k, v in kwargs.items():  # Use this until update to Python 3
             if v is None:  # Skip setting any entry whose value is set to None
                 results[k] = self.db.grid.get(k, None)
                 continue
