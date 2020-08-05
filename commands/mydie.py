@@ -23,8 +23,8 @@ class CmdMyDieDefault(MuxCommand):
 
     def roll_dice(self, dicenum, dicetype, modifier=None, conditional=None, return_tuple=False):
         """many sided-dice roller"""
-        dice_num = int(dicenum)
-        dice_type = int(dicetype)
+        dice_num = max(1, int(dicenum))
+        dice_type = max(1, int(dicetype))
         if not (dice_num and dice_type):  # Either can't be 0, None, or False
             return None
         rolls = tuple([randint(1, dice_type) for _ in range(dice_num)])
@@ -141,7 +141,7 @@ class CmdRoll(CmdMyDieDefault):
       /sum  - show intermediate summation values
     """
     key = 'roll'
-    switch_options = ('sum',)
+    options = ('sum',)
     locks = 'cmd:all()'
     help_category = 'Game'
     account_caller = True
