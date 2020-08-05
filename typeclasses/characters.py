@@ -8,10 +8,11 @@ creation commands.
 from evennia import DefaultCharacter
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
-from traits import TraitHandler
+from typeclasses.traits import TraitHandler
 from world.helpers import make_bar, mass_unit
 from evennia.contrib.clothing import get_worn_clothes
 from evennia.utils import list_to_string
+from evennia.utils import ansi
 # from evennia.utils.utils import delay  # Delay a follower's arrival after the leader
 from evennia.comms.models import ChannelDB, Msg  # To find and
 from evennia.comms.channelhandler import CHANNELHANDLER  # Send to public channel
@@ -81,7 +82,7 @@ class Character(DefaultCharacter, Tangible):
         self.msg("A {} lands beside you in {}!".format(scrambled(choices).pop(),  # Deal a random choice card.
                  self.location.get_display_name(self)))
         # This is an initial test. Choice will be dispensed from a vending machine later.
-        
+
     def assign_room(self):
         """
         Spawn a new home room for this character.
@@ -96,10 +97,11 @@ class Character(DefaultCharacter, Tangible):
         home_room_desc = settings.HOME_ROOM_DESC
         home_room_locks = 'control:id({0}) or perm(wizard);edit:id({0}) ' \
                           'or perm(helpstaff)'.format(self.id)
-        home_room_tags = [('private', 'flags')]
+        home_room_tags = [('private', 'flags', True)]
         home_room = {'typeclass': 'typeclasses.rooms.Room', 'key': home_room_name, 'desc': home_room_desc,
                      'locks': home_room_locks, 'tags': home_room_tags}
-        from evennia.utils.spawner import spawn  # Import the spawn utility just before using it.
+#        from evennia.utils.spawner import spawn  # Import the spawn utility just before using it.
+        from evennia.prototypes.spawner import spawn
         room = spawn(home_room)  # Calling spawn utility to create the home room.
         return room[0]  # Return the first (and only) object created, the room.
 
@@ -558,3 +560,11 @@ class NPC(Character):
                         continue
                     each.msg("|r%s|n sleeps." % self.get_display_name(each, color=False), from_obj=self)
             self.db.prelogout_location = self.location
+
+
+
+
+class ColorlessCharacter(Character, Tangible):
+    def msg(self, text=None, from_obj=None, session=None, options=None, **kwargs):
+        super().msg(text=ansi.strip_ansi(text), from_obj=from_obj, session=session, options=options **kwargs)
+
