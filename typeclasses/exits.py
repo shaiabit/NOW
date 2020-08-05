@@ -11,7 +11,7 @@ from evennia import DefaultExit
 from typeclasses.tangibles import Tangible
 from evennia.utils.utils import lazy_property
 from django.conf import settings
-from traits import TraitHandler
+from typeclasses.traits import TraitHandler
 
 
 MOVE_DELAY = dict(stroll=16, walk=8, run=4, sprint=2, scamper=1)  # TODO Lookup, calculate
