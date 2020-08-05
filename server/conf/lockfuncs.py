@@ -30,7 +30,7 @@ def tellfalse(accessing_obj, accessed_obj, *args, **kwargs):
     A simple logger that always returns false. Prints to stdout
     for simplicity, should use utils.logger for real operation.
     """
-    print "%s tried to access %s. Access denied." % (accessing_obj, accessed_obj)
+    print("%s tried to access %s. Access denied.", accessing_obj, accessed_obj)
     return False
 
 
