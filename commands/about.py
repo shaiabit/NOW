@@ -34,10 +34,12 @@ class CmdAbout(MuxCommand):
                 return
         cmd = self.cmdstring
         opt = self.switches
-        args = unicode(self.args).strip()
+#        args = unicode(self.args).strip()
+        args = self.args.strip()
         message = ''
         if args:
             obj = char.search(args, global_search=True)
+
             if obj:
                 display_name = obj.get_display_name(char)
                 object_summary = ''
@@ -100,7 +102,8 @@ class CmdAbout(MuxCommand):
                                     2: obj.db.messages and obj.db.messages.get('species', ''),
                                     3: obj.db.messages and obj.db.messages.get('gender', ''),
                                     4: obj.db.desc})
-                message = unicode(form)
+#                message = unicode(form)
+                message = str(form)
         else:
             if 'last' in opt or 'last' in cmd:
                 message = 'Usage: last <character name>'
