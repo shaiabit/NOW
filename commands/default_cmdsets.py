@@ -24,7 +24,7 @@ from evennia.commands.default.account import CmdCharCreate
 from evennia.commands.default.account import CmdOption
 from evennia.commands.default.account import CmdSessions
 from evennia.commands.default.account import CmdColorTest
-from evennia.commands.default.account import CmdQuell
+# from evennia.commands.default.account import CmdQuell
 #
 # Use Evennia default commands in admin group
 from evennia.commands.default.admin import CmdBoot
@@ -79,6 +79,7 @@ from commands.sense import CmdSense
 from commands.change import CmdChange
 from commands.portal import CmdPortal
 from commands.access import CmdAccess
+from commands.account import CmdQuell
 from commands.whisper import CmdWhisper
 from commands.channel import CmdChannels
 from commands.inventory import CmdInventory
@@ -111,7 +112,11 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.remove(default_cmds.CmdSetDesc)    # Duplicate subset of functions to CmdDesc
         self.remove(default_cmds.CmdDestroy)    # Reuse instead of destroy database objects.
         self.remove(default_cmds.CmdTeleport)   # Replaced with a Teleport that has cost and conditions.
-        self.remove(default_cmds.CmdDelAccount)  # Disable instead of remove accounts.
+        try:
+            self.remove(default_cmds.CmdDelAccount)  # Disable instead of remove accounts.
+# I don't think this actually exists.
+        except:
+            pass
 # [...] Administrative commands:
         self.add(CmdBoot(locks='cmd:perm(boot) or perm(helpstaff)', help_category='Administration'))
         self.add(CmdBan(locks='cmd:perm(ban) or perm(immortal)', help_category='Administration'))
