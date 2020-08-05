@@ -2,7 +2,8 @@
 from evennia import DefaultObject
 from evennia.utils import inherits_from
 from evennia.utils.utils import lazy_property
-from traits import TraitHandler
+from typeclasses.traits import TraitHandler
+from functools import reduce
 import time  # Check time since last visit
 
 
