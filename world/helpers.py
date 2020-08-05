@@ -53,7 +53,7 @@ def substitute_objects(text, puppet):
     candidates = [puppet] + puppet.contents
     if puppet.location:
         candidates = list(set(candidates + [puppet.location] + puppet.location.contents +
-                              (puppet.location.db.hosted.keys() if puppet.location.db.hosted else [])))
+                              (list(puppet.location.db.hosted.keys()) if puppet.location.db.hosted else [])))
     return_text = []
     for each in text.split():
         match = None
